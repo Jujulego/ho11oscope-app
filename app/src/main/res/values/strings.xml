@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Ho11oscope</string>
+
+    <!-- Navbar -->
+    <string name="nav_open">Ouvrir le panneau</string>
+    <string name="nav_close">Fermer le panneau</string>
+
+    <string name="nav_youtube">Youtube</string>
+    <string name="nav_settings">Paramètres</string>
+
+    <!-- MainActivity -->
+    <string name="main_search_hint">Vidéos</string>
+    <string name="main_tool_search">Rechercher</string>
+    <string name="main_tool_clearhistory">Vider l\'historique</string>
+    <string name="yt_video_playButton">Lancer</string>
+
+    <!-- Préferences -->
+    <string name="player_settings">Lecteur</string>
+    <string name="player_brightness_setting">Luminosité maximale</string>
+</resources>

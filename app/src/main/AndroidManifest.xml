@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="net.capellari.julien.ho11oscope">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Application -->
+    <application android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+
+        android:allowBackup="true"
+
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <!-- Métadonnées -->
+        <meta-data android:name="android.max_aspect"
+            android:value="2.1" /> <!-- Rends l'appli adaptables aux plus récentes tailles d'écrans 16:9 -->
+
+        <!-- Activités -->
+        <activity android:name=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation">
+
+            <!-- Métadonnées -->
+            <meta-data android:name="android.app.searchable"
+                android:resource="@xml/searchable_main" />
+
+            <!-- Launch -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Action View -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+            </intent-filter>
+
+            <!-- Action Search -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".SettingsActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        
+        <activity android:name=".YoutubeVideoActivity"
+            android:parentActivityName=".MainActivity">
+
+            <!-- Métadonnées -->
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity android:name=".PlayerActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="landscape">
+        </activity>
+
+        <!-- Providers -->
+        <provider android:name=".YoutubeSearchProvider"
+            android:authorities="net.capellari.julien.ho11oscope.YoutubeSearchProvider"
+            android:exported="false" />
+    </application>
+
+</manifest>
