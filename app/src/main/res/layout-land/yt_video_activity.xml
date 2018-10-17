@@ -6,7 +6,7 @@
 
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".YoutubeVideoActivity">
+    tools:context=".youtube.YoutubeVideoActivity">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/image_guideline"

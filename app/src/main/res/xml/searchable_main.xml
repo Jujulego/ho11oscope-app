@@ -4,6 +4,6 @@
     android:hint="@string/main_search_hint"
     android:inputType="textAutoCorrect"
 
-    android:searchSuggestAuthority="net.capellari.julien.ho11oscope.YoutubeSearchProvider"
+    android:searchSuggestAuthority="net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider"
     android:searchSuggestSelection=" ?">
 </searchable>

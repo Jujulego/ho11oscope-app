@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope
+package net.capellari.julien.ho11oscope.youtube
 
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -8,6 +8,7 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.ImageLoader
 import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.yt_video_activity.*
+import net.capellari.julien.ho11oscope.R
 
 class YoutubeVideoActivity : AppCompatActivity() {
     // Companion

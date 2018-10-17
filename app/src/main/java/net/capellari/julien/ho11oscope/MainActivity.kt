@@ -9,6 +9,9 @@ import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.main_activity.*
+import net.capellari.julien.ho11oscope.youtube.YoutubeSearchFragment
+import net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider
+import net.capellari.julien.ho11oscope.youtube.YoutubeVideoActivity
 
 class MainActivity : AppCompatActivity() {
     // Companion (equiv to static)

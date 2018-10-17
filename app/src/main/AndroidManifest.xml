@@ -45,12 +45,8 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".SettingsActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
         
-        <activity android:name=".YoutubeVideoActivity"
+        <activity android:name=".youtube.YoutubeVideoActivity"
             android:parentActivityName=".MainActivity">
 
             <!-- Métadonnées -->
@@ -64,8 +60,8 @@
         </activity>
 
         <!-- Providers -->
-        <provider android:name=".YoutubeSearchProvider"
-            android:authorities="net.capellari.julien.ho11oscope.YoutubeSearchProvider"
+        <provider android:name=".youtube.YoutubeSearchProvider"
+            android:authorities="net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider"
             android:exported="false" />
     </application>
 

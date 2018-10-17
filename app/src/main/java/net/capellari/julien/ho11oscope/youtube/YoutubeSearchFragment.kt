@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope
+package net.capellari.julien.ho11oscope.youtube
 
 import android.app.ActivityOptions
 import android.app.SearchManager
@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
+import android.util.Log
 import android.util.LruCache
 import android.util.Pair as UtilPair
 import android.view.*
@@ -24,6 +25,8 @@ import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.yt_search_fragment.*
 import kotlinx.android.synthetic.main.yt_search_result.view.*
+import net.capellari.julien.ho11oscope.R
+import net.capellari.julien.ho11oscope.inflate
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,7 +37,6 @@ class YoutubeSearchFragment : Fragment() {
     }
 
     // Attributs
-    private var query: String? = null
     private val videoAdapter = VideoAdapter()
     private var youtubeViewModel: YoutubeViewModel? = null
 
@@ -175,18 +177,13 @@ class YoutubeSearchFragment : Fragment() {
 
     // Fonctions
     fun search(query: String? = null) {
-        // Update query attr
-        query?.also {
-            this.query = it
+        // Sauvegarde
+        searchRecentSuggestions.saveRecentQuery(query, null)
 
-            // Sauvegarde
-            searchRecentSuggestions.saveRecentQuery(it, null)
-
-            // Start searching
-            youtubeViewModel?.run {
-                this.search(it)
-                swipeRefresh.isRefreshing = true
-            }
+        // Start searching
+        youtubeViewModel?.run {
+            this.search(query)
+            swipeRefresh.isRefreshing = true
         }
     }
 
@@ -205,13 +202,13 @@ class YoutubeSearchFragment : Fragment() {
             }
 
         // Méthodes
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoAdapter.VideoHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
             return VideoHolder(parent.inflate(R.layout.yt_search_result, false))
         }
 
         override fun getItemCount(): Int = videos?.items?.size ?: 0
 
-        override fun onBindViewHolder(holder: VideoAdapter.VideoHolder, position: Int) {
+        override fun onBindViewHolder(holder: VideoHolder, position: Int) {
             holder.bindVideo(videos!!.items[position])
         }
 

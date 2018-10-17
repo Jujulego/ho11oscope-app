@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope
+package net.capellari.julien.ho11oscope.youtube
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,7 +9,6 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.SearchListResponse
 import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 
 class YoutubeViewModel: ViewModel() {
     // Companion
@@ -18,6 +17,7 @@ class YoutubeViewModel: ViewModel() {
     }
 
     // Attributs
+    var query: String? = null
     val searchResults = MutableLiveData<SearchListResponse>()
 
     // Propriétés
@@ -29,17 +29,22 @@ class YoutubeViewModel: ViewModel() {
         ).setApplicationName("Ho11oscope").build()
 
     // Méthodes
-    fun search(query: String) : LiveData<SearchListResponse> {
-        doAsync {
-            // Search !
-            val req = youtubeApi.search().list("snippet")
-            req.apply {
-                key = YOUTUBE_API_KEY
+    fun search(query: String? = null) : LiveData<SearchListResponse> {
+        // Sauvegarde
+        query?.let {
+            this.query = it
+        }
 
-                q = query
-                maxResults = 25
-                type = "video"
-            }
+        // Search !
+        doAsync {
+            val req = youtubeApi.search().list("snippet")
+                    .apply {
+                        key = YOUTUBE_API_KEY
+
+                        q = (query ?: this@YoutubeViewModel.query)
+                        maxResults = 25
+                        type = "video"
+                    }
 
             searchResults.postValue(req.execute())
         }
