@@ -45,6 +45,9 @@ class YoutubeSearchFragment : Fragment() {
     private lateinit var requestQueue: RequestQueue
     private lateinit var imageLoader: ImageLoader
 
+    private var searchMenuItem: MenuItem? = null
+    private var searchExpandListener: MenuItem.OnActionExpandListener? = null
+
     // Propriétés
     private val youtubeApi
         get() = YouTube.Builder(
@@ -59,7 +62,13 @@ class YoutubeSearchFragment : Fragment() {
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
 
-    // Events
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Setup
+        setHasOptionsMenu(true)
+    }
+
     override fun onAttach(context: Context?) {
         super.onAttach(context)
 
@@ -89,6 +98,9 @@ class YoutubeSearchFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        // Menu refresh
+        activity?.invalidateOptionsMenu()
+
         // Setup recycler view
         results.apply {
             layoutManager = when (resources.configuration.orientation) {
@@ -108,6 +120,49 @@ class YoutubeSearchFragment : Fragment() {
                 search()
             }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        // Inflate menu
+        inflater.inflate(R.menu.toolbar_main, menu)
+
+        // SearchView
+        val searchManager = context!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+
+        searchMenuItem = menu.findItem(R.id.tool_search)
+        (searchMenuItem!!.actionView as SearchView).apply {
+            // Setup
+            setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
+
+            // Listeners
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextChange(newText: String?): Boolean = false
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    search(query)
+                    return true
+                }
+            })
+
+            setOnSuggestionListener(object : SearchView.OnSuggestionListener {
+                override fun onSuggestionSelect(position: Int): Boolean = false
+                override fun onSuggestionClick(position: Int): Boolean {
+                    val cursor = suggestionsAdapter.cursor
+
+                    if (cursor.moveToPosition(position)) {
+                        val query = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
+                        search(query)
+
+                        this@apply.setQuery(query, false)
+
+                        return true
+                    }
+
+                    return false
+                }
+            })
+        }
+
+        searchMenuItem!!.setOnActionExpandListener(searchExpandListener ?: return)
     }
 
     override fun onDetach() {
@@ -146,6 +201,11 @@ class YoutubeSearchFragment : Fragment() {
                 swipeRefresh.isRefreshing = false
             }
         }
+    }
+
+    fun setOnActionExpandListener(listener: MenuItem.OnActionExpandListener) {
+        searchExpandListener = listener
+        searchMenuItem?.setOnActionExpandListener(listener)
     }
 
     // Sous-classes

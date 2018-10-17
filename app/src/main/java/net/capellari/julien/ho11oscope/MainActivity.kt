@@ -1,14 +1,13 @@
 package net.capellari.julien.ho11oscope
 
 import android.app.SearchManager
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
-import android.support.v7.widget.SearchView
-import android.view.Menu
+import android.support.v7.app.ActionBarDrawerToggle
+import android.util.Log
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.main_activity.*
 
@@ -16,17 +15,57 @@ class MainActivity : AppCompatActivity() {
     // Companion (equiv to static)
     companion object {
         const val TAG = "MainActivity"
+
+        // Fragment tags
+        const val SETTINGS_TAG       = "SettingsFragment"
+        const val YOUTUBE_SEARCH_TAG = "YoutubeSearchFragment"
+    }
+
+    // Enumeration
+    enum class State {
+        NONE,
+        YOUTUBE_SEARCH,
+        SETTINGS
     }
 
     // Attributs
-    private lateinit var drawerControl: DrawerControl
+    private lateinit var drawerToggle: ActionBarDrawerToggle
 
     // Propriétés
-    val ytSearchFragment: YoutubeSearchFragment
-        get() = supportFragmentManager.findFragmentById(R.id.youtubeSearchFragment) as YoutubeSearchFragment
-
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(this, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
+
+    private var _state = State.NONE
+    private var state
+        get() = _state
+        set(state) {
+            // Update UI
+            when (state) {
+                _state -> {}
+                State.NONE -> {
+                    supportFragmentManager.beginTransaction()
+                            .apply {
+                                for (fragment in supportFragmentManager.fragments) {
+                                    remove(fragment ?: continue)
+                                }
+
+                                addToBackStack(null)
+                                commit()
+                            }
+                }
+
+                State.SETTINGS -> setupSettings(_state)
+                State.YOUTUBE_SEARCH -> setupYoutubeSearch(_state)
+            }
+
+            // Update value
+            _state = state
+        }
+
+    private val youtubeSearchFragment: YoutubeSearchFragment?
+        get() = supportFragmentManager.findFragmentByTag(YOUTUBE_SEARCH_TAG) as? YoutubeSearchFragment
+    private val settingsFragment: SettingsFragment?
+        get() = supportFragmentManager.findFragmentByTag(SETTINGS_TAG) as? SettingsFragment
 
     // Events
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,20 +76,23 @@ class MainActivity : AppCompatActivity() {
 
         // Setup
         setupToolbar()
-        drawerControl = DrawerControl(this, drawerLayout, navView)
-        drawerControl.setupDrawer(R.id.nav_main)
+        setupDrawer()
+        setupFragments()
+
+        // Init UI
+        state = State.YOUTUBE_SEARCH
     }
 
     override fun onStart() {
         super.onStart()
 
         // Sync drawerToggle
-        drawerControl.syncState()
+        drawerToggle.syncState()
 
         // Start search
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also {
-                query -> ytSearchFragment.search(query)
+                query -> youtubeSearchFragment?.search(query)
             }
         }
     }
@@ -59,58 +101,11 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
 
         // Pass to the drawerToggle
-        drawerControl.onConfigurationChanged(newConfig)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate menu
-        menuInflater.inflate(R.menu.toolbar_main, menu)
-
-        // SearchView
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        (menu.findItem(R.id.tool_search).actionView as SearchView).apply {
-            // Setup
-            setSearchableInfo(searchManager.getSearchableInfo(componentName))
-
-            // Listeners
-            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean {
-                    ytSearchFragment.search(query)
-                    return true
-                }
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    return false
-                }
-            })
-
-            setOnSuggestionListener(object : SearchView.OnSuggestionListener {
-                override fun onSuggestionSelect(position: Int): Boolean {
-                    return false
-                }
-
-                override fun onSuggestionClick(position: Int): Boolean {
-                    val cursor = suggestionsAdapter.cursor
-
-                    if (cursor.moveToPosition(position)) {
-                        val query = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
-                        ytSearchFragment.search(query)
-
-                        this@apply.setQuery(query, false)
-
-                        return true
-                    }
-
-                    return false
-                }
-            })
-        }
-
-        return super.onCreateOptionsMenu(menu)
+        drawerToggle.onConfigurationChanged(newConfig)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return drawerControl.onOptionsItemSelected(item) || when(item.itemId) {
+        return drawerToggle.onOptionsItemSelected(item) or when(item.itemId) {
             R.id.tool_clearhistory -> {
                 searchRecentSuggestions.clearHistory()
                 true
@@ -129,5 +124,96 @@ class MainActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
             setHomeButtonEnabled(true)
         }
+    }
+    private fun setupDrawer() {
+        // Setup actionbar toggle
+        drawerToggle = ActionBarDrawerToggle(
+                this, drawerLayout,
+                R.string.nav_open, R.string.nav_close
+        )
+
+        drawerLayout.addDrawerListener(drawerToggle)
+
+        // Events
+        navView.apply {
+            // Events
+            setNavigationItemSelectedListener { item ->
+                when (item.itemId) {
+                    R.id.nav_youtube -> {
+                        drawerLayout.closeDrawers()
+                        state = State.YOUTUBE_SEARCH
+
+                        true
+                    }
+                    R.id.nav_settings -> {
+                        drawerLayout.closeDrawers()
+                        state = State.SETTINGS
+
+                        true
+                    }
+                    R.id.debug_yt_video_activity -> {
+                        startActivity(Intent(this@MainActivity, YoutubeVideoActivity::class.java))
+                        true
+                    }
+                    R.id.debug_player_activity -> {
+                        startActivity(Intent(this@MainActivity, PlayerActivity::class.java))
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+    }
+    private fun setupFragments() {
+        supportFragmentManager.addOnBackStackChangedListener {
+            // Update internal & drawer state
+            loop@ for (fragment in supportFragmentManager.fragments) {
+                when(fragment) {
+                    is YoutubeSearchFragment -> {
+                        _state = State.YOUTUBE_SEARCH
+                        navView.setCheckedItem(R.id.nav_youtube)
+
+                        break@loop
+                    }
+                    is SettingsFragment -> {
+                        _state = State.SETTINGS
+                        navView.setCheckedItem(R.id.nav_settings)
+
+                        break@loop
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupYoutubeSearch(previous: State) {
+        // Create fragment
+        val ytsf = YoutubeSearchFragment()
+
+        // Replace fragment
+        supportFragmentManager.beginTransaction()
+                .apply {
+                    replace(R.id.fragmentPlaceholder, ytsf, YOUTUBE_SEARCH_TAG)
+                    addToBackStack(null)
+                    commit()
+                }
+
+        // Mark state as active
+        navView.setCheckedItem(R.id.nav_youtube)
+    }
+    private fun setupSettings(previous: State) {
+        // Create fragment
+        val sf = SettingsFragment()
+
+        // Replace fragment
+        supportFragmentManager.beginTransaction()
+                .apply {
+                    replace(R.id.fragmentPlaceholder, sf, SETTINGS_TAG)
+                    addToBackStack(null)
+                    commit()
+                }
+
+        // Mark state as active
+        navView.setCheckedItem(R.id.nav_settings)
     }
 }
