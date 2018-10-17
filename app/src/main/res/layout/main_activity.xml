@@ -11,7 +11,7 @@
     tools:context=".MainActivity">
 
     <!-- Toolbar -->
-    <android.support.v7.widget.Toolbar android:id="@+id/toolbar"
+    <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
@@ -24,7 +24,7 @@
         tools:menu="@menu/toolbar_main" />
 
     <!-- Drawer -->
-    <android.support.v4.widget.DrawerLayout android:id="@+id/drawerLayout"
+    <androidx.drawerlayout.widget.DrawerLayout android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar">
@@ -35,7 +35,7 @@
             android:layout_height="match_parent" />
 
         <!-- Barre de navigation -->
-        <android.support.design.widget.NavigationView
+        <com.google.android.material.navigation.NavigationView
             android:id="@+id/navView"
 
             android:layout_width="wrap_content"
@@ -44,5 +44,5 @@
             android:fitsSystemWindows="true"
 
             app:menu="@menu/drawer" />
-    </android.support.v4.widget.DrawerLayout>
+    </androidx.drawerlayout.widget.DrawerLayout>
 </RelativeLayout>

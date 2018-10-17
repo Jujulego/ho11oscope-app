@@ -1,10 +1,10 @@
 package net.capellari.julien.ho11oscope
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+import androidx.appcompat.app.AppCompatActivity
 
 class PlayerActivity : AppCompatActivity() {
     // Companion (equiv to static)
