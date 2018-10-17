@@ -13,22 +13,17 @@ import android.util.Pair as UtilPair
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.ImageLoader
 import com.android.volley.toolbox.Volley
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.http.HttpRequestInitializer
-import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.yt_search_fragment.*
 import kotlinx.android.synthetic.main.yt_search_result.view.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,6 +36,7 @@ class YoutubeSearchFragment : Fragment() {
     // Attributs
     private var query: String? = null
     private val videoAdapter = VideoAdapter()
+    private var youtubeViewModel: YoutubeViewModel? = null
 
     private lateinit var requestQueue: RequestQueue
     private lateinit var imageLoader: ImageLoader
@@ -49,17 +45,6 @@ class YoutubeSearchFragment : Fragment() {
     private var searchExpandListener: MenuItem.OnActionExpandListener? = null
 
     // Propriétés
-    private val youtubeApi
-        get() = YouTube.Builder(
-                AndroidHttp.newCompatibleTransport(),
-                JacksonFactory.getDefaultInstance(),
-                HttpRequestInitializer { }
-        ).setApplicationName(resources.getString(R.string.app_name)).build()
-
-    private val youtubeApiKey by lazy {
-        resources.getString(R.string.youtube_data_api_key)
-    }
-
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
 
@@ -99,9 +84,6 @@ class YoutubeSearchFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        // Menu refresh
-        activity?.invalidateOptionsMenu()
-
         // Setup recycler view
         results.apply {
             layoutManager = when (resources.configuration.orientation) {
@@ -109,6 +91,21 @@ class YoutubeSearchFragment : Fragment() {
                 else -> LinearLayoutManager(context)
             }
             adapter = videoAdapter
+        }
+
+        // Get ViewModel
+        youtubeViewModel = activity?.run {
+            ViewModelProviders.of(this).get(YoutubeViewModel::class.java)
+        }
+
+        youtubeViewModel?.run {
+            // Observe search results
+            searchResults.observe(this@YoutubeSearchFragment,
+                    androidx.lifecycle.Observer { results ->
+                        videoAdapter.videos = results
+                        swipeRefresh.isRefreshing = false
+                    }
+            )
         }
 
         // Listeners
@@ -131,39 +128,42 @@ class YoutubeSearchFragment : Fragment() {
         val searchManager = context!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
         searchMenuItem = menu.findItem(R.id.tool_search)
-        (searchMenuItem!!.actionView as SearchView).apply {
-            // Setup
-            setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
+                ?.also {
+                    (it.actionView as SearchView).apply {
+                        // Setup
+                        setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
 
-            // Listeners
-            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextChange(newText: String?): Boolean = false
-                override fun onQueryTextSubmit(query: String?): Boolean {
-                    search(query)
-                    return true
-                }
-            })
+                        // Listeners
+                        setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                            override fun onQueryTextChange(newText: String?): Boolean = false
+                            override fun onQueryTextSubmit(query: String?): Boolean {
+                                search(query)
+                                return true
+                            }
+                        })
 
-            setOnSuggestionListener(object : SearchView.OnSuggestionListener {
-                override fun onSuggestionSelect(position: Int): Boolean = false
-                override fun onSuggestionClick(position: Int): Boolean {
-                    val cursor = suggestionsAdapter.cursor
+                        setOnSuggestionListener(object : SearchView.OnSuggestionListener {
+                            override fun onSuggestionSelect(position: Int): Boolean = false
+                            override fun onSuggestionClick(position: Int): Boolean {
+                                val cursor = suggestionsAdapter.cursor
 
-                    if (cursor.moveToPosition(position)) {
-                        val query = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
-                        search(query)
+                                if (cursor.moveToPosition(position)) {
+                                    val query = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
+                                    search(query)
 
-                        this@apply.setQuery(query, false)
+                                    this@apply.setQuery(query, false)
 
-                        return true
+                                    return true
+                                }
+
+                                return false
+                            }
+                        })
                     }
 
-                    return false
+                    it.setOnActionExpandListener(searchExpandListener ?: return)
                 }
-            })
-        }
 
-        searchMenuItem!!.setOnActionExpandListener(searchExpandListener ?: return)
     }
 
     override fun onDetach() {
@@ -176,30 +176,16 @@ class YoutubeSearchFragment : Fragment() {
     // Fonctions
     fun search(query: String? = null) {
         // Update query attr
-        query ?: run {
-            this.query = query
-        }
+        query?.also {
+            this.query = it
 
-        // Sauvegarde
-        searchRecentSuggestions.saveRecentQuery(query, null)
-        swipeRefresh.isRefreshing = true
+            // Sauvegarde
+            searchRecentSuggestions.saveRecentQuery(it, null)
 
-        doAsync {
-            // Search !
-            val req = youtubeApi.search().list("snippet")
-            req.apply {
-                key = youtubeApiKey
-
-                q = query
-                maxResults = 25
-                type = "video"
-            }
-
-            val rep = req.execute()
-
-            uiThread {
-                videoAdapter.videos = rep
-                swipeRefresh.isRefreshing = false
+            // Start searching
+            youtubeViewModel?.run {
+                this.search(it)
+                swipeRefresh.isRefreshing = true
             }
         }
     }
@@ -248,30 +234,32 @@ class YoutubeSearchFragment : Fragment() {
                 val date = Date(video.snippet.publishedAt.value)
 
                 // Filling views
-                view.videoTitle.text = video.snippet.title
-                view.description.text = video.snippet.description
-                view.pubDate.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)
+                with(view) {
+                    videoTitle.text = video.snippet.title
+                    description.text = video.snippet.description
+                    pubDate.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)
 
-                view.image.setImageUrl(video.snippet.thumbnails.high.url, imageLoader)
+                    image.setImageUrl(video.snippet.thumbnails.high.url, imageLoader)
+                }
             }
 
             override fun onClick(v: View?) {
                 // Gardien
-                video ?: return
+                video?.also {
+                    // Start new activity ;)
+                    val intent = Intent(context, YoutubeVideoActivity::class.java).apply {
+                        putExtra(YoutubeVideoActivity.EXTRA_VIDEO_ID,          it.id.videoId)
+                        putExtra(YoutubeVideoActivity.EXTRA_VIDEO_TITLE,       it.snippet.title)
+                        putExtra(YoutubeVideoActivity.EXTRA_VIDEO_DESCRIPTION, it.snippet.description)
+                        putExtra(YoutubeVideoActivity.EXTRA_VIDEO_IMAGE,       it.snippet.thumbnails.high.url)
+                    }
 
-                // Start new activity ;)
-                val intent = Intent(context, YoutubeVideoActivity::class.java).apply {
-                    putExtra(YoutubeVideoActivity.EXTRA_VIDEO_ID,          video!!.id.videoId)
-                    putExtra(YoutubeVideoActivity.EXTRA_VIDEO_TITLE,       video!!.snippet.title)
-                    putExtra(YoutubeVideoActivity.EXTRA_VIDEO_DESCRIPTION, video!!.snippet.description)
-                    putExtra(YoutubeVideoActivity.EXTRA_VIDEO_IMAGE,       video!!.snippet.thumbnails.high.url)
+                    startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(activity,
+                            UtilPair(view.image,       "video_image"),
+                            UtilPair(view.videoTitle,  "video_title"),
+                            UtilPair(view.description, "video_description")
+                    ).toBundle())
                 }
-
-                startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(activity,
-                        UtilPair(view.image,       "video_image"),
-                        UtilPair(view.videoTitle,  "video_title"),
-                        UtilPair(view.description, "video_description")
-                ).toBundle())
             }
         }
     }

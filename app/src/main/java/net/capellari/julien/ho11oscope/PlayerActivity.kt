@@ -12,10 +12,6 @@ class PlayerActivity : AppCompatActivity() {
         const val TAG = "PlayerActivity"
     }
 
-    // Propriétés
-    private val youtubeApiKey
-        get() = resources.getString(R.string.youtube_data_api_key)
-
     // Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -52,8 +52,7 @@ class MainActivity : AppCompatActivity() {
                                 }
 
                                 addToBackStack(null)
-                                commit()
-                            }
+                            }.commit()
                 }
 
                 State.SETTINGS -> setupSettings(_state)
@@ -103,16 +102,14 @@ class MainActivity : AppCompatActivity() {
         super.onRestoreInstanceState(savedInstanceState)
 
         // Restore state
-        savedInstanceState?.run {
-            getString(STATE_STATE)?.run { state = State.valueOf(this) }
+        savedInstanceState?.getString(STATE_STATE)?.also {
+            s -> state = State.valueOf(s)
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         // Save state
-        outState?.apply {
-            putString(STATE_STATE, state.name)
-        }
+        outState?.putString(STATE_STATE, state.name)
 
         super.onSaveInstanceState(outState)
     }
@@ -155,32 +152,29 @@ class MainActivity : AppCompatActivity() {
         drawerLayout.addDrawerListener(drawerToggle)
 
         // Events
-        navView.apply {
-            // Events
-            setNavigationItemSelectedListener { item ->
-                when (item.itemId) {
-                    R.id.nav_youtube -> {
-                        drawerLayout.closeDrawers()
-                        state = State.YOUTUBE_SEARCH
+        navView.setNavigationItemSelectedListener {
+            item -> when (item.itemId) {
+                R.id.nav_youtube -> {
+                    drawerLayout.closeDrawers()
+                    state = State.YOUTUBE_SEARCH
 
-                        true
-                    }
-                    R.id.nav_settings -> {
-                        drawerLayout.closeDrawers()
-                        state = State.SETTINGS
-
-                        true
-                    }
-                    R.id.debug_yt_video_activity -> {
-                        startActivity(Intent(this@MainActivity, YoutubeVideoActivity::class.java))
-                        true
-                    }
-                    R.id.debug_player_activity -> {
-                        startActivity(Intent(this@MainActivity, PlayerActivity::class.java))
-                        true
-                    }
-                    else -> false
+                    true
                 }
+                R.id.nav_settings -> {
+                    drawerLayout.closeDrawers()
+                    state = State.SETTINGS
+
+                    true
+                }
+                R.id.debug_yt_video_activity -> {
+                    startActivity(Intent(this, YoutubeVideoActivity::class.java))
+                    true
+                }
+                R.id.debug_player_activity -> {
+                    startActivity(Intent(this, PlayerActivity::class.java))
+                    true
+                }
+                else -> false
             }
         }
     }
@@ -209,14 +203,21 @@ class MainActivity : AppCompatActivity() {
     private fun setupYoutubeSearch(previous: State) {
         // Create fragment
         val frag = YoutubeSearchFragment()
+        frag.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                drawerLayout.closeDrawers()
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean = true
+        })
 
         // Replace fragment
         supportFragmentManager.beginTransaction()
                 .apply {
                     replace(R.id.fragmentPlaceholder, frag, YOUTUBE_SEARCH_TAG)
                     addToBackStack(null)
-                    commit()
-                }
+                }.commit()
 
         // Mark state as active
         navView.setCheckedItem(R.id.nav_youtube)
@@ -230,8 +231,7 @@ class MainActivity : AppCompatActivity() {
                 .apply {
                     replace(R.id.fragmentPlaceholder, frag, SETTINGS_TAG)
                     addToBackStack(null)
-                    commit()
-                }
+                }.commit()
 
         // Mark state as active
         navView.setCheckedItem(R.id.nav_settings)
