@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.ImageLoader
 import com.android.volley.toolbox.Volley
-import kotlinx.android.synthetic.main.yt_video_activity.*
+import kotlinx.android.synthetic.main.youtube_video_activity.*
 import net.capellari.julien.ho11oscope.R
 
 class YoutubeVideoActivity : AppCompatActivity() {
@@ -31,7 +31,7 @@ class YoutubeVideoActivity : AppCompatActivity() {
         setupVolley()
 
         // Inflate layout
-        setContentView(R.layout.yt_video_activity)
+        setContentView(R.layout.youtube_video_activity)
 
         // Parse intent
         videoTitle.text  = intent.getStringExtra(EXTRA_VIDEO_TITLE) ?: "Title"

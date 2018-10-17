@@ -8,7 +8,6 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
-import android.util.Log
 import android.util.LruCache
 import android.util.Pair as UtilPair
 import android.view.*
@@ -23,8 +22,8 @@ import com.android.volley.toolbox.ImageLoader
 import com.android.volley.toolbox.Volley
 import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
-import kotlinx.android.synthetic.main.yt_search_fragment.*
-import kotlinx.android.synthetic.main.yt_search_result.view.*
+import kotlinx.android.synthetic.main.youtube_search_fragment.*
+import kotlinx.android.synthetic.main.youtube_search_result.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.inflate
 import java.text.SimpleDateFormat
@@ -43,20 +42,11 @@ class YoutubeSearchFragment : Fragment() {
     private lateinit var requestQueue: RequestQueue
     private lateinit var imageLoader: ImageLoader
 
-    private var searchMenuItem: MenuItem? = null
-    private var searchExpandListener: MenuItem.OnActionExpandListener? = null
-
     // Propriétés
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Setup
-        setHasOptionsMenu(true)
-    }
-
+    // Events
     override fun onAttach(context: Context?) {
         super.onAttach(context)
 
@@ -79,8 +69,17 @@ class YoutubeSearchFragment : Fragment() {
         })
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Get ViewModel
+        youtubeViewModel = activity?.run {
+            ViewModelProviders.of(this).get(YoutubeViewModel::class.java)
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.yt_search_fragment, container, false)
+        return inflater.inflate(R.layout.youtube_search_fragment, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -93,11 +92,6 @@ class YoutubeSearchFragment : Fragment() {
                 else -> LinearLayoutManager(context)
             }
             adapter = videoAdapter
-        }
-
-        // Get ViewModel
-        youtubeViewModel = activity?.run {
-            ViewModelProviders.of(this).get(YoutubeViewModel::class.java)
         }
 
         youtubeViewModel?.run {
@@ -122,52 +116,6 @@ class YoutubeSearchFragment : Fragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        // Inflate menu
-        inflater.inflate(R.menu.toolbar_main, menu)
-
-        // SearchView
-        val searchManager = context!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
-
-        searchMenuItem = menu.findItem(R.id.tool_search)
-                ?.also {
-                    (it.actionView as SearchView).apply {
-                        // Setup
-                        setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
-
-                        // Listeners
-                        setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                            override fun onQueryTextChange(newText: String?): Boolean = false
-                            override fun onQueryTextSubmit(query: String?): Boolean {
-                                search(query)
-                                return true
-                            }
-                        })
-
-                        setOnSuggestionListener(object : SearchView.OnSuggestionListener {
-                            override fun onSuggestionSelect(position: Int): Boolean = false
-                            override fun onSuggestionClick(position: Int): Boolean {
-                                val cursor = suggestionsAdapter.cursor
-
-                                if (cursor.moveToPosition(position)) {
-                                    val query = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
-                                    search(query)
-
-                                    this@apply.setQuery(query, false)
-
-                                    return true
-                                }
-
-                                return false
-                            }
-                        })
-                    }
-
-                    it.setOnActionExpandListener(searchExpandListener ?: return)
-                }
-
-    }
-
     override fun onDetach() {
         super.onDetach()
 
@@ -187,11 +135,6 @@ class YoutubeSearchFragment : Fragment() {
         }
     }
 
-    fun setOnActionExpandListener(listener: MenuItem.OnActionExpandListener) {
-        searchExpandListener = listener
-        searchMenuItem?.setOnActionExpandListener(listener)
-    }
-
     // Sous-classes
     inner class VideoAdapter(v: SearchListResponse? = null) : RecyclerView.Adapter<VideoAdapter.VideoHolder>() {
         // Propriétés
@@ -203,7 +146,7 @@ class YoutubeSearchFragment : Fragment() {
 
         // Méthodes
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
-            return VideoHolder(parent.inflate(R.layout.yt_search_result, false))
+            return VideoHolder(parent.inflate(R.layout.youtube_search_result, false))
         }
 
         override fun getItemCount(): Int = videos?.items?.size ?: 0

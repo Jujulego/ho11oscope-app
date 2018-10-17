@@ -4,13 +4,11 @@ import android.app.SearchManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.provider.SearchRecentSuggestions
 import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.main_activity.*
-import net.capellari.julien.ho11oscope.youtube.YoutubeSearchFragment
-import net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider
+import net.capellari.julien.ho11oscope.youtube.YoutubeFragment
 import net.capellari.julien.ho11oscope.youtube.YoutubeVideoActivity
 
 class MainActivity : AppCompatActivity() {
@@ -22,14 +20,14 @@ class MainActivity : AppCompatActivity() {
         const val STATE_STATE = "state"
 
         // Fragment tags
-        const val SETTINGS_TAG       = "SettingsFragment"
-        const val YOUTUBE_SEARCH_TAG = "YoutubeSearchFragment"
+        const val SETTINGS_TAG = "SettingsFragment"
+        const val YOUTUBE_TAG  = "YoutubeFragment"
     }
 
     // Enumeration
     enum class State {
         NONE,
-        YOUTUBE_SEARCH,
+        YOUTUBE,
         SETTINGS
     }
 
@@ -37,9 +35,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var drawerToggle: ActionBarDrawerToggle
 
     // Propriétés
-    private val searchRecentSuggestions
-        get() = SearchRecentSuggestions(this, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
-
     private var _state = State.NONE
     private var state
         get() = _state
@@ -47,27 +42,17 @@ class MainActivity : AppCompatActivity() {
             // Update UI
             when (state) {
                 _state -> {}
-                State.NONE -> {
-                    supportFragmentManager.beginTransaction()
-                            .apply {
-                                for (fragment in supportFragmentManager.fragments) {
-                                    remove(fragment ?: continue)
-                                }
-
-                                addToBackStack(null)
-                            }.commit()
-                }
-
+                State.NONE -> setupNone(_state)
                 State.SETTINGS -> setupSettings(_state)
-                State.YOUTUBE_SEARCH -> setupYoutubeSearch(_state)
+                State.YOUTUBE -> setupYoutube(_state)
             }
 
             // Update value
             _state = state
         }
 
-    private val youtubeSearchFragment: YoutubeSearchFragment?
-        get() = supportFragmentManager.findFragmentByTag(YOUTUBE_SEARCH_TAG) as? YoutubeSearchFragment
+    private val youtubeFragment: YoutubeFragment?
+        get() = supportFragmentManager.findFragmentByTag(YOUTUBE_TAG) as? YoutubeFragment
     private val settingsFragment: SettingsFragment?
         get() = supportFragmentManager.findFragmentByTag(SETTINGS_TAG) as? SettingsFragment
 
@@ -84,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         setupFragments()
 
         // Init UI
-        state = State.YOUTUBE_SEARCH
+        state = State.YOUTUBE
     }
 
     override fun onStart() {
@@ -96,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         // Start search
         if (Intent.ACTION_SEARCH == intent.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also {
-                query -> youtubeSearchFragment?.search(query)
+                //query -> youtubeFragment?.search(query)
             }
         }
     }
@@ -125,13 +110,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return drawerToggle.onOptionsItemSelected(item) or when(item.itemId) {
-            R.id.tool_clearhistory -> {
-                searchRecentSuggestions.clearHistory()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
+        return drawerToggle.onOptionsItemSelected(item) or super.onOptionsItemSelected(item)
     }
 
     // Méthods
@@ -159,7 +138,7 @@ class MainActivity : AppCompatActivity() {
             item -> when (item.itemId) {
                 R.id.nav_youtube -> {
                     drawerLayout.closeDrawers()
-                    state = State.YOUTUBE_SEARCH
+                    state = State.YOUTUBE
 
                     true
                 }
@@ -186,8 +165,8 @@ class MainActivity : AppCompatActivity() {
             // Update internal & drawer state
             loop@ for (fragment in supportFragmentManager.fragments) {
                 when(fragment) {
-                    is YoutubeSearchFragment -> {
-                        _state = State.YOUTUBE_SEARCH
+                    is YoutubeFragment -> {
+                        _state = State.YOUTUBE
                         navView.setCheckedItem(R.id.nav_youtube)
 
                         break@loop
@@ -203,9 +182,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupYoutubeSearch(previous: State) {
+    private fun setupNone(previous: State) {
+        // Remove all fragments
+        supportFragmentManager.beginTransaction()
+                .apply {
+                    for (fragment in supportFragmentManager.fragments) {
+                        remove(fragment ?: continue)
+                    }
+                }.commit()
+    }
+    private fun setupYoutube(previous: State) {
         // Create fragment
-        val frag = YoutubeSearchFragment()
+        val frag = YoutubeFragment()
         frag.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 drawerLayout.closeDrawers()
@@ -218,8 +206,8 @@ class MainActivity : AppCompatActivity() {
         // Replace fragment
         supportFragmentManager.beginTransaction()
                 .apply {
-                    replace(R.id.fragmentPlaceholder, frag, YOUTUBE_SEARCH_TAG)
-                    addToBackStack(null)
+                    replace(R.id.fragmentPlaceholder, frag, YOUTUBE_TAG)
+                    if (previous != State.NONE) addToBackStack(null)
                 }.commit()
 
         // Mark state as active
@@ -233,7 +221,7 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
                 .apply {
                     replace(R.id.fragmentPlaceholder, frag, SETTINGS_TAG)
-                    addToBackStack(null)
+                    if (previous != State.NONE) addToBackStack(null)
                 }.commit()
 
         // Mark state as active
