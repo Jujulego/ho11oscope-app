@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
 import android.support.v7.app.ActionBarDrawerToggle
-import android.util.Log
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.main_activity.*
 
@@ -15,6 +14,9 @@ class MainActivity : AppCompatActivity() {
     // Companion (equiv to static)
     companion object {
         const val TAG = "MainActivity"
+
+        // Activity State
+        const val STATE_STATE = "state"
 
         // Fragment tags
         const val SETTINGS_TAG       = "SettingsFragment"
@@ -95,6 +97,24 @@ class MainActivity : AppCompatActivity() {
                 query -> youtubeSearchFragment?.search(query)
             }
         }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+
+        // Restore state
+        savedInstanceState?.run {
+            getString(STATE_STATE)?.run { state = State.valueOf(this) }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        // Save state
+        outState?.apply {
+            putString(STATE_STATE, state.name)
+        }
+
+        super.onSaveInstanceState(outState)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
@@ -188,12 +208,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupYoutubeSearch(previous: State) {
         // Create fragment
-        val ytsf = YoutubeSearchFragment()
+        val frag = YoutubeSearchFragment()
 
         // Replace fragment
         supportFragmentManager.beginTransaction()
                 .apply {
-                    replace(R.id.fragmentPlaceholder, ytsf, YOUTUBE_SEARCH_TAG)
+                    replace(R.id.fragmentPlaceholder, frag, YOUTUBE_SEARCH_TAG)
                     addToBackStack(null)
                     commit()
                 }
@@ -203,12 +223,12 @@ class MainActivity : AppCompatActivity() {
     }
     private fun setupSettings(previous: State) {
         // Create fragment
-        val sf = SettingsFragment()
+        val frag = SettingsFragment()
 
         // Replace fragment
         supportFragmentManager.beginTransaction()
                 .apply {
-                    replace(R.id.fragmentPlaceholder, sf, SETTINGS_TAG)
+                    replace(R.id.fragmentPlaceholder, frag, SETTINGS_TAG)
                     addToBackStack(null)
                     commit()
                 }

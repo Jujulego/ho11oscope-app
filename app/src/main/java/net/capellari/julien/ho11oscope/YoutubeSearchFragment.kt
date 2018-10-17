@@ -56,8 +56,9 @@ class YoutubeSearchFragment : Fragment() {
                 HttpRequestInitializer { }
         ).setApplicationName(resources.getString(R.string.app_name)).build()
 
-    private val youtubeApiKey
-        get() = resources.getString(R.string.youtube_data_api_key)
+    private val youtubeApiKey by lazy {
+        resources.getString(R.string.youtube_data_api_key)
+    }
 
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
