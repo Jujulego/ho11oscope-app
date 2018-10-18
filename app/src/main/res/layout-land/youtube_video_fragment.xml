@@ -14,7 +14,7 @@
         android:layout_height="0dp"
         android:orientation="vertical"
 
-        app:layout_constraintGuide_percent=".40" />
+        app:layout_constraintGuide_percent=".66" />
 
     <com.android.volley.toolbox.NetworkImageView
         android:id="@+id/image"
@@ -22,13 +22,12 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
 
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         android:background="@android:color/black"
 
         app:layout_constraintDimensionRatio="H,16:9"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/playButton"
         app:layout_constraintRight_toLeftOf="@id/image_guideline"/>
 
     <Button android:id="@+id/playButton"
@@ -50,11 +49,12 @@
         android:background="@drawable/play_button"
 
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/image"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <TextView android:id="@+id/videoTitle"
         android:transitionName="video_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
 
@@ -63,6 +63,7 @@
 
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toRightOf="@id/image_guideline"
+        app:layout_constraintRight_toRightOf="parent"
 
         tools:text="Title"/>
 
