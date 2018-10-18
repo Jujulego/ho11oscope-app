@@ -11,9 +11,6 @@
 
         <item android:title="Debug">
             <menu>
-                <item android:id="@+id/debug_yt_video_activity"
-                    android:title="YoutubeVideoActivity" />
-
                 <item android:id="@+id/debug_player_activity"
                     android:title="PlayerActivity" />
             </menu>

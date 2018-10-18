@@ -1,8 +1,9 @@
 package net.capellari.julien.ho11oscope.youtube
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -10,7 +11,7 @@ import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.SearchListResponse
 import org.jetbrains.anko.doAsync
 
-class YoutubeViewModel: ViewModel() {
+class YoutubeViewModel(application: Application): AndroidViewModel(application) {
     // Companion
     companion object {
         const val YOUTUBE_API_KEY = "AIzaSyByzfP9EwXQj4heQc2xu8iw_mAnnw6yFQk"

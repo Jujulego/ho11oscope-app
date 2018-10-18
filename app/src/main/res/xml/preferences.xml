@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:fragment="net.capellari.julien.ho11oscope.SettingsFragment">
 
-    <androidx.preference.PreferenceCategory android:title="@string/player_settings">
-        <androidx.preference.CheckBoxPreference android:key="player_brightness"
+    <PreferenceCategory android:title="@string/player_settings">
+        <CheckBoxPreference android:key="player_brightness"
             android:title="@string/player_brightness_setting"
             android:defaultValue="true" />
-    </androidx.preference.PreferenceCategory>
-</androidx.preference.PreferenceScreen>
+    </PreferenceCategory>
+</PreferenceScreen>

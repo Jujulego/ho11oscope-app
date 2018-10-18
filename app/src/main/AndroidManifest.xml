@@ -45,14 +45,6 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
         </activity>
-        
-        <activity android:name=".youtube.YoutubeVideoActivity"
-            android:parentActivityName=".MainActivity">
-
-            <!-- Métadonnées -->
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
 
         <activity android:name=".PlayerActivity"
             android:theme="@style/AppTheme.NoActionBar"
