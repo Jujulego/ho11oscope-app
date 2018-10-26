@@ -2,11 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
         <item android:id="@+id/nav_youtube"
-            android:icon="@drawable/video_library_black_48"
+            android:icon="@drawable/ic_youtube_24dp"
             android:title="@string/nav_youtube" />
 
+        <item android:id="@+id/nav_opengl"
+            android:icon="@drawable/ic_cubes_24dp"
+            android:title="@string/nav_opengl" />
+
+        <item android:id="@+id/nav_poly"
+            android:icon="@drawable/ic_cubes_24dp"
+            android:title="@string/nav_poly" />
+
         <item android:id="@+id/nav_settings"
-            android:icon="@drawable/settings_black_48"
+            android:icon="@drawable/ic_settings_24dp"
             android:title="@string/nav_settings" />
     </group>
 </menu>

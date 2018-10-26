@@ -3,12 +3,12 @@ package net.capellari.julien.ho11oscope
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import com.google.api.services.youtube.model.SearchResult
 import net.capellari.julien.ho11oscope.youtube.YoutubePlayerFragment
 import kotlin.reflect.KFunction
@@ -38,12 +38,12 @@ class PlayerActivity : AppCompatActivity() {
 
     // Enumération
     interface IType {
-        fun fragment(value: String): Fragment
+        fun fragment(value: String): androidx.fragment.app.Fragment
     }
 
     enum class Type: IType {
         YOUTUBE {
-            override fun fragment(value: String): Fragment = YoutubePlayerFragment.newInstance(value)
+            override fun fragment(value: String): androidx.fragment.app.Fragment = YoutubePlayerFragment.newInstance(value)
         }
     }
 

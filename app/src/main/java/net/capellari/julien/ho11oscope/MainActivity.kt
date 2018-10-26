@@ -1,15 +1,16 @@
 package net.capellari.julien.ho11oscope
 
-import android.app.SearchManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.transition.*
-import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import android.transition.*
+import android.view.MenuItem
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.youtube_search_result.view.*
+import net.capellari.julien.ho11oscope.opengl.OpenGLActivity
+import net.capellari.julien.ho11oscope.poly.PolyActivity
 import net.capellari.julien.ho11oscope.youtube.YoutubeFragment
 import net.capellari.julien.ho11oscope.youtube.YoutubeVideoFragment
 
@@ -138,6 +139,14 @@ class MainActivity : AppCompatActivity() {
                     drawerLayout.closeDrawers()
                     setupYoutube()
 
+                    true
+                }
+                R.id.nav_opengl -> {
+                    startActivity(Intent(this, OpenGLActivity::class.java))
+                    true
+                }
+                R.id.nav_poly -> {
+                    startActivity(Intent(this, PolyActivity::class.java))
                     true
                 }
                 R.id.nav_settings -> {

@@ -1,9 +1,9 @@
 package net.capellari.julien.ho11oscope
 
-import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import android.content.Context
 import net.capellari.julien.ho11oscope.youtube.db.Video
 import net.capellari.julien.ho11oscope.youtube.db.VideoDAO
 

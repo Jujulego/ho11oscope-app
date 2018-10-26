@@ -28,7 +28,6 @@
                 android:layoutAnimation="@anim/layout_fall_down"
 
                 tools:listitem="@layout/youtube_search_result" />
-
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

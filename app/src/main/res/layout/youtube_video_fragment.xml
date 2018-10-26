@@ -55,8 +55,9 @@
         android:paddingStart="0dp"
         android:paddingEnd="12dp"
 
-        android:drawableStart="@drawable/play_arrow_white_36"
+        android:drawableStart="@drawable/ic_play_arrow_36dp"
         android:drawablePadding="8dp"
+        android:drawableTint="@android:color/white"
 
         android:text="@string/yt_video_playButton"
         android:textColor="@android:color/white"

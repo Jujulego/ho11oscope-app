@@ -1,17 +1,17 @@
 package net.capellari.julien.ho11oscope.youtube
 
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayerView
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerListener
 
-class YoutubePlayerFragment : Fragment(), YouTubePlayerListener {
+class YoutubePlayerFragment : androidx.fragment.app.Fragment(), YouTubePlayerListener {
     // Companion
     companion object {
         // Attributs

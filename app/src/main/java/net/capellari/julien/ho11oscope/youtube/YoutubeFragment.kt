@@ -1,22 +1,16 @@
 package net.capellari.julien.ho11oscope.youtube
 
-import android.app.ActivityOptions
 import android.app.SearchManager
+import androidx.lifecycle.ViewModelProviders
 import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
+import androidx.fragment.app.Fragment
+import androidx.appcompat.widget.*
 import android.util.Log
 import android.util.Pair as UtilPair
 import android.view.*
-import androidx.appcompat.widget.SearchView
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_fragment.*
@@ -27,7 +21,7 @@ import net.capellari.julien.ho11oscope.inflate
 import java.text.SimpleDateFormat
 import java.util.*
 
-class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
+class YoutubeFragment : androidx.fragment.app.Fragment(), MenuItem.OnActionExpandListener {
     // Companion (equiv to static)
     companion object {
         const val TAG = "YoutubeFragment"
@@ -86,11 +80,11 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         // Setup recycler view
         results.apply {
             layoutManager = when (resources.configuration.orientation) {
-                Configuration.ORIENTATION_LANDSCAPE -> GridLayoutManager(context, 2)
-                else -> LinearLayoutManager(context)
+                Configuration.ORIENTATION_LANDSCAPE -> androidx.recyclerview.widget.GridLayoutManager(context, 2)
+                else -> androidx.recyclerview.widget.LinearLayoutManager(context)
             }
             adapter = videoAdapter
-            itemAnimator = DefaultItemAnimator()
+            itemAnimator = androidx.recyclerview.widget.DefaultItemAnimator()
         }
 
         youtubeViewModel?.run {
@@ -251,7 +245,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         fun onVideoClick(video: VideoAdapter.VideoHolder)
     }
 
-    inner class VideoAdapter(v: SearchListResponse? = null) : RecyclerView.Adapter<VideoAdapter.VideoHolder>() {
+    inner class VideoAdapter(v: SearchListResponse? = null) : androidx.recyclerview.widget.RecyclerView.Adapter<VideoAdapter.VideoHolder>() {
         // Propriétés
         var videos: SearchListResponse? = v
             set(v) {
@@ -271,7 +265,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         }
 
         // Sous-classes
-        inner class VideoHolder(v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
+        inner class VideoHolder(v: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(v), View.OnClickListener {
             // Attributs
             var view: View = v
                 private set

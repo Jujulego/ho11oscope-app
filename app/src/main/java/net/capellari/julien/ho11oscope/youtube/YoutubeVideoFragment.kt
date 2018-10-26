@@ -1,20 +1,20 @@
 package net.capellari.julien.ho11oscope.youtube
 
+import androidx.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_video_fragment.view.*
 import net.capellari.julien.ho11oscope.PlayerActivity
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
 
-class YoutubeVideoFragment : Fragment() {
+class YoutubeVideoFragment : androidx.fragment.app.Fragment() {
     // Companion
     companion object {
         // Attributs

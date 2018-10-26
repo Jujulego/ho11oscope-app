@@ -6,6 +6,8 @@
     <string name="nav_close">Fermer le panneau</string>
 
     <string name="nav_youtube">Youtube</string>
+    <string name="nav_opengl">OpenGL</string>
+    <string name="nav_poly">Poly</string>
     <string name="nav_settings">Paramètres</string>
 
     <!-- MainActivity -->
