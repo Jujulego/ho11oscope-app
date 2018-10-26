@@ -1,5 +1,6 @@
 package net.capellari.julien.ho11oscope.poly
 
+import net.capellari.julien.ho11oscope.poly.opengl.ObjGeometry
 import java.nio.FloatBuffer
 
 // Extensions

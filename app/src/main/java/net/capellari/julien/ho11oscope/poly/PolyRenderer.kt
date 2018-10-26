@@ -5,6 +5,8 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.util.Log
+import net.capellari.julien.ho11oscope.poly.opengl.GLUtils
+import net.capellari.julien.ho11oscope.poly.opengl.Shaders
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 

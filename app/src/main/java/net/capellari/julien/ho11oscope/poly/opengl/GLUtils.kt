@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope.poly
+package net.capellari.julien.ho11oscope.poly.opengl
 
 import android.content.Context
 import android.opengl.GLES20
@@ -43,7 +43,7 @@ object GLUtils {
         // add the source code to the shader and compile it
         GLES20.glShaderSource(shader, shaderCode.toString())
         GLES20.glCompileShader(shader)
-        GLUtils.checkGlError("compile shader")
+        checkGlError("compile shader")
 
         val status = IntArray(1)
         GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, status, 0)
@@ -62,7 +62,7 @@ object GLUtils {
 
         GLES20.glGenBuffers(1, vbos, 0)
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbos[0])
-        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, data.capacity() * GLUtils.FLOAT_SIZE, data,
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, data.capacity() * FLOAT_SIZE, data,
                 GLES20.GL_STATIC_DRAW)
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
 
@@ -75,7 +75,7 @@ object GLUtils {
 
         GLES20.glGenBuffers(1, ibos, 0)
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, ibos[0])
-        GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, data.capacity() * GLUtils.SHORT_SIZE,
+        GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, data.capacity() * SHORT_SIZE,
                 data, GLES20.GL_STATIC_DRAW)
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
 

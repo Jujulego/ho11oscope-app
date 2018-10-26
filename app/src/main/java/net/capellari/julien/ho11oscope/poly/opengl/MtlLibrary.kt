@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope.poly
+package net.capellari.julien.ho11oscope.poly.opengl
 
 import android.util.Log
 import java.lang.RuntimeException
@@ -20,7 +20,7 @@ class MtlLibrary {
     }
 
     // Attributs
-    private val materials = mutableMapOf<String,Material>()
+    private val materials = mutableMapOf<String, Material>()
 
     // Méthodes
     fun parse(file: String) {
@@ -57,7 +57,7 @@ class MtlLibrary {
                 material?.print()
 
             } catch (err: Exception) {
-                throw MtlParseException("Failed to parse MTL, line #${i+1}", err)
+                throw MtlParseException("Failed to parse MTL, line #${i + 1}", err)
             }
         }
     }

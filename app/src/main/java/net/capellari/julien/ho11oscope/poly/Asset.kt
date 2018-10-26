@@ -3,6 +3,9 @@ package net.capellari.julien.ho11oscope.poly
 import android.content.Context
 import android.util.Log
 import com.github.kittinunf.fuel.httpDownload
+import net.capellari.julien.ho11oscope.poly.opengl.GLUtils
+import net.capellari.julien.ho11oscope.poly.opengl.MtlLibrary
+import net.capellari.julien.ho11oscope.poly.opengl.ObjGeometry
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

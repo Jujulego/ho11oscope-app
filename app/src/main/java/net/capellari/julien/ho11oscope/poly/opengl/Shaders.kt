@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope.poly
+package net.capellari.julien.ho11oscope.poly.opengl
 
 import android.content.Context
 import android.opengl.GLES20

@@ -1,4 +1,4 @@
-package net.capellari.julien.ho11oscope.poly
+package net.capellari.julien.ho11oscope.poly.opengl
 
 class ObjGeometry {
     // Companion
@@ -103,9 +103,11 @@ class ObjGeometry {
         val nIndex = parts.getOrNull(2)?.toIntOrNull()
 
         return Vertex(
-                index -1,
-                tcIndex?.let { it-1 } ?: MISSING,
-                nIndex?.let { it-1 } ?: MISSING
+                index - 1,
+                tcIndex?.let { it - 1 }
+                        ?: MISSING,
+                nIndex?.let { it - 1 }
+                        ?: MISSING
         )
     }
 
@@ -172,7 +174,7 @@ class ObjGeometry {
                     else -> {}
                 }
             } catch (err: Exception) {
-                throw ObjParseException("Failed to parse OBJ, line #${i+1}", err)
+                throw ObjParseException("Failed to parse OBJ, line #${i + 1}", err)
             }
         }
 
