@@ -14,7 +14,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
     // Companion
     companion object {
         // Attributs
-        const val TAG = "PolyRendere"
+        const val TAG = "PolyRenderer"
 
         // - camera field view angle (degrees)
         const val FOV_Y: Float = 60f
@@ -42,8 +42,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
     private lateinit var shaders: Shaders
     private var readyToRender = false
 
-    private var positionVbo: Int = 0
-    private var colorVbo: Int = 0
+    private var vbo = GLUtils.VBO()
     private var ibo: Int = 0
 
     private var indexCount: Int = 0
@@ -67,7 +66,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
     // Méthodes
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        GLES20.glDepthMask(false)
 
         lastFrameTime = System.currentTimeMillis()
         shaders = Shaders(context)
@@ -102,15 +105,14 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
 
         // render
         if (readyToRender) {
-            shaders.render(mvpMatrix, indexCount, ibo, positionVbo, colorVbo)
+            shaders.render(mvpMatrix, modelMatrix, viewMatrix, indexCount, ibo, vbo)
         } else {
             asset?.also {
                 // Prepare rendering
                 indexCount = it.indexCount
-                ibo = GLUtils.createIbo(it.indices)
 
-                positionVbo = GLUtils.createVbo(it.positions)
-                colorVbo = GLUtils.createVbo(it.colors)
+                ibo = GLUtils.createIbo(it.indices)
+                vbo = GLUtils.createVbo(it.positions, it.normals, it.ambientColors, it.diffuseColors, it.specularColors, it.specularExps, it.opacities)
 
                 // Ready !
                 readyToRender = true
