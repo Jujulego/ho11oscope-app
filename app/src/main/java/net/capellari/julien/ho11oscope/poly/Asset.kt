@@ -3,9 +3,11 @@ package net.capellari.julien.ho11oscope.poly
 import android.content.Context
 import android.util.Log
 import com.github.kittinunf.fuel.httpDownload
-import net.capellari.julien.ho11oscope.poly.opengl.GLUtils
-import net.capellari.julien.ho11oscope.poly.opengl.MtlLibrary
-import net.capellari.julien.ho11oscope.poly.opengl.ObjGeometry
+import net.capellari.julien.opengl.GLUtils
+import net.capellari.julien.opengl.mtl.MtlLibrary
+import net.capellari.julien.opengl.obj.ObjGeometry
+import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.opengl.put
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.File
@@ -38,7 +40,7 @@ class Asset(val id: String) {
     lateinit var diffuseColors:  FloatBuffer
     lateinit var specularColors: FloatBuffer
     lateinit var specularExps:   FloatBuffer
-    lateinit var opacities:        FloatBuffer
+    lateinit var opacities:      FloatBuffer
 
     val geometry = ObjGeometry()
     val materials = MtlLibrary()
@@ -96,7 +98,7 @@ class Asset(val id: String) {
                         materials.parse(getMtlFile(context).readText())
                         Log.d(TAG, ".mtl file parsed")
 
-                        uiThread { _ ->
+                        uiThread {
                             mtlReady = true
                             if (objReady) listener?.onReady()
                         }
@@ -108,7 +110,7 @@ class Asset(val id: String) {
         }
     }
 
-    fun convertObjAndMtl(translation: ObjGeometry.Vec3, scale: Float) {
+    fun convertObjAndMtl(translation: Vec3, scale: Float) {
         // Count entries
         vertexCount = 0
         indexCount = 0
@@ -187,13 +189,13 @@ class Asset(val id: String) {
 
             // Each vertex
             for (vertex in face.vertices) {
-                // Get position and normal
-                val pos = ObjGeometry.Vec3(geometry.getVertex(vertex.index))
+                // Get positions and normals
+                var pos = Vec3(geometry.getVertex(vertex.index))
                 val normal = if (vertex.normalIndex != ObjGeometry.MISSING) {
                     geometry.getNormal(vertex.normalIndex)
-                } else { // Missing normal.
+                } else { // Missing normals.
                     // TODO: recompute.
-                    ObjGeometry.Vec3(0f, 0f, 1f)
+                    Vec3(0f, 0f, 1f)
                 }
 
                 // Apply transformations

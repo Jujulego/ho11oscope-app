@@ -3,10 +3,9 @@ package net.capellari.julien.ho11oscope.poly
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.opengl.Matrix
 import android.util.Log
-import net.capellari.julien.ho11oscope.poly.opengl.GLUtils
-import net.capellari.julien.ho11oscope.poly.opengl.Shaders
+import net.capellari.julien.opengl.Mat4
+import net.capellari.julien.opengl.Vec3
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -26,24 +25,15 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         // Model spin speed (deg / s)
         const val MODEL_ROTATION_SPEED: Float = 45f
 
-        // Camera position and orientation
-        const val EYE_X: Float = 0f
-        const val EYE_Y: Float = 3f
-        const val EYE_Z: Float = -10f
-        const val TARGET_X: Float = 0f
-        const val TARGET_Y: Float = 0f
-        const val TARGET_Z: Float = 0f
-        const val UP_X: Float = 0f
-        const val UP_Y: Float = 1f
-        const val UP_Z: Float = 0f
+        // Camera positions and orientation
+        val EYE =    Vec3(0f, 3f, -10f)
+        val TARGET = Vec3(0f, 0f, 0f)
+        val UP =     Vec3(0f, 1f, 0f)
     }
 
     // Attributs
-    private lateinit var shaders: Shaders
+    private var polyProgram: PolyProgram = PolyProgram.getInstance()
     private var readyToRender = false
-
-    private var vbo = GLUtils.VBO()
-    private var ibo: Int = 0
 
     private var indexCount: Int = 0
     private var lastFrameTime: Long = 0
@@ -57,23 +47,13 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
             Log.d(TAG, "Recieved new object to render")
         }
 
-    // - matrices
-    private val modelMatrix = FloatArray(16) // object space => world space
-    private val viewMatrix  = FloatArray(16) // world space  => eye space
-    private val projMatrix  = FloatArray(16) // eye space    => clip space
-    private val mvpMatrix   = FloatArray(16) // model * view * proj
-
     // Méthodes
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
-
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        GLES20.glDepthMask(false)
+        disactivateOpacity()
 
         lastFrameTime = System.currentTimeMillis()
-        shaders = Shaders(context)
+        polyProgram.compile(context)
     }
 
     override fun onDrawFrame(unused: GL10?) {
@@ -88,31 +68,27 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
         // model matrix rotate around Y axis
-        Matrix.setRotateM(modelMatrix, 0, angle, 0f, 1f, 0f)
-
-        // camera position
-        Matrix.setLookAtM(viewMatrix, 0,
-                EYE_X,    EYE_Y,    EYE_Z,
-                TARGET_X, TARGET_Y, TARGET_Z,
-                UP_X,     UP_Y,     UP_Z
-        )
+        polyProgram.mMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
 
         // Compute MVP Matrix
-        FloatArray(16).let {
-            Matrix.multiplyMM(it, 0, viewMatrix, 0, modelMatrix, 0)
-            Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, it, 0)
-        }
+        polyProgram.mvpMatrix = polyProgram.pMatrix * (polyProgram.vMatrix * polyProgram.mMatrix)
 
         // render
         if (readyToRender) {
-            shaders.render(mvpMatrix, modelMatrix, viewMatrix, indexCount, ibo, vbo)
+            polyProgram.render(indexCount)
         } else {
             asset?.also {
                 // Prepare rendering
                 indexCount = it.indexCount
+                polyProgram.indices = it.indices
 
-                ibo = GLUtils.createIbo(it.indices)
-                vbo = GLUtils.createVbo(it.positions, it.normals, it.ambientColors, it.diffuseColors, it.specularColors, it.specularExps, it.opacities)
+                polyProgram.positions = it.positions
+                polyProgram.normals   = it.normals
+                polyProgram.ambientColors  = it.ambientColors
+                polyProgram.diffuseColors  = it.diffuseColors
+                polyProgram.specularColors = it.specularColors
+                polyProgram.specularExps = it.specularExps
+                polyProgram.opacities    = it.opacities
 
                 // Ready !
                 readyToRender = true
@@ -125,6 +101,21 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height)
 
         val ratio = width / height.toFloat()
-        Matrix.perspectiveM(projMatrix, 0, FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
+        polyProgram.pMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
+    }
+
+    fun activateOpacity() {
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        GLES20.glDepthMask(false)
+
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+    }
+
+    fun disactivateOpacity() {
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+        GLES20.glDepthMask(true)
+
+        GLES20.glDisable(GLES20.GL_BLEND)
     }
 }

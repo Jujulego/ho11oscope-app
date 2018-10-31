@@ -1,4 +1,7 @@
-package net.capellari.julien.ho11oscope.poly.opengl
+package net.capellari.julien.opengl.obj
+
+import net.capellari.julien.opengl.TexCoord
+import net.capellari.julien.opengl.Vec3
 
 class ObjGeometry {
     // Companion
@@ -10,40 +13,6 @@ class ObjGeometry {
     // Classes
     class Vertex(var index: Int, var texCoordIndex: Int, var normalIndex: Int)
     class Face(var vertices: MutableList<Vertex>, var material: String)
-
-    class Vec3(var x: Float, var y: Float, var z: Float) {
-        // Constructeur
-        constructor(other: Vec3) : this(other.x, other.y, other.z)
-
-        // Méthodes
-        override fun toString(): String {
-            return "(%.3f, %.3f, %.3f)".format(x, y, z)
-        }
-
-        // Opérateurs
-        operator fun plus(o: Vec3): Vec3 {
-            return Vec3(x + o.x, y + o.y, z + o.z)
-        }
-
-        operator fun plusAssign(o: Vec3) {
-            x += o.x; y += o.y; z += o.z
-        }
-
-        operator fun times(f: Float): Vec3 {
-            return Vec3(f * x, f * y, f * z)
-        }
-
-        operator fun timesAssign(f: Float) {
-            x *= f; y *= f; z *= f
-        }
-    }
-
-    class TexCoord(var u: Float, var v: Float)
-
-    class ObjParseException : Exception {
-        constructor(msg: String) : super(msg)
-        constructor(msg: String, cause: Exception) : super(msg, cause)
-    }
 
     // Attributs
     // - tableaux (+ tailles)
@@ -66,37 +35,37 @@ class ObjGeometry {
         private set
 
     val boundsCenter: Vec3
-        get() = Vec3(
-                (boundsMin!!.x + boundsMax!!.x) / 2f,
-                (boundsMin!!.y + boundsMax!!.y) / 2f,
-                (boundsMin!!.z + boundsMax!!.z) / 2f
-        )
+        get() = boundsMin?.let { boundsMin ->
+            boundsMax?.let { boundsMax ->
+                boundsMax center boundsMin
+            }
+        } ?: Vec3()
 
     val boundsSize: Vec3
-        get() = Vec3(
-                boundsMax!!.x - boundsMin!!.x,
-                boundsMax!!.y - boundsMin!!.y,
-                boundsMax!!.z - boundsMin!!.z
-        )
+        get() = boundsMin?.let { boundsMin ->
+            boundsMax?.let { boundsMax ->
+                boundsMax - boundsMin
+            }
+        } ?: Vec3()
 
     // Méthodes
     private fun parseVec3(s: String): Vec3 {
         val parts = s.trim().split(" +".toRegex())
-        if (parts.size != 3) throw RuntimeException("Vec3 doesn't have 3 components.")
+        if (parts.size != 3) throw ObjParseException("Vec3 doesn't have 3 components.")
 
         return Vec3(parts[0].toFloat(), parts[1].toFloat(), parts[2].toFloat())
     }
 
     private fun parseTexCoords(s: String): TexCoord {
         val parts = s.trim().split(" +".toRegex())
-        if (parts.size < 2) throw RuntimeException("Tex coords has < 2 components.")
+        if (parts.size < 2) throw ObjParseException("Tex coords has < 2 components.")
 
         return TexCoord(parts[0].toFloat(), parts[1].toFloat())
     }
 
     private fun parseVertex(s: String): Vertex {
         val parts = s.trim().split("/")
-        if (parts.isEmpty()) throw RuntimeException("Vertex must have a face index.")
+        if (parts.isEmpty()) throw ObjParseException("Vertex must have a face index.")
 
         val index = parts[0].toInt()
         val tcIndex = parts.getOrNull(1)?.toIntOrNull()
@@ -113,7 +82,7 @@ class ObjGeometry {
 
     private fun parseFace(s: String, material: String): Face {
         val parts = s.trim().split(" +".toRegex())
-        if (parts.size < 3) throw RuntimeException("Face must have at least 3 vertices.")
+        if (parts.size < 3) throw ObjParseException("Face must have at least 3 vertices.")
 
         val vertices = mutableListOf<Vertex>()
         for (p in parts) {

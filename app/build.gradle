@@ -1,10 +1,12 @@
 apply plugin: 'com.android.application'
 
+apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 28
+
     defaultConfig {
         applicationId "net.capellari.julien.ho11oscope"
         minSdkVersion 23
@@ -15,8 +17,7 @@ android {
 
         javaCompileOptions {
             annotationProcessorOptions {
-                arguments = ["room.schemaLocation":
-                                     "$projectDir/schemas".toString()]
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
     }
@@ -36,13 +37,16 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
+    // OpenGL
+    implementation project(":opengl")
+    implementation project(":opengl.annotations")
+    annotationProcessor project(":opengl.annotations")
+
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "org.jetbrains.anko:anko-commons:0.10.4"
+    implementation 'org.jetbrains.anko:anko-commons:0.10.4'
 
     // AndroidX support
-    def androidx_version = "1.0.0"
-
     implementation "androidx.appcompat:appcompat:$androidx_version"
     implementation "androidx.cardview:cardview:$androidx_version"
     implementation "com.google.android.material:material:$androidx_version"
@@ -51,15 +55,12 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:$androidx_version"
     implementation "androidx.legacy:legacy-support-v4:$androidx_version"
     implementation "androidx.transition:transition:$androidx_version"
-
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
 
     // Lifecyle
     def lifecycle_version = "2.0.0"
-
     kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
-
     testImplementation "androidx.arch.core:core-testing:$lifecycle_version"
 
     // Youtube API
@@ -81,11 +82,9 @@ dependencies {
 
     // Room
     def room_version = "2.1.0-alpha01"
-
     implementation "androidx.room:room-common:$room_version"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
-
     testImplementation "androidx.room:room-testing:$room_version"
 
     // Tests

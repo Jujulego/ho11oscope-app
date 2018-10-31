@@ -4,6 +4,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
+import android.util.Log
 import net.capellari.julien.ho11oscope.opengl.objets.Square
 import net.capellari.julien.ho11oscope.opengl.objets.Triangle
 import javax.microedition.khronos.egl.EGLConfig

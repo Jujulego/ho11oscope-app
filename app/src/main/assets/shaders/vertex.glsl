@@ -33,7 +33,7 @@ varying float specularExp;
 varying float opacity;
 
 void main() {
-    // vertex position
+    // vertex positions
     gl_Position = uMVP * vec4(aPosition, 1);
 
     // Transmit color to fragment shader
@@ -43,10 +43,10 @@ void main() {
     specularExp = aSpecularExp;
     opacity = aOpacity;
 
-    // Compute world space position
+    // Compute world space positions
     position = (uM * vec4(aPosition, 1)).xyz;
 
-    // Compute camera space normal
+    // Compute camera space normals
     normal = (uV * uM * vec4(aNormal, 1)).xyz;
 
     // Vector from vertex to camera
