@@ -43,7 +43,7 @@ dependencies {
     annotationProcessor project(":opengl.annotations")
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation 'org.jetbrains.anko:anko-commons:0.10.4'
 
     // AndroidX support
@@ -55,6 +55,7 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:$androidx_version"
     implementation "androidx.legacy:legacy-support-v4:$androidx_version"
     implementation "androidx.transition:transition:$androidx_version"
+
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
 
     // Lifecyle

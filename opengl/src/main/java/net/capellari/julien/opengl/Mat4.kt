@@ -67,7 +67,7 @@ class Mat4() {
     operator fun set(col: Int, lig: Int, v: Float) { data[lig*4 + col] = v }
 
     // - logic
-    override operator fun equals(o: Any?): Boolean = if (o is Mat4) data.contentEquals(o.data) else false
+    override operator fun equals(other: Any?): Boolean = if (other is Mat4) data.contentEquals(other.data) else false
 
     // - math
     operator fun times(o: Mat4): Mat4 = Mat4().also { Matrix.multiplyMM(it.data, 0, data, 0, o.data, 0) }
