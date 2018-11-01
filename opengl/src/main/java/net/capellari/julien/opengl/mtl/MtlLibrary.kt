@@ -22,7 +22,7 @@ class MtlLibrary {
 
                 when (verb) {
                     "newmtl" -> {
-                        material?.print()
+                        //material?.print()
 
                         material = Material(args)
                         materials[material.name] = material
@@ -83,7 +83,7 @@ class MtlLibrary {
             }
         }
 
-        material?.print()
+        //material?.print()
     }
 
     // Opérateurs

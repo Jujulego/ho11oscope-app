@@ -4,7 +4,6 @@ import android.content.Context
 import android.opengl.GLES20
 import android.util.Log
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 import kotlin.reflect.full.createInstance
 
 abstract class BaseProgram {
@@ -15,10 +14,8 @@ abstract class BaseProgram {
 
         // Méthodes
         @Suppress("UNCHECKED_CAST")
-        fun <T : BaseProgram> getImplementation(cls: KClass<T>) : T {
-            val impl = Class.forName("${cls.qualifiedName}_Impl").kotlin.createInstance()
-            return impl as T
-        }
+        fun <T : BaseProgram> getImplementation(cls: KClass<T>) : T =
+                Class.forName("${cls.qualifiedName}_Impl").kotlin.createInstance() as T
     }
 
     // Attributs
@@ -35,10 +32,10 @@ abstract class BaseProgram {
 
     // - charge vars
     protected abstract fun loadUniforms()
-    protected abstract fun loadIBO()
     protected abstract fun loadVBO()
 
-    // - clean
+    // - draw & clean
+    protected abstract fun draw()
     protected abstract fun clean()
 
     // Méthodes
@@ -59,14 +56,17 @@ abstract class BaseProgram {
 
         // Init uniforms
         usingProgram {
+            // Load variables
             loadUniforms()
+
+            // Création des buffers
+            iboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
         }
     }
-    fun render(numIndices: Int) {
+    fun render() {
         usingProgram {
             // Load buffers
             loadVBO()
-            loadIBO()
 
             // Bind VBO
             if (vboId != -1) {
@@ -81,7 +81,7 @@ abstract class BaseProgram {
             }
 
             // Draw TODO: get indice type from IBO annotation
-            GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_INT, 0)
+            draw()
 
             // Clean up
             clean()
@@ -91,7 +91,7 @@ abstract class BaseProgram {
     }
 
     // - contexte
-    fun<V> usingProgram(lambda: () -> V): V {
+    fun usingProgram(lambda: () -> Unit) {
         var wasActive: Boolean? = null
 
         try {

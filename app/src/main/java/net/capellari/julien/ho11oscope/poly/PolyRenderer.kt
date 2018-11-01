@@ -75,7 +75,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
 
         // render
         if (readyToRender) {
-            polyProgram.render(indexCount)
+            polyProgram.render()
         } else {
             asset?.also {
                 // Prepare rendering

@@ -24,7 +24,7 @@ abstract class PolyProgram : BaseProgram() {
     var pMatrix = Mat4()
 
     // - buffers
-    @IBO(BufferType.INT)   var indices: IntBuffer?   = null
+    @IBO(BufferType.INT)   open var indices: IntBuffer? = null
     @VBO(BufferType.FLOAT) var vbo:     FloatBuffer? = null
 
     // - uniforms
