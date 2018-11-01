@@ -148,6 +148,8 @@ abstract class BaseProgram {
                 is Vec2  -> GLES20.glUniform2f(handle, v.x, v.y)
                 is Vec3  -> GLES20.glUniform3f(handle, v.x, v.y, v.z)
                 is Vec4  -> GLES20.glUniform4f(handle, v.x, v.y, v.z, v.a)
+                is Mat2  -> GLES20.glUniformMatrix2fv(handle, 1, false, v.data, 0)
+                is Mat3  -> GLES20.glUniformMatrix3fv(handle, 1, false, v.data, 0)
                 is Mat4  -> GLES20.glUniformMatrix4fv(handle, 1, false, v.data, 0)
 
                 else -> throw RuntimeException("Unsupported value type : ${v::class.qualifiedName}")

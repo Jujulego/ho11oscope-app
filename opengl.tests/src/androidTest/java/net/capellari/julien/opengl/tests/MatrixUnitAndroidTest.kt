@@ -1,6 +1,6 @@
 package net.capellari.julien.opengl.tests
 
-import androidx.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import net.capellari.julien.opengl.Mat4
 import net.capellari.julien.opengl.Vec4
 import org.junit.Assert.*

@@ -1,5 +1,6 @@
-package net.capellari.julien.opengl
+package net.capellari.julien.opengl.tests
 
+import net.capellari.julien.opengl.*
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -26,6 +27,7 @@ class VectorUnitTest {
     @Test fun times() {
         val res = Vec3(2f, 2f, 2f)
         assertEquals(res, t1 * 2f)
+        assertEquals(res, 2f * t1)
     }
     @Test fun div() {
         val res = Vec3(.5f, .5f, .5f)
