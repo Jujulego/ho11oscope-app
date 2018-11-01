@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.*
 import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.TypeElement
+import javax.lang.model.element.*
 import javax.tools.Diagnostic
 
 @AutoService(Processor::class)
@@ -13,6 +13,54 @@ import javax.tools.Diagnostic
 class ProgramProcessor : AbstractProcessor() {
     // Propriétés
     private val sourceRoot get() = processingEnv.options["kapt.kotlin.generated"]
+
+    // Classes
+    inner class UniformProperty(element: VariableElement, val annotation: Uniform) {
+        // Attributs
+        lateinit var handle: PropertySpec
+            private set
+
+        lateinit var property: PropertySpec
+            private set
+
+        val name = element.simpleName.toString()
+        val type = element.asType().asTypeName()
+
+        // Constructeur
+        init {
+            createHandle()
+            createProperty()
+
+            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, element.simpleName)
+        }
+
+        // Méthodes
+        private fun createHandle() {
+            handle = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
+                        .initializer("-1").mutable()
+                        .build()
+        }
+
+        private fun createProperty() {
+            val param = ParameterSpec.builder("value", type).build()
+
+            property = PropertySpec.builder(name, type, KModifier.OVERRIDE)
+                    .apply {
+                        mutable()
+                        initializer("super.$name")
+
+                        setter(FunSpec.builder("set()").apply {
+                            addParameter(param)
+
+                            addStatement("field = %N", param)
+                            addStatement("setUniformValue(%N, %N)", handle, param)
+                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform $name")
+                            //addStatement("Log.d(%S, %S)", "BaseProgram", "Loaded uniform $name")
+                        }.build())
+                    }.build()
+
+        }
+    }
 
     // Méthodes
     override fun getSupportedAnnotationTypes(): Set<String> {
@@ -72,27 +120,32 @@ class ProgramProcessor : AbstractProcessor() {
 
         // Attributes
         val attrs = mutableMapOf<PropertySpec,Attribute>()
-        val unifs = mutableMapOf<PropertySpec,Uniform>()
+        val unifs = mutableListOf<UniformProperty>()
         var ibo: Pair<String,IBO>? = null
         var vbo: Pair<String,VBO>? = null
 
-        processingEnv.elementUtils.getAllMembers(element)
+
+        // liste des attributs
+        val fields = mutableMapOf<String,VariableElement>()
+        element.enclosedElements.forEach {
+            if (it.kind == ElementKind.FIELD) fields[it.simpleName.toString()] = it as VariableElement
+        }
+
+        element.enclosedElements
                 .forEach {
                     // Annotations
                     val attr = it.getAnnotation(Attribute::class.java)
                     val unif = it.getAnnotation(Uniform::class.java)
 
                     // Attributs & Uniforms
-                    if ((attr != null) or (unif != null)) {
+                    if (attr != null) {
                         val p = PropertySpec.builder("${it.simpleName.split('$').first()}Handle", Int::class, KModifier.PRIVATE)
                                 .initializer("-1").mutable()
                                 .build()
 
-                        if (attr != null) {
-                            attrs[p] = attr
-                        } else if (unif != null) {
-                            unifs[p] = unif
-                        }
+                        attrs[p] = attr
+                    } else if (unif != null) {
+                        unifs.add(UniformProperty(fields[it.simpleName.split("$").first()]!!, unif))
                     }
 
                     // VBO !
@@ -153,8 +206,9 @@ class ProgramProcessor : AbstractProcessor() {
                     for (p in attrs) {
                         addStatement("%N = getAttribLocation(%S)", p.key, p.value.name)
                     }
-                    for (p in unifs) {
-                        addStatement("%N = getUniformLocation(%S)", p.key, p.value.name)
+
+                    for (prop in unifs) {
+                        addStatement("%N = getUniformLocation(%S)", prop.handle, prop.annotation.name)
                     }
                 }.build()
 
@@ -162,10 +216,9 @@ class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (p in unifs) {
-                        val name = p.key.name.substring(0, p.key.name.length-6)
-                        addStatement("setUniformValue(%N, $name)", p.key)
-                        addStatement("GLUtils.checkGlError(%S)", "Loading uniform $name")
+                    for (prop in unifs) {
+                        addStatement("setUniformValue(%N, %N)", prop.handle, prop.property)
+                        addStatement("GLUtils.checkGlError(%S)", "Loading uniform ${prop.annotation.name}")
                     }
                 }.build()
 
@@ -285,7 +338,10 @@ class ProgramProcessor : AbstractProcessor() {
 
                 // Attributs
                 addProperties(attrs.keys)
-                addProperties(unifs.keys)
+                for (prop in unifs) {
+                    addProperty(prop.handle)
+                    addProperty(prop.property)
+                }
 
                 // Méthodes
                 addFunction(loadShaders)
@@ -307,6 +363,7 @@ class ProgramProcessor : AbstractProcessor() {
                     addImport("android.opengl", "GLES20")
                     addImport("net.capellari.julien.opengl", "GLUtils")
                     addImport("java.nio", "ByteBuffer", "ByteOrder")
+                    addImport("android.util", "Log")
                     vbo?.also {
                         val bcls = it.second.type.cls.asClassName()
                         addImport(bcls.packageName, bcls.simpleName)

@@ -28,11 +28,11 @@ abstract class PolyProgram : BaseProgram() {
     @VBO(BufferType.FLOAT) var vbo:     FloatBuffer? = null
 
     // - uniforms
-    @Uniform("uMVP")        var mvpMatrix     = Mat4()
-    @Uniform("uM")          var mMatrix       = Mat4()
-    @Uniform("uV")          var vMatrix       = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
-    @Uniform("uLight")      var lightPosition = Vec3(0f, 2f, 25f)
-    @Uniform("uLightPower") var lightPower    = 600f
+    @Uniform("uMVP")   open var mvpMatrix       = Mat4()
+    @Uniform("uM")     open var mMatrix         = Mat4()
+    @Uniform("uV")     open var vMatrix         = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
+    @Uniform("uLight") open var lightPosition   = Vec3(0f, 2f, 25f)
+    @Uniform("uLightPower") open var lightPower = 600f
 
     // - attributes
     @Attribute("aPosition",      vbo=GLUtils.COORDS_PER_VERTEX)    var positions:      FloatBuffer? = null

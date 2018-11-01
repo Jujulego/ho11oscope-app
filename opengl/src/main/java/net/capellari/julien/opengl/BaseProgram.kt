@@ -3,8 +3,8 @@ package net.capellari.julien.opengl
 import android.content.Context
 import android.opengl.GLES20
 import android.util.Log
-import java.nio.Buffer
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 import kotlin.reflect.full.createInstance
 
 abstract class BaseProgram {
@@ -23,6 +23,8 @@ abstract class BaseProgram {
 
     // Attributs
     private var program: Int = -1
+    private var isActive = false
+
     protected var iboId: Int = -1
     protected var vboId: Int = -1
 
@@ -54,37 +56,63 @@ abstract class BaseProgram {
         // Get locations
         getLocations()
         Log.d(TAG, "All locations gathered")
+
+        // Init uniforms
+        usingProgram {
+            loadUniforms()
+        }
+    }
+    fun render(numIndices: Int) {
+        usingProgram {
+            // Load buffers
+            loadVBO()
+            loadIBO()
+
+            // Bind VBO
+            if (vboId != -1) {
+                GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)
+                GLUtils.checkGlError("Binding VBO")
+            }
+
+            // Bind IBO
+            if (iboId != -1) {
+                GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboId)
+                GLUtils.checkGlError("Binding IBO")
+            }
+
+            // Draw TODO: get indice type from IBO annotation
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_INT, 0)
+
+            // Clean up
+            clean()
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+        }
     }
 
-    fun render(numIndices: Int) {
-        GLES20.glUseProgram(program)
+    // - contexte
+    fun<V> usingProgram(lambda: () -> V): V {
+        var wasActive: Boolean? = null
 
-        // Load variables and buffers
-        loadUniforms()
+        try {
+            // Activate program
+            synchronized(this) {
+                wasActive = isActive
+                GLES20.glUseProgram(program)
+                isActive = true
+            }
 
-        loadVBO()
-        loadIBO()
+            return lambda()
 
-        // Bind VBO
-        if (vboId != -1) {
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)
-            GLUtils.checkGlError("Binding VBO")
+        } finally {
+            // Disactivate program
+            wasActive?.also {
+                synchronized(this) {
+                    if (it) GLES20.glUseProgram(0)
+                    isActive = it
+                }
+            }
         }
-
-        // Bind IBO
-        if (iboId != -1) {
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboId)
-            GLUtils.checkGlError("Binding IBO")
-        }
-
-        // Draw TODO: get indice type from IBO annotation
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_INT, 0)
-
-        // Clean up
-        clean()
-        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
-        GLES20.glUseProgram(0)
     }
 
     // - shaders
@@ -144,6 +172,7 @@ abstract class BaseProgram {
     protected fun setUniformValue(handle: Int, v: Any?) {
         if (handle >= 0 && v != null) {
             when (v) {
+                is Int   -> GLES20.glUniform1i(handle, v)
                 is Float -> GLES20.glUniform1f(handle, v)
                 is Vec2  -> GLES20.glUniform2f(handle, v.x, v.y)
                 is Vec3  -> GLES20.glUniform3f(handle, v.x, v.y, v.z)
