@@ -2,7 +2,10 @@ package net.capellari.julien.opengl
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.*
-import java.io.File
+import java.io.OutputStreamWriter
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.*
@@ -62,6 +65,9 @@ class ProgramProcessor : AbstractProcessor() {
         }
     }
     inner class AttributeProperty(element: VariableElement, val annotation: Attribute) : HandleProperty(element) {
+        // Attributs
+        val vbo = element.getAnnotation(VBO::class.java) != null
+
         // Méthodes
         override fun createProperty() {
             val param = ParameterSpec.builder("value", type).build()
@@ -112,7 +118,7 @@ class ProgramProcessor : AbstractProcessor() {
 
                                     beginControlFlow("usingProgram")
                                         addStatement("GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboId)")
-                                        addStatement("GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, it.capacity() * %L, it, GLES20.GL_STATIC_DRAW)", annotation.type.size)
+                                        addStatement("GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, bufferSize(it), it, GLES20.GL_STATIC_DRAW)")
                                         addStatement("GLUtils.checkGlError(\"Loading ibo\")")
                                     endControlFlow()
                                 endControlFlow()
@@ -181,7 +187,6 @@ class ProgramProcessor : AbstractProcessor() {
         val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
         var ibo: IndicesProperty? = null
-        var vbo: Pair<String,VBO>? = null
 
         // Liste des attributs
         val fields = mutableMapOf<String,VariableElement>()
@@ -203,19 +208,6 @@ class ProgramProcessor : AbstractProcessor() {
                         attrs.add(AttributeProperty(fields[name]!!, attr))
                     } else if (unif != null) {
                         unifs.add(UniformProperty(fields[name]!!, unif))
-                    }
-
-                    // VBO !
-                    it.getAnnotation(VBO::class.java)?.let { annot ->
-                        // Doublons ?
-                        vbo?.let { vbo ->
-                            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING,
-                                    "@VBO used twice on the same program ('${vbo.first}' and '$name')"
-                            )
-                        }
-
-                        // Paire !
-                        vbo = name to annot
                     }
 
                     // IBO !
@@ -283,60 +275,49 @@ class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    vbo?.also { vbo ->
-                        // Enabling part
-                        val sizeCode = CodeBlock.builder()
-                                .addStatement("var size = 0")
-
-                        val putCode = CodeBlock.builder()
-
-                        for (prop in attrs) {
-                            if (prop.annotation.vbo > 0) {
-                                sizeCode
-                                    .beginControlFlow("${prop.name}?.let")
-                                        .addStatement("size += it.capacity() * %L", vbo.second.type.size)
-                                    .endControlFlow()
-
-                                putCode
-                                    .beginControlFlow("${prop.name}?.let")
-                                        .addStatement("it.position(0)")
-                                        .addStatement("put(it)")
-                                    .endControlFlow()
-                            }
+                    // Compute vbo size
+                    addStatement("var size = 0")
+                    for (prop in attrs) {
+                        if (prop.vbo) {
+                            beginControlFlow("${prop.name}?.let")
+                                addStatement("size += bufferSize(it)")
+                            endControlFlow()
                         }
-
-                        // Final code
-                        addCode(sizeCode.build())
-                        addStatement("${vbo.first} = allocateOrReuse(size, ${vbo.first}, %T.${vbo.second.type.name})", BufferType::class)
-                        beginControlFlow("${vbo.first}?.apply")
-                            addCode(putCode.build())
-                            addStatement("position(0)")
-                            addStatement("GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)")
-                            addStatement("GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, size, this, GLES20.GL_STATIC_DRAW)")
-                        endControlFlow()
                     }
+
+                    // Allocate VBO
+                    addStatement("vbo.allocate(size)")
+                    addStatement("vbo.position = 0")
+
+                    // Put data
+                    for (prop in attrs) {
+                        if (prop.vbo) {
+                            beginControlFlow("${prop.name}?.let")
+                                addStatement("vbo.put(it)")
+                            endControlFlow()
+                        }
+                    }
+
+                    // Bind VBO
+                    addStatement("vbo.bind(vboId)")
                 }.build()
 
         val enableVBO = FunSpec.builder("enableVBO")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    vbo?.also { vbo ->
-                        beginControlFlow("${vbo.first}?.apply")
-                            addStatement("var offset = 0")
+                    // Link to arrays
+                    addStatement("var offset = 0")
 
-                            for (prop in attrs) {
-                                if (prop.annotation.vbo > 0) {
-                                    beginControlFlow("${prop.name}?.let")
-                                        addStatement("GLES20.glEnableVertexAttribArray(%N)", prop.handle)
-                                        addStatement("GLES20.glVertexAttribPointer(%N, %L, GLES20.GL_%L, false, 0, offset)",
-                                                prop.handle, prop.annotation.vbo, vbo.second.type.name)
+                    for (prop in attrs) {
+                        if (prop.vbo) {
+                            beginControlFlow("${prop.name}?.let")
+                                addStatement("GLES20.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES20.glVertexAttribPointer(%N, numberComponents(it), bufferType(it), false, 0, offset)", prop.handle)
 
-                                        addStatement("offset += it.capacity() * %L", vbo.second.type.size)
-                                    endControlFlow()
-                                }
-                            }
-                        endControlFlow()
+                                addStatement("offset += bufferSize(it)")
+                            endControlFlow()
+                        }
                     }
                 }.build()
 
@@ -346,8 +327,8 @@ class ProgramProcessor : AbstractProcessor() {
 
                     ibo?.also { ibo ->
                         beginControlFlow("%N?.also {", ibo.property)
-                            addStatement("GLES20.glDrawElements(GLES20.GL_TRIANGLES, it.capacity(), GLUtils.getGlBufferType(%T.%L), 0)",
-                                    BufferType::class, ibo.annotation.type.name)
+                            addStatement("GLES20.glDrawElements(GLES20.GL_TRIANGLES, it.capacity(), bufferType(it, true), 0)",
+                                    BufferType::class)
                             addStatement("GLUtils.checkGlError(\"Drawing\")")
                         endControlFlow()
                     }
@@ -391,22 +372,52 @@ class ProgramProcessor : AbstractProcessor() {
             }
 
         // Ecriture
-        val file = File(sourceRoot)
-        file.mkdir()
-
-        FileSpec.builder(pkgProgram, implCls.simpleName)
+        val code = FileSpec.builder(pkgProgram, implCls.simpleName)
                 .apply {
                     addImport("android.opengl", "GLES20")
-                    addImport("net.capellari.julien.opengl", "GLUtils")
-                    addImport("java.nio", "ByteBuffer", "ByteOrder")
                     addImport("android.util", "Log")
-
-                    vbo?.also {
-                        val bcls = it.second.type.cls.asClassName()
-                        addImport(bcls.packageName, bcls.simpleName)
-                    }
+                    addImport("net.capellari.julien.opengl", "GLUtils")
 
                     addType(cls.build())
-                }.build().writeTo(file)
+                }.build()
+
+        // Create file
+        var output = Paths.get(sourceRoot)
+
+        if (!Files.exists(output)) Files.createDirectory(output)
+        if (code.packageName.isNotEmpty()) {
+            for (packageComponent in code.packageName.split('.').dropLastWhile { it.isEmpty() }) {
+                output = output.resolve(packageComponent)
+            }
+        }
+
+        Files.createDirectories(output)
+        output = output.resolve("${code.name}.kt")
+
+        // Write down to file
+        val writer = OutputStreamWriter(Files.newOutputStream(output), StandardCharsets.UTF_8)
+
+        code.writeTo(object : Appendable {
+            fun replace(str: CharSequence?): CharSequence {
+                return (str ?: "null").replace("java\\.lang".toRegex(), "kotlin")
+            }
+
+            override fun append(str: CharSequence?): java.lang.Appendable {
+                writer.append(replace(str))
+                return this
+            }
+
+            override fun append(str: CharSequence?, p1: Int, p2: Int): java.lang.Appendable {
+                writer.append(replace(str), p1, p2)
+                return this
+            }
+
+            override fun append(c: Char): java.lang.Appendable {
+                writer.append(c)
+                return this
+            }
+        })
+
+        writer.close()
     }
 }

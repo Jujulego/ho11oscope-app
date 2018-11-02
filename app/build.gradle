@@ -32,14 +32,18 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // OpenGL
-    implementation project(":opengl")
-    implementation project(":opengl.annotations")
+    implementation project(':opengl')
+    implementation project(':opengl.annotations')
     annotationProcessor project(":opengl.annotations")
 
     // Kotlin
@@ -55,7 +59,6 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:$androidx_version"
     implementation "androidx.legacy:legacy-support-v4:$androidx_version"
     implementation "androidx.transition:transition:$androidx_version"
-
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
 
     // Lifecyle
@@ -76,10 +79,14 @@ dependencies {
     }
 
     // Volley
-    implementation 'com.android.volley:volley:1.1.1'
+    implementation('com.android.volley:volley:1.1.1') {
+        exclude group: 'org.apache.httpcomponents'
+    }
 
     // Fuel
-    implementation 'com.github.kittinunf.fuel:fuel-android:1.15.1'
+    implementation('com.github.kittinunf.fuel:fuel-android:1.15.1') {
+        exclude group: 'org.apache.httpcomponents'
+    }
 
     // Room
     def room_version = "2.1.0-alpha01"

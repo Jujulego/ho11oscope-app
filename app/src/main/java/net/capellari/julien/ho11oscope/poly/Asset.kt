@@ -7,7 +7,6 @@ import net.capellari.julien.opengl.GLUtils
 import net.capellari.julien.opengl.mtl.MtlLibrary
 import net.capellari.julien.opengl.obj.ObjGeometry
 import net.capellari.julien.opengl.Vec3
-import net.capellari.julien.opengl.put
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.File
@@ -32,15 +31,15 @@ class Asset(val id: String) {
     }
 
     // Attributs
-    lateinit var positions:     FloatBuffer
-    lateinit var normals:       FloatBuffer
+    var positions = arrayListOf<Vec3>()
+    var normals   = arrayListOf<Vec3>()
     lateinit var indices:       IntBuffer
 
-    lateinit var ambientColors:  FloatBuffer
-    lateinit var diffuseColors:  FloatBuffer
-    lateinit var specularColors: FloatBuffer
-    lateinit var specularExps:   FloatBuffer
-    lateinit var opacities:      FloatBuffer
+    var ambientColors  = arrayListOf<Vec3>()
+    var diffuseColors  = arrayListOf<Vec3>()
+    var specularColors = arrayListOf<Vec3>()
+    var specularExps   = arrayListOf<Float>()
+    var opacities      = arrayListOf<Float>()
 
     val geometry = ObjGeometry()
     val materials = MtlLibrary()
@@ -127,47 +126,19 @@ class Asset(val id: String) {
         Log.d(TAG, "$vertexCount vertices, $indexCount indices")
 
         // Allocations
-        positions = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * GLUtils.COORDS_PER_VERTEX * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
-        normals = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * GLUtils.COORDS_PER_VERTEX * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
         indices = ByteBuffer.allocateDirect(GLUtils.INT_SIZE * indexCount)
                 .order(ByteOrder.nativeOrder())
                 .asIntBuffer()
 
-        ambientColors = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * GLUtils.NUM_COLOR_COMPONENTS * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
-        diffuseColors = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * GLUtils.NUM_COLOR_COMPONENTS * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
-        specularColors = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * GLUtils.NUM_COLOR_COMPONENTS * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
-        specularExps = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
-        opacities = ByteBuffer.allocateDirect(GLUtils.FLOAT_SIZE * vertexCount)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
         // Start at 0
-        positions.position(0)
-        normals.position(0)
+        positions.clear()
+        normals.clear()
         indices.position(0)
-        ambientColors.position(0)
-        diffuseColors.position(0)
-        specularColors.position(0)
-        specularExps.position(0)
-        opacities.position(0)
+        ambientColors.clear()
+        diffuseColors.clear()
+        specularColors.clear()
+        specularExps.clear()
+        opacities.clear()
 
         // Converting
         var currentVertexIndex = 0
@@ -203,14 +174,14 @@ class Asset(val id: String) {
                 pos *= scale
 
                 // Add to buffers
-                positions.put(pos)
-                normals.put(normal)
+                positions.add(pos)
+                normals.add(normal)
 
-                ambientColors.put(faceAmbientColor)
-                diffuseColors.put(faceDiffuseColor)
-                specularColors.put(faceSpecularColor)
-                specularExps.put(faceSpecularExp)
-                opacities.put(opacity)
+                ambientColors.add(faceAmbientColor)
+                diffuseColors.add(faceDiffuseColor)
+                specularColors.add(faceSpecularColor)
+                specularExps.add(faceSpecularExp)
+                opacities.add(opacity)
 
                 ++currentVertexIndex
             }

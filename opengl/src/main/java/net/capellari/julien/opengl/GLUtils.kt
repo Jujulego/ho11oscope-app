@@ -32,14 +32,6 @@ object GLUtils {
         }
     }
 
-    fun getGlBufferType(type: BufferType) : Int {
-        return when (type) {
-            BufferType.SHORT -> GLES20.GL_UNSIGNED_SHORT
-            BufferType.INT   -> GLES20.GL_UNSIGNED_INT
-            BufferType.FLOAT -> GLES20.GL_FLOAT
-        }
-    }
-
     fun readFile(context: Context, file: String): String {
         // read file
         val shaderCode = StringBuffer()

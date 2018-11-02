@@ -3,6 +3,8 @@ package net.capellari.julien.opengl
 import android.content.Context
 import android.opengl.GLES20
 import android.util.Log
+import net.capellari.julien.opengl.base.BaseMat
+import net.capellari.julien.opengl.base.BaseVec
 import java.nio.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
@@ -24,6 +26,8 @@ abstract class BaseProgram {
     private var isActive = false
 
     protected var iboId: Int = -1
+
+    protected var vbo = VertexBufferObject()
     protected var vboId: Int = -1
     protected var reloadVBO  = false
 
@@ -76,12 +80,12 @@ abstract class BaseProgram {
                 reloadVBO = false
             }
 
-            // Bind VBO
+            // Bind VertexBufferObject
             if (vboId != -1) {
                 GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)
                 enableVBO()
 
-                GLUtils.checkGlError("Binding VBO")
+                GLUtils.checkGlError("Binding VertexBufferObject")
             }
 
             // Bind IBO
@@ -179,15 +183,109 @@ abstract class BaseProgram {
     }
 
     // - buffers
+    protected inline fun<reified T : Any> bufferSize(c: Collection<T>) : Int {
+        if (c.isEmpty()) return 0
+
+        return c.size * when (c.first()) {
+            // Base
+            is Short -> GLUtils.SHORT_SIZE
+            is Int   -> GLUtils.INT_SIZE
+            is Float -> GLUtils.FLOAT_SIZE
+
+            // Composed
+            is BaseVec<*>   -> (c.first() as BaseVec<*>).size * GLUtils.FLOAT_SIZE
+            is BaseMat<*,*> -> (c.first() as BaseMat<*,*>).run { size * size * GLUtils.FLOAT_SIZE }
+
+            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+        }
+    }
+    protected inline fun<reified T : Any> bufferSize(v: T) : Int {
+        return when (v) {
+            // Base
+            is Short -> GLUtils.SHORT_SIZE
+            is Int   -> GLUtils.INT_SIZE
+            is Float -> GLUtils.FLOAT_SIZE
+
+            // Composed
+            is BaseVec<*> -> (v as BaseVec<*>).size * GLUtils.FLOAT_SIZE
+            is BaseMat<*,*> -> (v as BaseMat<*,*>).run { size * size * GLUtils.FLOAT_SIZE }
+
+            // Buffers
+            is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
+            is IntBuffer   -> (v as Buffer).capacity() * GLUtils.INT_SIZE
+            is FloatBuffer -> (v as Buffer).capacity() * GLUtils.FLOAT_SIZE
+
+            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+        }
+    }
+
+    protected inline fun<reified T : Any> bufferType(c: Collection<T>, unsigned: Boolean = false) : Int {
+        if (c.isEmpty()) return -1
+
+        return when (c.first()) {
+            // Base
+            is Short -> if (unsigned) GLES20.GL_UNSIGNED_SHORT else GLES20.GL_SHORT
+            is Int   -> if (unsigned) GLES20.GL_UNSIGNED_INT   else GLES20.GL_INT
+            is Float -> GLES20.GL_FLOAT
+
+            // Composed
+            is BaseVec<*>   -> GLES20.GL_FLOAT
+            is BaseMat<*,*> -> GLES20.GL_FLOAT
+
+            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+        }
+    }
+    protected inline fun<reified T : Any> bufferType(v: T, unsigned: Boolean = false): Int {
+        return when (v) {
+            // Base
+            is Short -> if (unsigned) GLES20.GL_UNSIGNED_SHORT else GLES20.GL_SHORT
+            is Int   -> if (unsigned) GLES20.GL_UNSIGNED_INT   else GLES20.GL_INT
+            is Float -> GLES20.GL_FLOAT
+
+            // Composed
+            is BaseVec<*>   -> GLES20.GL_FLOAT
+            is BaseMat<*,*> -> GLES20.GL_FLOAT
+
+            // Buffers
+            is ShortBuffer -> if (unsigned) GLES20.GL_UNSIGNED_SHORT else GLES20.GL_SHORT
+            is IntBuffer   -> if (unsigned) GLES20.GL_UNSIGNED_INT   else GLES20.GL_INT
+            is FloatBuffer -> GLES20.GL_FLOAT
+
+            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+        }
+    }
+
+    protected inline fun<reified T : Any> numberComponents(c: Collection<T>) : Int {
+        if (c.isEmpty()) return 0
+
+        return when (c.first()) {
+            // Base
+            is Short, is Int, is Float -> 1
+
+            // Composed
+            is BaseVec<*>   -> (c.first() as BaseVec<*>).size
+            is BaseMat<*,*> -> (c.first() as BaseMat<*,*>).run { size * size }
+
+            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+        }
+    }
+    protected inline fun<reified T : Any> numberComponents(v: T): Int {
+        return when (v) {
+            // Base
+            is Short, is Int, is Float -> 1
+
+            // Composed
+            is BaseVec<*>   -> (v as BaseVec<*>).size
+            is BaseMat<*,*> -> (v as BaseMat<*,*>).run { size * size }
+
+            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     protected fun<T:Buffer> allocateOrReuse(size: Int, buffer: T?, bufferType: BufferType) : T? {
         // Reuse initial buffer
-        if (buffer == null) {
-            if (size == 0) return null
-        } else {
-            buffer.position(0)
-            if (size <= buffer.capacity()) return buffer
-        }
+        if (size <= buffer?.capacity() ?: 0) return buffer
 
         // Allocation
         val buf = ByteBuffer.allocateDirect(size)
