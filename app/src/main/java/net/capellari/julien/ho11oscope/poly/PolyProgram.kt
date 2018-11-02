@@ -24,8 +24,8 @@ abstract class PolyProgram : BaseProgram() {
     var pMatrix = Mat4()
 
     // - buffers
-    @IBO(BufferType.INT)   open var indices: IntBuffer? = null
-    @VBO(BufferType.FLOAT) var vbo:     FloatBuffer? = null
+    @IBO(BufferType.INT) open var indices: IntBuffer?   = null
+    @VBO(BufferType.FLOAT)    var vbo:     FloatBuffer? = null
 
     // - uniforms
     @Uniform("uMVP")   open var mvpMatrix       = Mat4()
@@ -35,11 +35,11 @@ abstract class PolyProgram : BaseProgram() {
     @Uniform("uLightPower") open var lightPower = 600f
 
     // - attributes
-    @Attribute("aPosition",      vbo=GLUtils.COORDS_PER_VERTEX)    var positions:      FloatBuffer? = null
-    @Attribute("aNormal",        vbo=GLUtils.COORDS_PER_VERTEX)    var normals:        FloatBuffer? = null
-    @Attribute("aAmbientColor",  vbo=GLUtils.NUM_COLOR_COMPONENTS) var ambientColors:  FloatBuffer? = null
-    @Attribute("aDiffuseColor",  vbo=GLUtils.NUM_COLOR_COMPONENTS) var diffuseColors:  FloatBuffer? = null
-    @Attribute("aSpecularColor", vbo=GLUtils.NUM_COLOR_COMPONENTS) var specularColors: FloatBuffer? = null
-    @Attribute("aSpecularExp",   vbo=1) var specularExps: FloatBuffer? = null
-    @Attribute("aOpacity",       vbo=1) var opacities:    FloatBuffer? = null
+    @Attribute("aPosition",      vbo=GLUtils.COORDS_PER_VERTEX)    open var positions:      FloatBuffer? = null
+    @Attribute("aNormal",        vbo=GLUtils.COORDS_PER_VERTEX)    open var normals:        FloatBuffer? = null
+    @Attribute("aAmbientColor",  vbo=GLUtils.NUM_COLOR_COMPONENTS) open var ambientColors:  FloatBuffer? = null
+    @Attribute("aDiffuseColor",  vbo=GLUtils.NUM_COLOR_COMPONENTS) open var diffuseColors:  FloatBuffer? = null
+    @Attribute("aSpecularColor", vbo=GLUtils.NUM_COLOR_COMPONENTS) open var specularColors: FloatBuffer? = null
+    @Attribute("aSpecularExp",   vbo=1) open var specularExps: FloatBuffer? = null
+    @Attribute("aOpacity",       vbo=1) open var opacities:    FloatBuffer? = null
 }

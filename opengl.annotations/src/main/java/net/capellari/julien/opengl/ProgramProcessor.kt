@@ -15,13 +15,13 @@ class ProgramProcessor : AbstractProcessor() {
     private val sourceRoot get() = processingEnv.options["kapt.kotlin.generated"]
 
     // Classes
-    inner class UniformProperty(element: VariableElement, val annotation: Uniform) {
+    abstract inner class HandleProperty(element: VariableElement) {
         // Attributs
         lateinit var handle: PropertySpec
-            private set
+            protected set
 
         lateinit var property: PropertySpec
-            private set
+            protected set
 
         val name = element.simpleName.toString()
         val type = element.asType().asTypeName()
@@ -29,17 +29,20 @@ class ProgramProcessor : AbstractProcessor() {
         // Constructeur
         init {
             createHandle()
-            createProperty()
+            this.createProperty()
         }
 
         // Méthodes
         private fun createHandle() {
             handle = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
-                        .initializer("-1").mutable()
-                        .build()
+                    .initializer("-1").mutable()
+                    .build()
         }
-
-        private fun createProperty() {
+        protected abstract fun createProperty()
+    }
+    inner class UniformProperty(element: VariableElement, val annotation: Uniform) : HandleProperty(element) {
+        // Méthodes
+        override fun createProperty() {
             val param = ParameterSpec.builder("value", type).build()
 
             property = PropertySpec.builder(name, type, KModifier.OVERRIDE)
@@ -54,6 +57,25 @@ class ProgramProcessor : AbstractProcessor() {
                             addStatement("setUniformValue(%N, %N)", handle, param)
                             addStatement("GLUtils.checkGlError(%S)", "Loading uniform $name")
                             //addStatement("Log.d(%S, %S)", "BaseProgram", "Loaded uniform $name")
+                        }.build())
+                    }.build()
+        }
+    }
+    inner class AttributeProperty(element: VariableElement, val annotation: Attribute) : HandleProperty(element) {
+        // Méthodes
+        override fun createProperty() {
+            val param = ParameterSpec.builder("value", type).build()
+
+            property = PropertySpec.builder(name, type.asNullable(), KModifier.OVERRIDE)
+                    .apply {
+                        mutable()
+                        initializer("super.$name")
+
+                        setter(FunSpec.builder("set()").apply {
+                            addParameter(param)
+
+                            addStatement("field = %N", param)
+                            addStatement("reloadVBO = true")
                         }.build())
                     }.build()
         }
@@ -156,18 +178,18 @@ class ProgramProcessor : AbstractProcessor() {
         val implCls = ClassName(pkgProgram, "${element.simpleName}_Impl")
 
         // Attributes
-        val attrs = mutableMapOf<PropertySpec,Attribute>()
+        val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
         var ibo: IndicesProperty? = null
         var vbo: Pair<String,VBO>? = null
 
-
-        // liste des attributs
+        // Liste des attributs
         val fields = mutableMapOf<String,VariableElement>()
         element.enclosedElements.forEach {
             if (it.kind == ElementKind.FIELD) fields[it.simpleName.toString()] = it as VariableElement
         }
 
+        // Analyse des annotations attributs
         element.enclosedElements
                 .forEach {
                     val name = it.simpleName.split("$").first()
@@ -178,11 +200,7 @@ class ProgramProcessor : AbstractProcessor() {
 
                     // Attributs & Uniforms
                     if (attr != null) {
-                        val p = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
-                                .initializer("-1").mutable()
-                                .build()
-
-                        attrs[p] = attr
+                        attrs.add(AttributeProperty(fields[name]!!, attr))
                     } else if (unif != null) {
                         unifs.add(UniformProperty(fields[name]!!, unif))
                     }
@@ -197,7 +215,7 @@ class ProgramProcessor : AbstractProcessor() {
                         }
 
                         // Paire !
-                        vbo = it.simpleName.toString() to annot
+                        vbo = name to annot
                     }
 
                     // IBO !
@@ -242,8 +260,8 @@ class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (p in attrs) {
-                        addStatement("%N = getAttribLocation(%S)", p.key, p.value.name)
+                    for (prop in attrs) {
+                        addStatement("%N = getAttribLocation(%S)", prop.handle, prop.annotation.name)
                     }
 
                     for (prop in unifs) {
@@ -271,70 +289,54 @@ class ProgramProcessor : AbstractProcessor() {
                                 .addStatement("var size = 0")
 
                         val putCode = CodeBlock.builder()
-                                .indent().indent().indent()
 
-                        val enableCode = CodeBlock.builder()
-                                .indent().indent().addStatement("var offset = 0")
-
-                        for (p in attrs) {
-                            if (p.value.vbo > 0) {
-                                val name = p.key.name.substring(0, p.key.name.length - 6)
-
+                        for (prop in attrs) {
+                            if (prop.annotation.vbo > 0) {
                                 sizeCode
-                                    .beginControlFlow("%L?.let", name)
+                                    .beginControlFlow("${prop.name}?.let")
                                         .addStatement("size += it.capacity() * %L", vbo.second.type.size)
                                     .endControlFlow()
 
                                 putCode
-                                    .beginControlFlow("%L?.let", name)
+                                    .beginControlFlow("${prop.name}?.let")
                                         .addStatement("it.position(0)")
                                         .addStatement("put(it)")
-                                    .endControlFlow()
-
-                                enableCode
-                                    .beginControlFlow("%L?.let", name)
-                                        .addStatement("GLES20.glEnableVertexAttribArray(%N)", p.key)
-                                        .addStatement("GLES20.glVertexAttribPointer(%N, %L, GLES20.GL_%L, false, 0, offset)",
-                                                p.key, p.value.vbo, vbo.second.type.name)
-
-                                        .addStatement("offset += it.capacity() * %L", vbo.second.type.size)
                                     .endControlFlow()
                             }
                         }
 
-                        putCode.unindent().unindent().unindent()
-                        enableCode.unindent().unindent()
-
                         // Final code
-                        addCode(CodeBlock.builder()
-                            .apply {
-                                addCode(sizeCode.build())
-                                addCode("""|
-                                    |vbo = if (size > 0) ByteBuffer.allocateDirect(size)
-                                    |        .order(ByteOrder.nativeOrder())
-                                    |        .asFloatBuffer().apply {
-                                    |            position(0)
-                                    |""".trimMargin())
-                                addCode(putCode.build())
-                                addCode("""|            position(0)
-                                    |        } else null
-                                    |
-                                    |vboId = ${vbo.first}?.let {
-                                    |    IntArray(1).also { id ->
-                                    |        GLES20.glGenBuffers(1, id, 0)
-                                    |
-                                    |""".trimMargin())
-                                addCode("""
-                                    |        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, id[0])
-                                    |        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, size, it, GLES20.GL_STATIC_DRAW)
-                                    |
-                                    |""".trimMargin())
-                                addCode(enableCode.build())
-                                addCode("""|
-                                    |    }[0]
-                                    |} ?: -1
-                                    |""".trimMargin())
-                            }.build())
+                        addCode(sizeCode.build())
+                        addStatement("${vbo.first} = allocateOrReuse(size, ${vbo.first}, %T.${vbo.second.type.name})", BufferType::class)
+                        beginControlFlow("${vbo.first}?.apply")
+                            addCode(putCode.build())
+                            addStatement("position(0)")
+                            addStatement("GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)")
+                            addStatement("GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, size, this, GLES20.GL_STATIC_DRAW)")
+                        endControlFlow()
+                    }
+                }.build()
+
+        val enableVBO = FunSpec.builder("enableVBO")
+                .apply {
+                    addModifiers(KModifier.OVERRIDE)
+
+                    vbo?.also { vbo ->
+                        beginControlFlow("${vbo.first}?.apply")
+                            addStatement("var offset = 0")
+
+                            for (prop in attrs) {
+                                if (prop.annotation.vbo > 0) {
+                                    beginControlFlow("${prop.name}?.let")
+                                        addStatement("GLES20.glEnableVertexAttribArray(%N)", prop.handle)
+                                        addStatement("GLES20.glVertexAttribPointer(%N, %L, GLES20.GL_%L, false, 0, offset)",
+                                                prop.handle, prop.annotation.vbo, vbo.second.type.name)
+
+                                        addStatement("offset += it.capacity() * %L", vbo.second.type.size)
+                                    endControlFlow()
+                                }
+                            }
+                        endControlFlow()
                     }
                 }.build()
 
@@ -355,8 +357,8 @@ class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (p in attrs) {
-                        addStatement("GLES20.glDisableVertexAttribArray(%N)", p.key)
+                    for (prop in attrs) {
+                        addStatement("GLES20.glDisableVertexAttribArray(%N)", prop.handle)
                     }
                 }.build()
 
@@ -367,7 +369,10 @@ class ProgramProcessor : AbstractProcessor() {
 
                 // Attributs
                 ibo?.also { ibo -> addProperty(ibo.property) }
-                addProperties(attrs.keys)
+                for (prop in attrs) {
+                    addProperty(prop.handle)
+                    addProperty(prop.property)
+                }
                 for (prop in unifs) {
                     addProperty(prop.handle)
                     addProperty(prop.property)
@@ -379,6 +384,7 @@ class ProgramProcessor : AbstractProcessor() {
 
                 addFunction(loadUniforms)
                 addFunction(loadVBO)
+                addFunction(enableVBO)
 
                 addFunction(draw)
                 addFunction(clean)

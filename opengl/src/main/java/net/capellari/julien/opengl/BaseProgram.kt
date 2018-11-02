@@ -3,6 +3,7 @@ package net.capellari.julien.opengl
 import android.content.Context
 import android.opengl.GLES20
 import android.util.Log
+import java.nio.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
@@ -24,6 +25,7 @@ abstract class BaseProgram {
 
     protected var iboId: Int = -1
     protected var vboId: Int = -1
+    protected var reloadVBO  = false
 
     // Méthodes abstraites
     // - loading shaders
@@ -33,6 +35,7 @@ abstract class BaseProgram {
     // - charge vars
     protected abstract fun loadUniforms()
     protected abstract fun loadVBO()
+    protected abstract fun enableVBO()
 
     // - draw & clean
     protected abstract fun draw()
@@ -61,16 +64,23 @@ abstract class BaseProgram {
 
             // Création des buffers
             iboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
+            vboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
+            reloadVBO = true
         }
     }
     fun render() {
         usingProgram {
             // Load buffers
-            loadVBO()
+            if (reloadVBO) {
+                loadVBO()
+                reloadVBO = false
+            }
 
             // Bind VBO
             if (vboId != -1) {
                 GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)
+                enableVBO()
+
                 GLUtils.checkGlError("Binding VBO")
             }
 
@@ -166,6 +176,29 @@ abstract class BaseProgram {
         }
 
         return handle
+    }
+
+    // - buffers
+    @Suppress("UNCHECKED_CAST")
+    protected fun<T:Buffer> allocateOrReuse(size: Int, buffer: T?, bufferType: BufferType) : T? {
+        // Reuse initial buffer
+        if (buffer == null) {
+            if (size == 0) return null
+        } else {
+            buffer.position(0)
+            if (size <= buffer.capacity()) return buffer
+        }
+
+        // Allocation
+        val buf = ByteBuffer.allocateDirect(size)
+                .order(ByteOrder.nativeOrder())
+        buf.position(0)
+
+        return when (bufferType) {
+            BufferType.SHORT -> buf.asShortBuffer() as T
+            BufferType.INT   -> buf.asIntBuffer()   as T
+            BufferType.FLOAT -> buf.asFloatBuffer() as T
+        }
     }
 
     // - valeurs
