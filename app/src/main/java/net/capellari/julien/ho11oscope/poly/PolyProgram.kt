@@ -1,5 +1,6 @@
 package net.capellari.julien.ho11oscope.poly
 
+import android.opengl.GLES20
 import net.capellari.julien.opengl.*
 import java.nio.IntBuffer
 
@@ -23,7 +24,7 @@ abstract class PolyProgram : BaseProgram() {
     var pMatrix = Mat4()
 
     // - buffers
-    @IBO open var indices: IntBuffer? = null
+    @IBO open var indices: ArrayList<Int>? = null
 
     // - uniforms
     @Uniform("uMVP")   open var mvpMatrix       = Mat4()

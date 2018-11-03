@@ -25,11 +25,15 @@ abstract class BaseProgram {
     private var program: Int = -1
     private var isActive = false
 
+    protected var ibo = IndiceBufferObject()
     protected var iboId: Int = -1
 
     protected var vbo = VertexBufferObject()
     protected var vboId: Int = -1
     protected var reloadVBO  = false
+
+    // Config
+    var mode: Int = GLES20.GL_TRIANGLES
 
     // Méthodes abstraites
     // - loading shaders
@@ -38,6 +42,7 @@ abstract class BaseProgram {
 
     // - charge vars
     protected abstract fun loadUniforms()
+    protected abstract fun loadIBO()
     protected abstract fun loadVBO()
     protected abstract fun enableVBO()
 
@@ -61,7 +66,7 @@ abstract class BaseProgram {
         getLocations()
         Log.d(TAG, "All locations gathered")
 
-        // Init uniforms
+        // Initialisation
         usingProgram {
             // Load variables
             loadUniforms()
@@ -71,6 +76,8 @@ abstract class BaseProgram {
             vboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
             reloadVBO = true
         }
+
+        loadIBO()
     }
     fun render() {
         usingProgram {
@@ -187,6 +194,7 @@ abstract class BaseProgram {
         return when(c) {
             // Get Size
             is Collection<*> -> (c as Collection<*>).size
+            is Array<*>      -> (c as Array<*>).size
             is Buffer        -> (c as Buffer).capacity()
 
             else -> 1
@@ -194,6 +202,9 @@ abstract class BaseProgram {
     }
 
     protected inline fun<reified T : Any> bufferSize(c: Collection<T>) : Int {
+        return if (c.isEmpty()) 0 else c.size * bufferSize(c.first())
+    }
+    protected inline fun<reified T : Any> bufferSize(c: Array<T>) : Int {
         return if (c.isEmpty()) 0 else c.size * bufferSize(c.first())
     }
     protected inline fun<reified T : Any> bufferSize(v: T) : Int {
@@ -219,6 +230,9 @@ abstract class BaseProgram {
     protected inline fun<reified T : Any> bufferType(c: Collection<T>, unsigned: Boolean = false) : Int {
         return if (c.isEmpty()) -1 else bufferType(c.first(), unsigned)
     }
+    protected inline fun<reified T : Any> bufferType(c: Array<T>, unsigned: Boolean = false) : Int {
+        return if (c.isEmpty()) -1 else bufferType(c.first(), unsigned)
+    }
     protected inline fun<reified T : Any> bufferType(v: T, unsigned: Boolean = false): Int {
         return when (v) {
             // Base
@@ -240,6 +254,9 @@ abstract class BaseProgram {
     }
 
     protected inline fun<reified T : Any> numberComponents(c: Collection<T>) : Int {
+        return if (c.isEmpty()) 0 else numberComponents(c.first())
+    }
+    protected inline fun<reified T : Any> numberComponents(c: Array<T>) : Int {
         return if (c.isEmpty()) 0 else numberComponents(c.first())
     }
     protected inline fun<reified T : Any> numberComponents(v: T): Int {

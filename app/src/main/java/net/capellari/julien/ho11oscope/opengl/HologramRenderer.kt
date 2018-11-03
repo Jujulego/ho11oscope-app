@@ -14,27 +14,23 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
     @Volatile
     var angle: Float = 0f
 
-    private lateinit var square: Square
-
     private var vpMatrix   = Mat4()
     private val viewMatrix = Mat4.lookAt(0f, 0f, -3f, 0f, 0f, 0f, 0f, 1f, 0f)
 
-    private val triangleProgram = Triangle.getInstance()
+    private val program = Square.getInstance()
 
     // Events
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
-        square = Square()
-
-        triangleProgram.compile(context)
+        program.compile(context)
     }
 
     override fun onDrawFrame(unused: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
-        triangleProgram.mvpMatrix = vpMatrix * Mat4.rotate(angle, 0f, 0f, -1f)
-        triangleProgram.render()
+        program.mvpMatrix = vpMatrix * Mat4.rotate(angle, 0f, 0f, -1f)
+        program.render()
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {

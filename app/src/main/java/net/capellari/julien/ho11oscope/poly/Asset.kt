@@ -33,7 +33,7 @@ class Asset(val id: String) {
     // Attributs
     var positions = arrayListOf<Vec3>()
     var normals   = arrayListOf<Vec3>()
-    lateinit var indices:       IntBuffer
+    var indices   = arrayListOf<Int>()
 
     var ambientColors  = arrayListOf<Vec3>()
     var diffuseColors  = arrayListOf<Vec3>()
@@ -125,15 +125,10 @@ class Asset(val id: String) {
 
         Log.d(TAG, "$vertexCount vertices, $indexCount indices")
 
-        // Allocations
-        indices = ByteBuffer.allocateDirect(GLUtils.INT_SIZE * indexCount)
-                .order(ByteOrder.nativeOrder())
-                .asIntBuffer()
-
-        // Start at 0
+        // Clear lists
         positions.clear()
         normals.clear()
-        indices.position(0)
+        indices.clear()
         ambientColors.clear()
         diffuseColors.clear()
         specularColors.clear()
@@ -188,9 +183,11 @@ class Asset(val id: String) {
 
             // Triangulation of faces
             for (j in 0 until numVerticesInFace-2) {
-                indices.put(startVertexIndex)
-                    .put(startVertexIndex + j + 1)
-                    .put(startVertexIndex + j + 2)
+                indices.apply {
+                    add(startVertexIndex)
+                    add(startVertexIndex + j + 1)
+                    add(startVertexIndex + j + 2)
+                }
             }
         }
     }

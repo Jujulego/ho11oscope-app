@@ -1,14 +1,12 @@
 package net.capellari.julien.opengl
 
 import android.opengl.GLES20
-import net.capellari.julien.opengl.base.BaseMat
-import net.capellari.julien.opengl.base.BaseVec
 import net.capellari.julien.opengl.base.BufferObject
 import java.lang.RuntimeException
-import java.nio.*
-import kotlin.reflect.KClass
+import java.nio.IntBuffer
+import java.nio.ShortBuffer
 
-class VertexBufferObject : BufferObject(GLES20.GL_ARRAY_BUFFER) {
+class IndiceBufferObject : BufferObject(GLES20.GL_ELEMENT_ARRAY_BUFFER) {
     // Put
     // - bases
     fun put(value: Short) {
@@ -39,27 +37,6 @@ class VertexBufferObject : BufferObject(GLES20.GL_ARRAY_BUFFER) {
         }
     }
 
-    fun put(value: Float) {
-        buffer?.putFloat(value)
-    }
-    fun put(array: FloatArray) {
-        array.forEach { put(it) }
-    }
-    fun put(buffer: FloatBuffer) {
-        buffer.position(0)
-
-        while (buffer.hasRemaining()) {
-            put(buffer.get())
-        }
-    }
-
-    fun put(vec: BaseVec<*>) {
-        put(vec.data)
-    }
-    fun put(vec: BaseMat<*,*>) {
-        put(vec.data)
-    }
-
     // - generics
     inline fun<reified T : Any> put(collection: Collection<T>) {
         for (value in collection) put(value)
@@ -74,13 +51,6 @@ class VertexBufferObject : BufferObject(GLES20.GL_ARRAY_BUFFER) {
             // Base
             is Short -> put(value as Short)
             is Int   -> put(value as Int)
-            is Float -> put(value as Float)
-
-            // Vecteurs
-            is BaseVec<*> -> put(value as BaseVec<*>)
-
-            // Matrices
-            is BaseMat<*,*> -> put(value as BaseMat<*,*>)
 
             else -> throw RuntimeException("Unsupported type ${T::class.qualifiedName}")
         }

@@ -111,11 +111,15 @@ class ProgramProcessor : AbstractProcessor() {
                             addStatement("field = %N", param)
                             beginControlFlow("if (iboId != -1)")
                                 beginControlFlow("%N?.also", param)
-                                    addStatement("it.position(0)")
+                                    // Allocation
+                                    addStatement("ibo.allocate(bufferSize(it))")
+
+                                    // Remplissage
+                                    addStatement("ibo.position = 0")
+                                    addStatement("ibo.put(it)")
 
                                     beginControlFlow("usingProgram")
-                                        addStatement("GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboId)")
-                                        addStatement("GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, bufferSize(it), it, GLES20.GL_STATIC_DRAW)")
+                                        addStatement("ibo.bind(iboId)")
                                         addStatement("GLUtils.checkGlError(\"Loading ibo\")")
                                     endControlFlow()
                                 endControlFlow()
@@ -268,6 +272,29 @@ class ProgramProcessor : AbstractProcessor() {
                     }
                 }.build()
 
+        val loadIBO = FunSpec.builder("loadIBO")
+                .apply {
+                    addModifiers(KModifier.OVERRIDE)
+
+                    ibo?.let { ibo ->
+                        beginControlFlow("if (iboId != -1)")
+                            beginControlFlow("%N?.also", ibo.property)
+                                // Allocation
+                                addStatement("ibo.allocate(bufferSize(it))")
+
+                                // Remplissage
+                                addStatement("ibo.position = 0")
+                                addStatement("ibo.put(it)")
+
+                                beginControlFlow("usingProgram")
+                                    addStatement("ibo.bind(iboId)")
+                                    addStatement("GLUtils.checkGlError(\"Loading ibo\")")
+                                endControlFlow()
+                            endControlFlow()
+                        endControlFlow()
+                    }
+                }.build()
+
         val loadVBO = FunSpec.builder("loadVBO")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
@@ -276,7 +303,7 @@ class ProgramProcessor : AbstractProcessor() {
                     addStatement("var size = 0")
                     for (prop in attrs) {
                         beginControlFlow("${prop.name}?.let")
-                            addStatement("size += bufferSize(it)")
+                        addStatement("size += bufferSize(it)")
                         endControlFlow()
                     }
 
@@ -287,7 +314,7 @@ class ProgramProcessor : AbstractProcessor() {
                     // Put data
                     for (prop in attrs) {
                         beginControlFlow("${prop.name}?.let")
-                            addStatement("vbo.put(it)")
+                        addStatement("vbo.put(it)")
                         endControlFlow()
                     }
 
@@ -318,7 +345,7 @@ class ProgramProcessor : AbstractProcessor() {
 
                     ibo?.let { ibo ->
                         beginControlFlow("%N?.also {", ibo.property)
-                            addStatement("GLES20.glDrawElements(GLES20.GL_TRIANGLES, it.capacity(), bufferType(it, true), 0)")
+                            addStatement("GLES20.glDrawElements(mode, ibo.size, bufferType(it, true), 0)")
                             addStatement("GLUtils.checkGlError(\"Drawing\")")
                         endControlFlow()
                     } ?: {
@@ -330,7 +357,7 @@ class ProgramProcessor : AbstractProcessor() {
                             endControlFlow()
                         }
 
-                        addStatement("GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, count)")
+                        addStatement("GLES20.glDrawArrays(mode, 0, count)")
                         addStatement("GLUtils.checkGlError(\"Drawing\")")
                     }()
                 }.build()
@@ -360,11 +387,20 @@ class ProgramProcessor : AbstractProcessor() {
                     addProperty(prop.property)
                 }
 
+                // Contructeur
+                if (program.mode != 0) {
+                    addInitializerBlock(CodeBlock.builder()
+                            .addStatement("mode = %L", program.mode)
+                            .build()
+                    )
+                }
+
                 // Méthodes
                 addFunction(loadShaders)
                 addFunction(getLocations)
 
                 addFunction(loadUniforms)
+                addFunction(loadIBO)
                 addFunction(loadVBO)
                 addFunction(enableVBO)
 
@@ -400,7 +436,14 @@ class ProgramProcessor : AbstractProcessor() {
 
         code.writeTo(object : Appendable {
             fun replace(str: CharSequence?): CharSequence {
-                return (str ?: "null").replace("java\\.lang".toRegex(), "kotlin")
+                return (str ?: "null")
+                        .replace("java\\.lang".toRegex(), "kotlin")
+                        .replace("kotlin\\.Integer".toRegex(), "kotlin.*")
+
+                        .replace("Integer".toRegex(), "Int")
+                        .replace("Array<Short>".toRegex(), "ShortArray")
+                        .replace("Array<Int>".toRegex(),   "IntArray")
+                        .replace("Array<Float>".toRegex(), "FloatArray")
             }
 
             override fun append(str: CharSequence?): java.lang.Appendable {
