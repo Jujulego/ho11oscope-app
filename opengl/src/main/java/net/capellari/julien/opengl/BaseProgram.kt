@@ -17,8 +17,8 @@ abstract class BaseProgram {
 
         // Méthodes
         @Suppress("UNCHECKED_CAST")
-        fun <T : BaseProgram> getImplementation(cls: KClass<T>) : T =
-                Class.forName("${cls.qualifiedName}_Impl").kotlin.createInstance() as T
+        inline fun <reified T : BaseProgram> getImplementation() : T =
+                Class.forName("${T::class.qualifiedName}_Impl").kotlin.createInstance() as T
     }
 
     // Attributs
@@ -80,12 +80,12 @@ abstract class BaseProgram {
                 reloadVBO = false
             }
 
-            // Bind VertexBufferObject
+            // Bind VBO
             if (vboId != -1) {
                 GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)
                 enableVBO()
 
-                GLUtils.checkGlError("Binding VertexBufferObject")
+                GLUtils.checkGlError("Binding VBO")
             }
 
             // Bind IBO
@@ -94,7 +94,7 @@ abstract class BaseProgram {
                 GLUtils.checkGlError("Binding IBO")
             }
 
-            // Draw TODO: get indice type from IBO annotation
+            // Draw
             draw()
 
             // Clean up
@@ -183,21 +183,18 @@ abstract class BaseProgram {
     }
 
     // - buffers
-    protected inline fun<reified T : Any> bufferSize(c: Collection<T>) : Int {
-        if (c.isEmpty()) return 0
+    protected inline fun<reified T : Any> vertexCount(c: T) : Int {
+        return when(c) {
+            // Get Size
+            is Collection<*> -> (c as Collection<*>).size
+            is Buffer        -> (c as Buffer).capacity()
 
-        return c.size * when (c.first()) {
-            // Base
-            is Short -> GLUtils.SHORT_SIZE
-            is Int   -> GLUtils.INT_SIZE
-            is Float -> GLUtils.FLOAT_SIZE
-
-            // Composed
-            is BaseVec<*>   -> (c.first() as BaseVec<*>).size * GLUtils.FLOAT_SIZE
-            is BaseMat<*,*> -> (c.first() as BaseMat<*,*>).run { size * size * GLUtils.FLOAT_SIZE }
-
-            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
+            else -> 1
         }
+    }
+
+    protected inline fun<reified T : Any> bufferSize(c: Collection<T>) : Int {
+        return if (c.isEmpty()) 0 else c.size * bufferSize(c.first())
     }
     protected inline fun<reified T : Any> bufferSize(v: T) : Int {
         return when (v) {
@@ -207,7 +204,7 @@ abstract class BaseProgram {
             is Float -> GLUtils.FLOAT_SIZE
 
             // Composed
-            is BaseVec<*> -> (v as BaseVec<*>).size * GLUtils.FLOAT_SIZE
+            is BaseVec<*>   -> (v as BaseVec<*>).size * GLUtils.FLOAT_SIZE
             is BaseMat<*,*> -> (v as BaseMat<*,*>).run { size * size * GLUtils.FLOAT_SIZE }
 
             // Buffers
@@ -220,20 +217,7 @@ abstract class BaseProgram {
     }
 
     protected inline fun<reified T : Any> bufferType(c: Collection<T>, unsigned: Boolean = false) : Int {
-        if (c.isEmpty()) return -1
-
-        return when (c.first()) {
-            // Base
-            is Short -> if (unsigned) GLES20.GL_UNSIGNED_SHORT else GLES20.GL_SHORT
-            is Int   -> if (unsigned) GLES20.GL_UNSIGNED_INT   else GLES20.GL_INT
-            is Float -> GLES20.GL_FLOAT
-
-            // Composed
-            is BaseVec<*>   -> GLES20.GL_FLOAT
-            is BaseMat<*,*> -> GLES20.GL_FLOAT
-
-            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
-        }
+        return if (c.isEmpty()) -1 else bufferType(c.first(), unsigned)
     }
     protected inline fun<reified T : Any> bufferType(v: T, unsigned: Boolean = false): Int {
         return when (v) {
@@ -256,18 +240,7 @@ abstract class BaseProgram {
     }
 
     protected inline fun<reified T : Any> numberComponents(c: Collection<T>) : Int {
-        if (c.isEmpty()) return 0
-
-        return when (c.first()) {
-            // Base
-            is Short, is Int, is Float -> 1
-
-            // Composed
-            is BaseVec<*>   -> (c.first() as BaseVec<*>).size
-            is BaseMat<*,*> -> (c.first() as BaseMat<*,*>).run { size * size }
-
-            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
-        }
+        return if (c.isEmpty()) 0 else numberComponents(c.first())
     }
     protected inline fun<reified T : Any> numberComponents(v: T): Int {
         return when (v) {

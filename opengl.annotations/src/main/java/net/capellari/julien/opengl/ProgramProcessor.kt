@@ -65,9 +65,6 @@ class ProgramProcessor : AbstractProcessor() {
         }
     }
     inner class AttributeProperty(element: VariableElement, val annotation: Attribute) : HandleProperty(element) {
-        // Attributs
-        val vbo = element.getAnnotation(VBO::class.java) != null
-
         // Méthodes
         override fun createProperty() {
             val param = ParameterSpec.builder("value", type).build()
@@ -278,11 +275,9 @@ class ProgramProcessor : AbstractProcessor() {
                     // Compute vbo size
                     addStatement("var size = 0")
                     for (prop in attrs) {
-                        if (prop.vbo) {
-                            beginControlFlow("${prop.name}?.let")
-                                addStatement("size += bufferSize(it)")
-                            endControlFlow()
-                        }
+                        beginControlFlow("${prop.name}?.let")
+                            addStatement("size += bufferSize(it)")
+                        endControlFlow()
                     }
 
                     // Allocate VBO
@@ -291,11 +286,9 @@ class ProgramProcessor : AbstractProcessor() {
 
                     // Put data
                     for (prop in attrs) {
-                        if (prop.vbo) {
-                            beginControlFlow("${prop.name}?.let")
-                                addStatement("vbo.put(it)")
-                            endControlFlow()
-                        }
+                        beginControlFlow("${prop.name}?.let")
+                            addStatement("vbo.put(it)")
+                        endControlFlow()
                     }
 
                     // Bind VBO
@@ -310,14 +303,12 @@ class ProgramProcessor : AbstractProcessor() {
                     addStatement("var offset = 0")
 
                     for (prop in attrs) {
-                        if (prop.vbo) {
-                            beginControlFlow("${prop.name}?.let")
-                                addStatement("GLES20.glEnableVertexAttribArray(%N)", prop.handle)
-                                addStatement("GLES20.glVertexAttribPointer(%N, numberComponents(it), bufferType(it), false, 0, offset)", prop.handle)
+                        beginControlFlow("${prop.name}?.let")
+                            addStatement("GLES20.glEnableVertexAttribArray(%N)", prop.handle)
+                            addStatement("GLES20.glVertexAttribPointer(%N, numberComponents(it), bufferType(it), %L, 0, offset)", prop.handle, prop.annotation.normalized)
 
-                                addStatement("offset += bufferSize(it)")
-                            endControlFlow()
-                        }
+                            addStatement("offset += bufferSize(it)")
+                        endControlFlow()
                     }
                 }.build()
 
@@ -325,13 +316,23 @@ class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    ibo?.also { ibo ->
+                    ibo?.let { ibo ->
                         beginControlFlow("%N?.also {", ibo.property)
-                            addStatement("GLES20.glDrawElements(GLES20.GL_TRIANGLES, it.capacity(), bufferType(it, true), 0)",
-                                    BufferType::class)
+                            addStatement("GLES20.glDrawElements(GLES20.GL_TRIANGLES, it.capacity(), bufferType(it, true), 0)")
                             addStatement("GLUtils.checkGlError(\"Drawing\")")
                         endControlFlow()
-                    }
+                    } ?: {
+                        addStatement("var count = 0")
+
+                        for (prop in attrs) {
+                            beginControlFlow("${prop.name}?.let")
+                                addStatement("count = if (count == 0) vertexCount(it) else minOf(count, vertexCount(it))")
+                            endControlFlow()
+                        }
+
+                        addStatement("GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, count)")
+                        addStatement("GLUtils.checkGlError(\"Drawing\")")
+                    }()
                 }.build()
 
         val clean = FunSpec.builder("clean")

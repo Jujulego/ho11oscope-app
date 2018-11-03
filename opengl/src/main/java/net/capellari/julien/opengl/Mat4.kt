@@ -38,6 +38,10 @@ class Mat4() : BaseMat<Mat4,Vec4>(4, Mat4::class, Vec4::class) {
         fun perspective(fovY: Float, ratio: Float, nearClip: Float, farClip: Float): Mat4 = Mat4().apply {
                 Matrix.perspectiveM(data, 0, fovY, ratio, nearClip, farClip)
             }
+
+        fun frustum(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float): Mat4 = Mat4().apply {
+                Matrix.frustumM(data, 0, left, right, bottom, top, near, far)
+            }
     }
 
     // Constructeurs

@@ -4,9 +4,12 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.view.MotionEvent
 
-private const val TOUCH_SCALE_FACTOR: Float = -180.0f / 320f
-
 class HologramSurfaceView(context: Context) : GLSurfaceView(context) {
+    // Companion
+    companion object {
+        private const val TOUCH_SCALE_FACTOR: Float = -180.0f / 320f
+    }
+
     // Attributs
     private val renderer: HologramRenderer
 
@@ -19,7 +22,7 @@ class HologramSurfaceView(context: Context) : GLSurfaceView(context) {
         setEGLContextClientVersion(2)
 
         // Renderer
-        renderer = HologramRenderer()
+        renderer = HologramRenderer(context)
         setRenderer(renderer)
 
         renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY

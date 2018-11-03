@@ -1,13 +1,12 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
-import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 @Program(
     shaders = [
-        ShaderScript(file = "shaders/vertex.glsl",   type = ShaderType.VERTEX),
-        ShaderScript(file = "shaders/fragment.glsl", type = ShaderType.FRAGMENT)
+        ShaderScript(ShaderType.VERTEX,   file = "shaders/vertex.glsl"),
+        ShaderScript(ShaderType.FRAGMENT, file = "shaders/fragment.glsl")
     ]
 )
 abstract class PolyProgram : BaseProgram() {
@@ -16,7 +15,7 @@ abstract class PolyProgram : BaseProgram() {
         private var instance: PolyProgram? = null
 
         fun getInstance(): PolyProgram = instance ?: synchronized(this) {
-            instance ?: BaseProgram.getImplementation(PolyProgram::class).also { instance = it }
+            instance ?: BaseProgram.getImplementation<PolyProgram>().also { instance = it }
         }
     }
 
@@ -34,11 +33,11 @@ abstract class PolyProgram : BaseProgram() {
     @Uniform("uLightPower") open var lightPower = 600f
 
     // - attributes
-    @VBO @Attribute("aPosition")      open var positions:      ArrayList<Vec3>? = null
-    @VBO @Attribute("aNormal")        open var normals:        ArrayList<Vec3>? = null
-    @VBO @Attribute("aAmbientColor")  open var ambientColors:  ArrayList<Vec3>? = null
-    @VBO @Attribute("aDiffuseColor")  open var diffuseColors:  ArrayList<Vec3>? = null
-    @VBO @Attribute("aSpecularColor") open var specularColors: ArrayList<Vec3>? = null
-    @VBO @Attribute("aSpecularExp")   open var specularExps:  ArrayList<Float>? = null
-    @VBO @Attribute("aOpacity")       open var opacities:     ArrayList<Float>? = null
+    @Attribute("aPosition")      open var positions:      ArrayList<Vec3>? = null
+    @Attribute("aNormal")        open var normals:        ArrayList<Vec3>? = null
+    @Attribute("aAmbientColor")  open var ambientColors:  ArrayList<Vec3>? = null
+    @Attribute("aDiffuseColor")  open var diffuseColors:  ArrayList<Vec3>? = null
+    @Attribute("aSpecularColor") open var specularColors: ArrayList<Vec3>? = null
+    @Attribute("aSpecularExp")   open var specularExps:  ArrayList<Float>? = null
+    @Attribute("aOpacity")       open var opacities:     ArrayList<Float>? = null
 }
