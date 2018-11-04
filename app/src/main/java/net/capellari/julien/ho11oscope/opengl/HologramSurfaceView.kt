@@ -2,9 +2,10 @@ package net.capellari.julien.ho11oscope.opengl
 
 import android.content.Context
 import android.opengl.GLSurfaceView
+import android.util.AttributeSet
 import android.view.MotionEvent
 
-class HologramSurfaceView(context: Context) : GLSurfaceView(context) {
+class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurfaceView(context, attributeSet) {
     // Companion
     companion object {
         private const val TOUCH_SCALE_FACTOR: Float = -180.0f / 320f

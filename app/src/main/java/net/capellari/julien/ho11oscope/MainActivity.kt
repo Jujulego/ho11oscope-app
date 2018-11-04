@@ -1,67 +1,44 @@
 package net.capellari.julien.ho11oscope
 
-import android.content.Intent
 import android.content.res.Configuration
-import android.os.Bundle
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import android.transition.*
+import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.MenuItem
+import android.view.View
+import android.view.WindowManager
+import androidx.annotation.IdRes
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.navigation.findNavController
+import androidx.navigation.ui.*
 import kotlinx.android.synthetic.main.main_activity.*
-import kotlinx.android.synthetic.main.youtube_search_result.view.*
-import net.capellari.julien.ho11oscope.opengl.OpenGLActivity
-import net.capellari.julien.ho11oscope.poly.PolyActivity
-import net.capellari.julien.ho11oscope.youtube.YoutubeFragment
-import net.capellari.julien.ho11oscope.youtube.YoutubeVideoFragment
 
 class MainActivity : AppCompatActivity() {
-    // Companion (equiv to static)
-    companion object {
-        const val TAG = "MainActivity"
-
-        // Activity State
-        const val STATE_STATE = "state"
-
-        // Fragment tags
-        const val SETTINGS_TAG      = "SettingsFragment"
-        const val YOUTUBE_TAG       = "YoutubeFragment"
-        const val YOUTUBE_VIDEO_TAG = "YoutubeVideoFragment"
-    }
-
-    // Enumeration
-    enum class State {
-        NONE,
-        SETTINGS,
-        YOUTUBE, YOUTUBE_VIDEO
-    }
-
     // Attributs
     private lateinit var drawerToggle: ActionBarDrawerToggle
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
     // Propriétés
-    private var state = State.NONE
+    private val sharedPreferences by lazy {
+        PreferenceManager.getDefaultSharedPreferences(this)
+    }
+    private var preferenceBrightness: Boolean
+        get()  = sharedPreferences.getBoolean("player_brightness", true)
+        set(v) = sharedPreferences.edit().putBoolean("player_brightness", v).apply()
 
-    private val settingsFragment: SettingsFragment?
-        get() = supportFragmentManager.findFragmentByTag(SETTINGS_TAG) as? SettingsFragment
-    private val youtubeFragment: YoutubeFragment?
-        get() = supportFragmentManager.findFragmentByTag(YOUTUBE_TAG) as? YoutubeFragment
-    private val youtubeVideoFragment: YoutubeVideoFragment?
-        get() = supportFragmentManager.findFragmentByTag(YOUTUBE_VIDEO_TAG) as? YoutubeVideoFragment
+    private val navController get() = findNavController(R.id.navHostFragment)
+    private val isAtTopLevel get()  = navController.currentDestination?.run {isTopLevelDestination(id) } ?: false
 
     // Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Inflate layout
         setContentView(R.layout.main_activity)
 
         // Setup
         setupToolbar()
         setupDrawer()
-        setupFragments()
-
-        // Init UI
-        setupYoutube()
+        setupNavigation()
     }
 
     override fun onStart() {
@@ -69,36 +46,14 @@ class MainActivity : AppCompatActivity() {
 
         // Sync drawerToggle
         drawerToggle.syncState()
-
-        // Start search
-        /*if (Intent.ACTION_SEARCH == intent.action) {
-            intent.getStringExtra(SearchManager.QUERY)?.also { query ->
-                youtubeFragment?.search(query)
-            }
-        }*/
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        super.onRestoreInstanceState(savedInstanceState)
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
 
-        // Restore state
-        savedInstanceState?.getString(STATE_STATE)?.also {
-            s -> when (State.valueOf(s)) {
-                state -> {}
-                State.NONE -> setupNone()
-
-                State.SETTINGS -> setupSettings()
-                State.YOUTUBE  -> setupYoutube()
-                State.YOUTUBE_VIDEO -> setupYoutube()
-            }
+        if (hasFocus && navController.currentDestination?.id == R.id.playerFragment) {
+            hideSystemUI()
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        // Save state
-        outState?.putString(STATE_STATE, state.name)
-
-        super.onSaveInstanceState(outState)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
@@ -109,10 +64,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return drawerToggle.onOptionsItemSelected(item) or super.onOptionsItemSelected(item)
+        return item.onNavDestinationSelected(navController)
+                || (if (isAtTopLevel) drawerToggle.onOptionsItemSelected(item) else false)
+                || super.onOptionsItemSelected(item)
     }
 
-    // Méthods
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp(appBarConfiguration)
+                || super.onSupportNavigateUp()
+    }
+
+    // Méthodes
     private fun setupToolbar() {
         // Set support toolbar
         setSupportActionBar(toolbar)
@@ -133,168 +95,85 @@ class MainActivity : AppCompatActivity() {
         drawerLayout.addDrawerListener(drawerToggle)
 
         // Events
-        navView.setNavigationItemSelectedListener {
-            item -> when (item.itemId) {
-                R.id.nav_youtube -> {
-                    drawerLayout.closeDrawers()
-                    setupYoutube()
-
-                    true
-                }
-                R.id.nav_opengl -> {
-                    startActivity(Intent(this, OpenGLActivity::class.java))
-                    true
-                }
-                R.id.nav_poly -> {
-                    startActivity(Intent(this, PolyActivity::class.java))
-                    true
-                }
-                R.id.nav_settings -> {
-                    drawerLayout.closeDrawers()
-                    setupSettings()
-
-                    true
-                }
-                R.id.debug_player_activity -> {
-                    startActivity(Intent(this, PlayerActivity::class.java))
-                    true
-                }
-                else -> false
+        navigationView.setNavigationItemSelectedListener { item ->
+            if (item.itemId != navController.currentDestination?.id) {
+                navController.navigate(item.itemId)
             }
+
+            true
         }
     }
-    private fun setupFragments() {
-        supportFragmentManager.addOnBackStackChangedListener {
-            // Update internal & drawer state
-            loop@ for (fragment in supportFragmentManager.fragments) {
-                when(fragment) {
-                    is YoutubeFragment -> {
-                        state = State.YOUTUBE
-                        navView.setCheckedItem(R.id.nav_youtube)
+    private fun setupNavigation() {
+        // ActionBar
+        appBarConfiguration = AppBarConfiguration.Builder(
+                    R.id.youtubeFragment,
+                    R.id.openglFragment,
+                    R.id.polyFragment,
+                    R.id.settingsFragment
+                ).setDrawerLayout(drawerLayout)
+                .build()
 
-                        break@loop
-                    }
-                    is SettingsFragment -> {
-                        state = State.SETTINGS
-                        navView.setCheckedItem(R.id.nav_settings)
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
-                        break@loop
-                    }
-                }
-            }
-        }
-    }
-
-    private fun setupNone() {
-        // Remove all fragments
-        supportFragmentManager.beginTransaction()
-                .apply {
-                    for (fragment in supportFragmentManager.fragments) {
-                        remove(fragment ?: continue)
-                    }
-                }.commit()
-
-        // Update state
-        state = State.NONE
-    }
-    private fun setupSettings() {
-        // Create fragment
-        val frag = SettingsFragment()
-
-        // Replace fragment
-        supportFragmentManager.beginTransaction()
-                .apply {
-                    replace(R.id.fragmentPlaceholder, frag, SETTINGS_TAG)
-                    if (state != State.NONE) addToBackStack(null)
-                }.commit()
-
-        // Mark state as active
-        navView.setCheckedItem(R.id.nav_settings)
-
-        // Update state
-        state = State.SETTINGS
-    }
-    private fun setupYoutube() {
-        // Create fragment
-        val frag = YoutubeFragment()
-        frag.addYoutubeListener(object : YoutubeFragment.YoutubeListener {
-            override fun onVideoClick(video: YoutubeFragment.VideoAdapter.VideoHolder) {
-                setupYoutubeVideo(video)
+        // Events
+        navController.addOnNavigatedListener { _, destination ->
+            when (destination.id) {
+                R.id.youtubeFragment  -> navigationView.setCheckedItem(R.id.action_drawer_youtube)
+                R.id.openglFragment   -> navigationView.setCheckedItem(R.id.action_drawer_opengl)
+                R.id.polyFragment     -> navigationView.setCheckedItem(R.id.action_drawer_poly)
+                R.id.settingsFragment -> navigationView.setCheckedItem(R.id.action_drawer_settings)
             }
 
-            // Menu item
-            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+            // Manage SystemUI
+            if (destination.id == R.id.playerFragment) {
+                hideSystemUI()
+            } else {
+                showSystemUI()
+            }
+
+            // Manage drawer
+            if (isTopLevelDestination(destination.id)) {
+                drawerToggle.syncState()
                 drawerLayout.closeDrawers()
-                return true
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+            } else {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             }
-
-            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean = true
-        })
-
-        // Replace fragment
-        supportFragmentManager.beginTransaction()
-                .apply {
-                    replace(R.id.fragmentPlaceholder, frag, YOUTUBE_TAG)
-                    if (state != State.NONE) addToBackStack(null)
-                }.commit()
-
-        // Mark state as active
-        navView.setCheckedItem(R.id.nav_youtube)
-
-        // Update state
-        state = State.YOUTUBE
-    }
-    private fun setupYoutubeVideo(video: YoutubeFragment.VideoAdapter.VideoHolder) {
-        video.video?.let {
-            // Create fragment
-            val frag = YoutubeVideoFragment.newInstance(it)
-
-            if (state == State.YOUTUBE) {
-                youtubeFragment?.exitTransition = Fade()
-                        .apply {
-                            duration = 300
-                        }
-
-                frag.sharedElementEnterTransition = MoveTransition()
-                        .apply {
-                            duration = 600
-                        }
-
-                frag.enterTransition = Fade()
-                        .apply {
-                            startDelay = 300
-                            duration = 300
-                        }
-            }
-
-            // Replace fragment
-            supportFragmentManager.beginTransaction()
-                    .apply {
-                        if (state == State.YOUTUBE) {
-                            video.setTransitionNames()
-
-                            addSharedElement(video.view.image,       "video_image")
-                            addSharedElement(video.view.videoTitle,  "video_title")
-                            addSharedElement(video.view.description, "video_description")
-                        }
-                        replace(R.id.fragmentPlaceholder, frag, YOUTUBE_TAG)
-
-                        if (state != State.NONE) addToBackStack(null)
-                    }.commit()
-
-            // Mark state as active
-            navView.setCheckedItem(R.id.nav_youtube)
-
-            // Update state
-            state = State.YOUTUBE_VIDEO
         }
     }
 
-    inner class MoveTransition : TransitionSet() {
-        init {
-            addTransition(ChangeBounds())
-            addTransition(ChangeTransform())
-            addTransition(ChangeImageTransform())
+    private fun hideSystemUI() {
+        // Max brightness
+        if (preferenceBrightness) {
+            window.attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
         }
+
+        // Hide toolbar
+        toolbar.visibility = View.GONE
+
+        // Immersive mode
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
+                // Move layout behind system bars
+                or View.SYSTEM_UI_LAYOUT_FLAGS
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+
+                // Hide system bars
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN)
     }
+    private fun showSystemUI() {
+        // Default brightness
+        if (preferenceBrightness) {
+            window.attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        }
+
+        // Show toolbar
+        toolbar.visibility = View.VISIBLE
+
+        // Normal mode
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
+
+    private fun isTopLevelDestination(@IdRes id: Int) = appBarConfiguration.topLevelDestinations.contains(id)
 }

@@ -44,6 +44,8 @@ dependencies {
     // OpenGL
     implementation project(':opengl')
     implementation project(':opengl.annotations')
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0-alpha1'
+    implementation 'androidx.appcompat:appcompat:1.0.0-alpha1'
     annotationProcessor project(":opengl.annotations")
 
     // Kotlin
@@ -63,20 +65,17 @@ dependencies {
 
     // Lifecyle
     def lifecycle_version = "2.0.0"
-    kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
+
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
+
     testImplementation "androidx.arch.core:core-testing:$lifecycle_version"
 
-    // Youtube API
-    implementation 'com.google.android.gms:play-services-auth:16.0.1'
-    implementation 'pub.devrel:easypermissions:0.3.0'
-    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:8.0.1'
-    implementation('com.google.api-client:google-api-client-android:1.25.0') {
-        exclude group: 'org.apache.httpcomponents'
-    }
-    implementation('com.google.apis:google-api-services-youtube:v3-rev205-1.25.0') {
-        exclude group: 'org.apache.httpcomponents'
-    }
+    // Navigation
+    def nav_version = "1.0.0-alpha07"
+
+    implementation "android.arch.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "android.arch.navigation:navigation-ui-ktx:$nav_version"
 
     // Volley
     implementation('com.android.volley:volley:1.1.1') {
@@ -89,11 +88,24 @@ dependencies {
     }
 
     // Room
-    def room_version = "2.1.0-alpha01"
+    def room_version = "2.1.0-alpha02"
+
     implementation "androidx.room:room-common:$room_version"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
+
     testImplementation "androidx.room:room-testing:$room_version"
+
+    // Youtube API
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
+    implementation 'pub.devrel:easypermissions:0.3.0'
+    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:8.0.1'
+    implementation('com.google.api-client:google-api-client-android:1.25.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    implementation('com.google.apis:google-api-services-youtube:v3-rev205-1.25.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
 
     // Tests
     testImplementation 'junit:junit:4.12'

@@ -19,4 +19,8 @@
     <!-- Préferences -->
     <string name="player_settings">Lecteur</string>
     <string name="player_brightness_setting">Luminosité maximale</string>
+
+    <string name="opengl_settings">OpenGL</string>
+    <string name="opengl_transparency_setting">Transparence</string>
+    <string name="opengl_wired_rendering_setting">Rendu fil de fer</string>
 </resources>

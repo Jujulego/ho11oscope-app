@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
@@ -10,39 +9,41 @@
 
     tools:context=".MainActivity">
 
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="wrap_content"
+
         android:background="?attr/colorPrimary"
-        android:elevation="4dp"
+        android:minHeight="?attr/actionBarSize"
         android:theme="@style/AppTheme.AppBarOverlay"
 
         app:title="@string/app_name"
-        app:popupTheme="@style/AppTheme.PopupOverlay"
+        app:popupTheme="@style/AppTheme.PopupOverlay" />
 
-        tools:menu="@menu/toolbar_main" />
-
-    <!-- Drawer -->
-    <androidx.drawerlayout.widget.DrawerLayout android:id="@+id/drawerLayout"
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/toolbar">
+        android:layout_height="match_parent">
 
-        <!-- Contenu -->
-        <FrameLayout android:id="@+id/fragmentPlaceholder"
+        <fragment
+            android:id="@+id/navHostFragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
 
-        <!-- Barre de navigation -->
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
+
         <com.google.android.material.navigation.NavigationView
-            android:id="@+id/navView"
+            android:id="@+id/navigationView"
 
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:fitsSystemWindows="true"
 
-            app:menu="@menu/drawer" />
+            app:menu="@menu/nav_drawer" />
     </androidx.drawerlayout.widget.DrawerLayout>
-</RelativeLayout>
+</LinearLayout>

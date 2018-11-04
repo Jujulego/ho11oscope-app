@@ -3,6 +3,7 @@ package net.capellari.julien.ho11oscope.opengl
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.preference.PreferenceManager
 import net.capellari.julien.ho11oscope.opengl.objets.Square
 import net.capellari.julien.ho11oscope.opengl.objets.Triangle
 import net.capellari.julien.opengl.Mat4
@@ -19,11 +20,25 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
 
     private val program = Square.getInstance()
 
+    // Propriétés
+    private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
+    private var transparency: Boolean
+        get()  = sharedPreferences.getBoolean("transparency", false)
+        set(v) = sharedPreferences.edit().putBoolean("transparency", v).apply()
+
+    private var wireRendering: Boolean
+        get()  = sharedPreferences.getBoolean("wire_rendering", false)
+        set(v) = sharedPreferences.edit().putBoolean("wire_rendering", v).apply()
+
     // Events
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
         program.compile(context)
+
+        if (wireRendering) {
+            program.mode = GLES20.GL_LINE_LOOP
+        }
     }
 
     override fun onDrawFrame(unused: GL10?) {

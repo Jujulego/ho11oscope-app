@@ -3,6 +3,7 @@ package net.capellari.julien.ho11oscope.poly
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.preference.PreferenceManager
 import android.util.Log
 import net.capellari.julien.opengl.Mat4
 import net.capellari.julien.opengl.Vec3
@@ -47,13 +48,33 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
             Log.d(TAG, "Recieved new object to render")
         }
 
+    // Propriétés
+    private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
+    private var transparency: Boolean
+        get()  = sharedPreferences.getBoolean("transparency", false)
+        set(v) = sharedPreferences.edit().putBoolean("transparency", v).apply()
+
+    private var wireRendering: Boolean
+        get()  = sharedPreferences.getBoolean("wire_rendering", false)
+        set(v) = sharedPreferences.edit().putBoolean("wire_rendering", v).apply()
+
+
     // Méthodes
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
-        disactivateOpacity()
+
+        if (transparency) {
+            disactivateOpacity()
+        } else {
+            activateOpacity()
+        }
 
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
+
+        if (wireRendering) {
+            polyProgram.mode = GLES20.GL_LINE_LOOP
+        }
     }
 
     override fun onDrawFrame(unused: GL10?) {
@@ -104,7 +125,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         polyProgram.pMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
     }
 
-    fun activateOpacity() {
+    private fun activateOpacity() {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthMask(false)
 
@@ -112,7 +133,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
     }
 
-    fun disactivateOpacity() {
+    private fun disactivateOpacity() {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthMask(true)
 

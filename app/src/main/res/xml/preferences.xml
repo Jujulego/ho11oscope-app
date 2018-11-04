@@ -2,9 +2,26 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:fragment="net.capellari.julien.ho11oscope.SettingsFragment">
 
-    <PreferenceCategory android:title="@string/player_settings">
+    <PreferenceCategory android:title="@string/player_settings"
+        android:icon="@null">
+
         <CheckBoxPreference android:key="player_brightness"
             android:title="@string/player_brightness_setting"
-            android:defaultValue="true" />
+            android:defaultValue="true"
+            android:icon="@null" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/opengl_settings"
+        android:icon="@null">
+
+        <CheckBoxPreference android:key="transparency"
+            android:title="@string/opengl_transparency_setting"
+            android:defaultValue="false"
+            android:icon="@null" />
+
+        <CheckBoxPreference android:key="wire_rendering"
+            android:title="@string/opengl_wired_rendering_setting"
+            android:defaultValue="false"
+            android:icon="@null" />
     </PreferenceCategory>
 </PreferenceScreen>

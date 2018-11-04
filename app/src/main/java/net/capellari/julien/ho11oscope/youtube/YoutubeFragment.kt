@@ -10,6 +10,8 @@ import androidx.appcompat.widget.*
 import android.util.Pair as UtilPair
 import android.view.*
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +23,7 @@ import kotlinx.android.synthetic.main.youtube_search_result.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
 import net.capellari.julien.ho11oscope.inflate
+import org.jetbrains.anko.bundleOf
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,14 +40,11 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
 
     // Attributs
     private var searchMenuItem: MenuItem? = null
-    private var searchExpandListener: MenuItem.OnActionExpandListener? = null
 
     private var state = State.NONE
     private val videoAdapter = VideoAdapter()
     private var youtubeViewModel: YoutubeViewModel? = null
     private lateinit var requestManager: RequestManager
-
-    private var listeners = mutableListOf<YoutubeListener>()
 
     // Propriétés
     private val searchRecentSuggestions
@@ -52,6 +52,8 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
 
     private val searchView: SearchView?
         get() = searchMenuItem?.actionView as? SearchView
+
+    private val navController get() = Navigation.findNavController(this.requireActivity(), R.id.navHostFragment)
 
     // Events
     override fun onAttach(context: Context) {
@@ -138,15 +140,9 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         youtubeViewModel?.apply {
             query = query ?: ""
         }
-        setupSearch(true)
+        setupSearch()
 
-        // Listeners
-        var res = true
-        for (listener in listeners) {
-            res = res and listener.onMenuItemActionExpand(item)
-        }
-
-        return res
+        return true
     }
 
     override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
@@ -154,13 +150,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         youtubeViewModel?.query = null
         setupNone()
 
-        // Listeners
-        var res = true
-        for (listener in listeners) {
-            res = res and listener.onMenuItemActionCollapse(item)
-        }
-
-        return res
+        return true
     }
 
     // Methods
@@ -173,9 +163,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
             this.search(query)
             swipeRefresh.isRefreshing = true
         }
-    }
-    fun addYoutubeListener(listener: YoutubeListener) {
-        listeners.add(listener)
     }
 
     private fun setupSearchView() {
@@ -235,7 +222,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         // Update state
         state = State.NONE
     }
-    private fun setupSearch(fromActionExpandListener: Boolean = false) {
+    private fun setupSearch() {
         // Show result list
         search.visibility = View.VISIBLE
 
@@ -244,10 +231,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
     }
 
     // Sous-classes
-    interface YoutubeListener : MenuItem.OnActionExpandListener {
-        fun onVideoClick(video: VideoAdapter.VideoHolder)
-    }
-
     inner class VideoAdapter(v: SearchListResponse? = null) : RecyclerView.Adapter<VideoAdapter.VideoHolder>() {
         // Propriétés
         var videos: SearchListResponse? = v
@@ -299,11 +282,23 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
 
             override fun onClick(v: View?) {
                 // Gardien
-                video?.also {
-                    // Listeners
-                    for (listener in listeners) {
-                        listener.onVideoClick(this)
-                    }
+                video?.also { video ->
+                    setTransitionNames()
+                    navController.navigate(
+                        R.id.action_video_details,
+                        bundleOf(
+                            YoutubeVideoFragment.ARGS_VIDEO_ID          to video.id.videoId,
+                            YoutubeVideoFragment.ARGS_VIDEO_TITLE       to video.snippet.title,
+                            YoutubeVideoFragment.ARGS_VIDEO_DESCRIPTION to video.snippet.description,
+                            YoutubeVideoFragment.ARGS_VIDEO_IMAGE_URL   to video.snippet.thumbnails.high.url
+                        ),
+                        null,
+                        FragmentNavigatorExtras(
+                            view.image       to "video_image",
+                            view.videoTitle  to "video_title",
+                            view.description to "video_description"
+                        )
+                    )
                 }
             }
 

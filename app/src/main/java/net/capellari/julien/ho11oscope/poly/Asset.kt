@@ -3,14 +3,12 @@ package net.capellari.julien.ho11oscope.poly
 import android.content.Context
 import android.util.Log
 import com.github.kittinunf.fuel.httpDownload
-import net.capellari.julien.opengl.GLUtils
 import net.capellari.julien.opengl.mtl.MtlLibrary
 import net.capellari.julien.opengl.obj.ObjGeometry
 import net.capellari.julien.opengl.Vec3
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.File
-import java.nio.*
 
 class Asset(val id: String) {
     // Companion
@@ -64,7 +62,7 @@ class Asset(val id: String) {
         PolyAPI.asset(id) { files ->
             // Download files
             // .obj file
-            Log.d(PolyActivity.TAG, "Downloading .obj file ...")
+            Log.d(PolyFragment.TAG, "Downloading .obj file ...")
 
             files.objFileURL!!.httpDownload().destination { _, _ ->
                 getObjFile(context)
@@ -86,7 +84,7 @@ class Asset(val id: String) {
             }
 
             // .mtl file
-            Log.d(PolyActivity.TAG, "Downloading .mtl file ...")
+            Log.d(PolyFragment.TAG, "Downloading .mtl file ...")
 
             files.mtlFileURL!!.httpDownload().destination { _, _ ->
                 getMtlFile(context)

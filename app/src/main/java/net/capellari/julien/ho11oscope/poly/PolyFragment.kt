@@ -2,27 +2,27 @@ package net.capellari.julien.ho11oscope.poly
 
 import android.content.res.Configuration
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.poly_activity.*
+import kotlinx.android.synthetic.main.poly_fragment.*
 import kotlinx.android.synthetic.main.poly_search_result.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.inflate
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 
-class PolyActivity : AppCompatActivity() {
+class PolyFragment : Fragment() {
     // Companion
     companion object {
         // Constantes
-        const val TAG = "PolyActivity"
-        const val ASSET = "assets/3yiIERrKNQr"
+        const val TAG = "PolyFragment"
         const val ASSET_DISPLAY_SIZE = 5
     }
 
@@ -59,11 +59,12 @@ class PolyActivity : AppCompatActivity() {
         }
 
     // Events
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.poly_fragment, container, false)
+    }
 
-        // View
-        setContentView(R.layout.poly_activity)
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
 
         // Recycler view
         results.apply {
@@ -133,7 +134,7 @@ class PolyActivity : AppCompatActivity() {
                         progress.visibility = View.VISIBLE
 
                         doAsync {
-                            asset?.download(this@PolyActivity)
+                            asset?.download(requireContext())
                         }
                     }
                 }

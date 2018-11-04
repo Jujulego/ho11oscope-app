@@ -2,19 +2,20 @@ package net.capellari.julien.ho11oscope.youtube
 
 import androidx.lifecycle.ViewModelProviders
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.Navigation
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_video_fragment.view.*
-import net.capellari.julien.ho11oscope.PlayerActivity
+import net.capellari.julien.ho11oscope.PlayerFragment
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
+import org.jetbrains.anko.bundleOf
 
-class YoutubeVideoFragment : androidx.fragment.app.Fragment() {
+class YoutubeVideoFragment : Fragment() {
     // Companion
     companion object {
         // Attributs
@@ -55,6 +56,8 @@ class YoutubeVideoFragment : androidx.fragment.app.Fragment() {
     private val videoImageUrl: String?
         get() = arguments?.getString(ARGS_VIDEO_IMAGE_URL)
 
+    private val navController get() = Navigation.findNavController(this.requireActivity(), R.id.navHostFragment)
+
     // Events
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -79,10 +82,13 @@ class YoutubeVideoFragment : androidx.fragment.app.Fragment() {
         // Events
         view.playButton.setOnClickListener {
             videoId?.let { id ->
-                val intent = Intent(context, PlayerActivity::class.java)
-                PlayerActivity.fillIntent(intent, PlayerActivity.Type.YOUTUBE, id)
-
-                startActivity(intent)
+                navController.navigate(
+                    R.id.action_play_video,
+                    bundleOf(
+                        PlayerFragment.ARGS_TYPE   to PlayerFragment.Type.YOUTUBE.name,
+                        PlayerFragment.ARGS_VALEUR to id
+                    )
+                )
             }
         }
 
