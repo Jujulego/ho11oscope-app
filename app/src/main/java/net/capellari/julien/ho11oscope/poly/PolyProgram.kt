@@ -1,8 +1,6 @@
 package net.capellari.julien.ho11oscope.poly
 
-import android.opengl.GLES20
 import net.capellari.julien.opengl.*
-import java.nio.IntBuffer
 
 @Program(
     shaders = [

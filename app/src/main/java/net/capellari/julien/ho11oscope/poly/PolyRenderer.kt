@@ -28,8 +28,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
 
         // Camera positions and orientation
         val EYE =    Vec3(0f, 3f, -10f)
-        val TARGET = Vec3(0f, 0f, 0f)
-        val UP =     Vec3(0f, 1f, 0f)
+        val TARGET = Vec3(0f, 0f,  0f)
+        val UP =     Vec3(0f, 1f,  0f)
     }
 
     // Attributs
@@ -64,9 +64,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
 
         if (transparency) {
-            disactivateOpacity()
+            activateTransparency()
         } else {
-            activateOpacity()
+            disactivateTransparency()
         }
 
         lastFrameTime = System.currentTimeMillis()
@@ -74,6 +74,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
 
         if (wireRendering) {
             polyProgram.mode = GLES20.GL_LINE_LOOP
+        } else {
+            polyProgram.mode = GLES20.GL_TRIANGLES
         }
     }
 
@@ -125,7 +127,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         polyProgram.pMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
     }
 
-    private fun activateOpacity() {
+    private fun activateTransparency() {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthMask(false)
 
@@ -133,7 +135,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
     }
 
-    private fun disactivateOpacity() {
+    private fun disactivateTransparency() {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthMask(true)
 

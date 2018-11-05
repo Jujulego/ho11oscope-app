@@ -5,7 +5,7 @@
 
     <item android:id="@+id/tool_search"
         android:icon="@drawable/ic_youtube_searched_for_36dp"
-        android:title="@string/main_tool_search"
+        android:title="@string/yt_tool_search"
 
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView"
@@ -14,7 +14,7 @@
 
     <item android:id="@+id/tool_clearhistory"
         android:icon="@drawable/ic_clear_36dp"
-        android:title="@string/main_tool_clearhistory"
+        android:title="@string/yt_tool_clearhistory"
 
         app:showAsAction="never" />
 </menu>

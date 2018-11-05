@@ -27,6 +27,7 @@ abstract class BaseProgram {
 
     protected var ibo = IndiceBufferObject()
     protected var iboId: Int = -1
+    protected var reloadIBO  = false
 
     protected var vbo = VertexBufferObject()
     protected var vboId: Int = -1
@@ -74,10 +75,10 @@ abstract class BaseProgram {
             // Création des buffers
             iboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
             vboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
-            reloadVBO = true
-        }
 
-        loadIBO()
+            reloadVBO = true
+            reloadIBO = true
+        }
     }
     fun render() {
         usingProgram {
@@ -85,6 +86,11 @@ abstract class BaseProgram {
             if (reloadVBO) {
                 loadVBO()
                 reloadVBO = false
+            }
+
+            if (reloadIBO) {
+                loadIBO()
+                reloadIBO = false
             }
 
             // Bind VBO

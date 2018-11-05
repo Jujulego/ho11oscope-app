@@ -4,9 +4,8 @@ import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.preference.PreferenceManager
-import net.capellari.julien.ho11oscope.opengl.objets.Square
-import net.capellari.julien.ho11oscope.opengl.objets.Triangle
 import net.capellari.julien.opengl.Mat4
+import net.capellari.julien.opengl.Vec3
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -18,7 +17,7 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
     private var vpMatrix   = Mat4()
     private val viewMatrix = Mat4.lookAt(0f, 0f, -3f, 0f, 0f, 0f, 0f, 1f, 0f)
 
-    private val program = Square.getInstance()
+    val program = HologramProgram.instance
 
     // Propriétés
     private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
@@ -38,6 +37,8 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
 
         if (wireRendering) {
             program.mode = GLES20.GL_LINE_LOOP
+        } else {
+            program.mode = GLES20.GL_TRIANGLES
         }
     }
 
@@ -53,5 +54,24 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
 
         val ratio: Float = width.toFloat() / height.toFloat()
         vpMatrix = Mat4.frustum(-ratio, ratio, -1f, 1f, 3f, 7f) * viewMatrix
+    }
+
+    // Méthodes
+    fun setupTriangle() {
+        program.coords = arrayListOf(
+                Vec3(  0f,  0.622008459f, 0f),
+                Vec3(-.5f, -0.311004243f, 0f),
+                Vec3( .5f, -0.311004243f, 0f)
+        )
+        program.drawOrder = arrayOf(0, 1, 2)
+    }
+    fun setupCarre() {
+        program.coords = arrayListOf(
+                Vec3(-.5f,  .5f, 0f),
+                Vec3(-.5f, -.5f, 0f),
+                Vec3( .5f, -.5f, 0f),
+                Vec3( .5f,  .5f, 0f)
+        )
+        program.drawOrder = arrayOf(0, 1, 2, 0, 2, 3)
     }
 }

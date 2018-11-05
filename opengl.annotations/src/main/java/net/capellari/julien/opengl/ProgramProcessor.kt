@@ -109,21 +109,7 @@ class ProgramProcessor : AbstractProcessor() {
                             addParameter(param)
 
                             addStatement("field = %N", param)
-                            beginControlFlow("if (iboId != -1)")
-                                beginControlFlow("%N?.also", param)
-                                    // Allocation
-                                    addStatement("ibo.allocate(bufferSize(it))")
-
-                                    // Remplissage
-                                    addStatement("ibo.position = 0")
-                                    addStatement("ibo.put(it)")
-
-                                    beginControlFlow("usingProgram")
-                                        addStatement("ibo.bind(iboId)")
-                                        addStatement("GLUtils.checkGlError(\"Loading ibo\")")
-                                    endControlFlow()
-                                endControlFlow()
-                            endControlFlow()
+                            addStatement("reloadIBO = true")
                         }.build())
                     }.build()
         }
@@ -344,8 +330,20 @@ class ProgramProcessor : AbstractProcessor() {
                     addModifiers(KModifier.OVERRIDE)
 
                     ibo?.let { ibo ->
-                        beginControlFlow("%N?.also {", ibo.property)
-                            addStatement("GLES20.glDrawElements(mode, ibo.size, bufferType(it, true), 0)")
+                        beginControlFlow("if (%N != null) {", ibo.property)
+                            addStatement("GLES20.glDrawElements(mode, ibo.size, bufferType(%N as %T, true), 0)", ibo.property, ibo.type.asNonNull())
+                            addStatement("GLUtils.checkGlError(\"Drawing\")")
+                        endControlFlow()
+                        beginControlFlow("else")
+                            addStatement("var count = 0")
+
+                            for (prop in attrs) {
+                                beginControlFlow("${prop.name}?.let")
+                                    addStatement("count = if (count == 0) vertexCount(it) else minOf(count, vertexCount(it))")
+                                endControlFlow()
+                            }
+
+                            addStatement("GLES20.glDrawArrays(mode, 0, count)")
                             addStatement("GLUtils.checkGlError(\"Drawing\")")
                         endControlFlow()
                     } ?: {

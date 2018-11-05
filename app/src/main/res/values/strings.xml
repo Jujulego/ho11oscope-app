@@ -10,11 +10,15 @@
     <string name="nav_poly">Poly</string>
     <string name="nav_settings">Paramètres</string>
 
-    <!-- MainActivity -->
-    <string name="main_search_hint">Vidéos</string>
-    <string name="main_tool_search">Rechercher</string>
-    <string name="main_tool_clearhistory">Vider l\'historique</string>
+    <!-- Youtube -->
+    <string name="yt_search_hint">Vidéos</string>
+    <string name="yt_tool_search">Rechercher</string>
+    <string name="yt_tool_clearhistory">Vider l\'historique</string>
     <string name="yt_video_playButton">Lancer</string>
+
+    <!-- OpenGL -->
+    <string name="opengl_triangle">Triangle</string>
+    <string name="opengl_carre">Carré</string>
 
     <!-- Préferences -->
     <string name="player_settings">Lecteur</string>

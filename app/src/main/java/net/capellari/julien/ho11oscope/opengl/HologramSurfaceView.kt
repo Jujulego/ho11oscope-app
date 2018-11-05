@@ -4,6 +4,7 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
+import net.capellari.julien.opengl.Vec3
 
 class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurfaceView(context, attributeSet) {
     // Companion
@@ -12,7 +13,7 @@ class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurf
     }
 
     // Attributs
-    private val renderer: HologramRenderer
+    val renderer: HologramRenderer
 
     private var prevX: Float = 0f
     private var prevY: Float = 0f
@@ -56,5 +57,14 @@ class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurf
         prevY = y
 
         return true
+    }
+
+    fun setupTriangle() {
+        renderer.setupTriangle()
+        requestRender()
+    }
+    fun setupCarre() {
+        renderer.setupCarre()
+        requestRender()
     }
 }
