@@ -67,4 +67,8 @@ class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurf
         renderer.setupCarre()
         requestRender()
     }
+    fun setupHexagone() {
+        renderer.setupHexagone()
+        requestRender()
+    }
 }

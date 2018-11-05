@@ -55,6 +55,10 @@
         <item name="android:textColor">@android:color/black</item>
     </style>
 
+    <style name="AppTheme.TabAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
     <!-- Icônes -->
     <style name="AppTheme.DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
         <item name="color">@android:color/white</item>

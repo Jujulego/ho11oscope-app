@@ -19,6 +19,7 @@
     <!-- OpenGL -->
     <string name="opengl_triangle">Triangle</string>
     <string name="opengl_carre">Carré</string>
+    <string name="opengl_hexagone">Hexagone</string>
 
     <!-- Préferences -->
     <string name="player_settings">Lecteur</string>

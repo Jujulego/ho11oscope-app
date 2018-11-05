@@ -63,7 +63,7 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
                 Vec3(-.5f, -0.311004243f, 0f),
                 Vec3( .5f, -0.311004243f, 0f)
         )
-        program.drawOrder = arrayOf(0, 1, 2)
+        program.drawOrder = null
     }
     fun setupCarre() {
         program.coords = arrayListOf(
@@ -73,5 +73,24 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
                 Vec3( .5f,  .5f, 0f)
         )
         program.drawOrder = arrayOf(0, 1, 2, 0, 2, 3)
+    }
+    fun setupHexagone() {
+        program.coords = arrayListOf(
+                Vec3(   0f,    0f, 0f), // 0
+                Vec3(  .5f,    0f, 0f), // 1
+                Vec3( .25f,  .43f, 0f), // 2
+                Vec3(-.25f,  .43f, 0f), // 3
+                Vec3( -.5f,    0f, 0f), // 4
+                Vec3(-.25f, -.43f, 0f), // 5
+                Vec3( .25f, -.43f, 0f)  // 6
+        )
+        program.drawOrder = arrayOf(
+                0, 1, 2,
+                0, 2, 3,
+                0, 3, 4,
+                0, 4, 5,
+                0, 5, 6,
+                0, 6, 1
+        )
     }
 }

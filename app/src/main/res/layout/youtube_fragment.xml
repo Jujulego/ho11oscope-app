@@ -8,7 +8,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
 
-    tools:context=".youtube.YoutubeFragment">
+    tools:context=".youtube.YoutubeFragment"
+    tools:menu="toolbar_youtube">
 
     <FrameLayout android:id="@+id/search"
         android:layout_width="match_parent"
