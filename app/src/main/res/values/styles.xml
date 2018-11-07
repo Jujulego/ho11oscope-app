@@ -65,7 +65,7 @@
     </style>
 
     <!-- Préférences -->
-    <style name="AppTheme.PreferenceThemeOverlay" parent="PreferenceThemeOverlay.v14">
+    <style name="AppTheme.PreferenceThemeOverlay" parent="PreferenceThemeOverlay">
         <item name="switchPreferenceCompatStyle">@style/Preference.SwitchPreferenceCompat</item>
     </style>
 </resources>

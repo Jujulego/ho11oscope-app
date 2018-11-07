@@ -104,7 +104,7 @@ class YoutubeVideoFragment : Fragment() {
     private fun updateUI() {
         view?.let { view ->
             // Filling views
-            view.videoTitle.text  = videoTitle ?: "Titre"
+            view.name.text  = videoTitle ?: "Titre"
             view.description.text = videoDescription ?: "Description"
 
             videoImageUrl?.let { view.image.setImageUrl(it, requestManager.imageLoader) }

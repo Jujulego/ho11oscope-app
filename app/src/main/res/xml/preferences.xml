@@ -3,29 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
+    android:fragment="net.capellari.julien.ho11oscope.SettingsFragment"
     tools:context=".SettingsFragment">
 
-    <PreferenceCategory android:title="@string/player_settings"
-        app:iconSpaceReserved="false">
-
-        <CheckBoxPreference android:key="player_brightness"
-            android:title="@string/player_brightness_setting"
+    <PreferenceCategory android:title="@string/player_settings">
+        <CheckBoxPreference android:title="@string/player_brightness_setting"
             android:defaultValue="true"
+            android:key="player_brightness"
 
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/opengl_settings"
-        app:iconSpaceReserved="false" >
-
-        <CheckBoxPreference android:key="transparency"
-            android:title="@string/opengl_transparency_setting"
+    <PreferenceCategory android:title="@string/opengl_settings">
+        <CheckBoxPreference android:title="@string/opengl_transparency_setting"
             android:defaultValue="false"
+            android:key="transparency"
+
             app:iconSpaceReserved="false" />
 
-        <CheckBoxPreference android:key="wire_rendering"
-            android:title="@string/opengl_wired_rendering_setting"
+        <CheckBoxPreference android:title="@string/opengl_wired_rendering_setting"
             android:defaultValue="false"
+            android:key="wire_rendering"
 
             app:iconSpaceReserved="false" />
     </PreferenceCategory>

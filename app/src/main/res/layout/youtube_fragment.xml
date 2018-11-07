@@ -17,18 +17,11 @@
 
         android:visibility="gone">
 
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/swipeRefresh"
+        <fragment android:id="@+id/resultsFragment"
+            android:name="net.capellari.julien.ho11oscope.ResultsFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/results"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layoutAnimation="@anim/layout_fall_down"
-
-                tools:listitem="@layout/youtube_search_result" />
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            tools:layout="@layout/results_fragment" />
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

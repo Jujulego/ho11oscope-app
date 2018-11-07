@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:checkableBehavior="single">
+
+        <item android:id="@+id/poly_liste"
+            android:icon="@drawable/ic_flat_search_24dp"
+            android:title="@string/poly_list"
+
+            app:showAsAction="ifRoom" />
+
+        <item android:id="@+id/poly_settings"
+            android:icon="@drawable/ic_flat_settings2_24dp"
+            android:title="@string/poly_settings"
+            android:enabled="false"
+
+            app:showAsAction="ifRoom" />
+    </group>
+</menu>

@@ -1,19 +1,20 @@
 package net.capellari.julien.ho11oscope.poly
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import kotlinx.android.synthetic.main.poly_fragment.*
+import kotlinx.android.synthetic.main.poly_fragment.view.*
 import kotlinx.android.synthetic.main.poly_search_result.view.*
 import net.capellari.julien.ho11oscope.R
+import net.capellari.julien.ho11oscope.ResultsFragment
 import net.capellari.julien.ho11oscope.inflate
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
@@ -27,7 +28,7 @@ class PolyFragment : Fragment() {
     }
 
     // Attributs
-    private var polyAdapter = PolyAdapter()
+    private val resultsFragment = ResultsFragment()
 
     private var asset: Asset? = null
         set(asset) {
@@ -58,86 +59,73 @@ class PolyFragment : Fragment() {
             }
         }
 
-    // Events
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Results
+        resultsFragment.addListener(object : ResultsFragment.OnResultsListener {
+            override fun onRefresh() {
+                refresh()
+            }
+
+            override fun onItemClick(res: ResultsFragment.Result) {
+                (res.obj as? PolyAPI.AssetData)?.let {
+                    asset = Asset(it.id)
+                    progress.visibility = View.VISIBLE
+
+                    doAsync {
+                        asset?.download(requireContext())
+                    }
+                }
+            }
+        })
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.poly_fragment, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // View Pager
+        view.pager.adapter = Pager(childFragmentManager)
+        view.bottomNav.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.poly_liste -> { view.pager.currentItem = 0; true }
+                else -> false
+            }
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        // Recycler view
-        results.apply {
-            layoutManager = when (resources.configuration.orientation) {
-                Configuration.ORIENTATION_LANDSCAPE -> GridLayoutManager(context, 2)
-                else -> LinearLayoutManager(context)
-            }
-            adapter = polyAdapter
-            itemAnimator = DefaultItemAnimator()
-        }
+        // Download list
+        refresh()
+    }
 
-        // Download
+    // Méthodes
+    fun refresh() {
+        resultsFragment.isRefreshing = true
+
         PolyAPI.assets {
-            polyAdapter.add(it)
+            resultsFragment.add(ResultsFragment.Result(
+                    it.name,
+                    obj = it
+            ))
+            resultsFragment.isRefreshing = false
         }
     }
 
-    // Classes
-    inner class PolyAdapter : RecyclerView.Adapter<PolyAdapter.ViewHolder>() {
-        // Attributs
-        private val liste = arrayListOf<PolyAPI.AssetData>()
+    // Classe
+    inner class Pager(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+        override fun getCount(): Int = 1
 
-        // Méthodes
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            return ViewHolder(parent.inflate(R.layout.poly_search_result, false))
-        }
-
-        override fun getItemCount(): Int = liste.size
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.data = liste[position]
-        }
-
-        fun add(data: PolyAPI.AssetData) {
-            liste.size.let {
-                liste.add(data)
-                notifyItemInserted(it)
-            }
-        }
-
-        fun clear() {
-            liste.size.let {
-                liste.clear()
-                notifyItemRangeRemoved(0, it)
-            }
-        }
-
-        // Classes
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            // Attributs
-            private var view: View = itemView
-            var data: PolyAPI.AssetData? = null
-                set(data) {
-                    field = data
-
-                    // update ui
-                    data?.let {
-                        view.name.text = it.name
-                    }
-                }
-
-            // Constructeur
-            init {
-                view.setOnClickListener { _ ->
-                    data?.also {
-                        asset = Asset(it.id)
-                        progress.visibility = View.VISIBLE
-
-                        doAsync {
-                            asset?.download(requireContext())
-                        }
-                    }
-                }
+        override fun getItem(position: Int): Fragment? {
+            return when (position) {
+                0    -> resultsFragment
+                else -> null
             }
         }
     }

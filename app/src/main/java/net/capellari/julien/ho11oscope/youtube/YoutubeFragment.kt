@@ -3,31 +3,25 @@ package net.capellari.julien.ho11oscope.youtube
 import android.app.SearchManager
 import androidx.lifecycle.ViewModelProviders
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
+import android.util.Log
 import androidx.appcompat.widget.*
 import android.util.Pair as UtilPair
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import androidx.navigation.fragment.FragmentNavigatorExtras
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_fragment.*
-import kotlinx.android.synthetic.main.youtube_search_result.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
-import net.capellari.julien.ho11oscope.inflate
+import net.capellari.julien.ho11oscope.ResultsFragment
 import org.jetbrains.anko.bundleOf
 import java.text.SimpleDateFormat
 import java.util.*
 
-class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
+class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFragment.OnResultsListener {
     // Companion (equiv to static)
     companion object {
         const val TAG = "YoutubeFragment"
@@ -42,18 +36,20 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
     private var searchMenuItem: MenuItem? = null
 
     private var state = State.NONE
-    private val videoAdapter = VideoAdapter()
     private var youtubeViewModel: YoutubeViewModel? = null
     private lateinit var requestManager: RequestManager
 
     // Propriétés
+    private val resultsFragment
+        get() = childFragmentManager.findFragmentById(R.id.resultsFragment) as? ResultsFragment
+
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
 
     private val searchView: SearchView?
         get() = searchMenuItem?.actionView as? SearchView
 
-    private val navController get() = Navigation.findNavController(this.requireActivity(), R.id.navHostFragment)
+    private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
 
     // Events
     override fun onAttach(context: Context) {
@@ -79,38 +75,37 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         return inflater.inflate(R.layout.youtube_fragment, container, false)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Listeners
+        Log.d(TAG, "viewcreated !")
+        resultsFragment?.addListener(this)
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        // Setup recycler view
-        results.apply {
-            layoutManager = when (resources.configuration.orientation) {
-                Configuration.ORIENTATION_LANDSCAPE -> GridLayoutManager(context, 2)
-                else -> LinearLayoutManager(context)
-            }
-            adapter = videoAdapter
-            itemAnimator = DefaultItemAnimator()
-        }
-
+        // Results
         youtubeViewModel?.run {
             // Observe search results
             searchResults.observe(this@YoutubeFragment,
                     androidx.lifecycle.Observer<SearchListResponse> { results ->
-                        videoAdapter.videos = results
-                        swipeRefresh.isRefreshing = false
+                        for (video in results.items) {
+                            resultsFragment?.add(ResultsFragment.Result(
+                                    video.snippet.title,
+                                    video.snippet.description,
+                                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
+                                            Date(video.snippet.publishedAt.value)
+                                    ),
+                                    video.snippet.thumbnails.high.url,
+                                    video
+                            ))
+                        }
+
+                        resultsFragment?.isRefreshing = false
                     }
             )
-        }
-
-        // Listeners
-        swipeRefresh.apply {
-            // Setup
-            setColorSchemeResources(R.color.colorPrimary)
-
-            // Listeners
-            setOnRefreshListener {
-                search()
-            }
         }
     }
 
@@ -153,6 +148,26 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         return true
     }
 
+    override fun onRefresh() {
+        search()
+    }
+
+    override fun onItemClick(res: ResultsFragment.Result) {
+        Log.d(TAG, "itemclick !")
+
+        (res.obj as? SearchResult)?.also { video ->
+            navController.navigate(
+                    R.id.action_video_details,
+                    bundleOf(
+                            YoutubeVideoFragment.ARGS_VIDEO_ID          to video.id.videoId,
+                            YoutubeVideoFragment.ARGS_VIDEO_TITLE       to video.snippet.title,
+                            YoutubeVideoFragment.ARGS_VIDEO_DESCRIPTION to video.snippet.description,
+                            YoutubeVideoFragment.ARGS_VIDEO_IMAGE_URL   to video.snippet.thumbnails.high.url
+                    )
+            )
+        }
+    }
+
     // Methods
     fun search(query: String? = null) {
         // Sauvegarde
@@ -161,7 +176,8 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         // Start searching
         youtubeViewModel?.run {
             this.search(query)
-            swipeRefresh.isRefreshing = true
+            resultsFragment?.clear()
+            resultsFragment?.isRefreshing = true
         }
     }
 
@@ -216,7 +232,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
 
     private fun setupNone() {
         // Hide result list
-        videoAdapter.videos = null
         search.visibility = View.GONE
 
         // Update state
@@ -228,85 +243,5 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
 
         // Update state
         state = State.SEARCH
-    }
-
-    // Sous-classes
-    inner class VideoAdapter(v: SearchListResponse? = null) : RecyclerView.Adapter<VideoAdapter.VideoHolder>() {
-        // Propriétés
-        var videos: SearchListResponse? = v
-            set(v) {
-                field = v
-                notifyDataSetChanged()
-            }
-
-        // Méthodes
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
-            return VideoHolder(parent.inflate(R.layout.youtube_search_result, false))
-        }
-
-        override fun getItemCount(): Int = videos?.items?.size ?: 0
-
-        override fun onBindViewHolder(holder: VideoHolder, position: Int) {
-            holder.bindVideo(videos!!.items[position])
-        }
-
-        // Sous-classes
-        inner class VideoHolder(v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
-            // Attributs
-            var view: View = v
-                private set
-            var video: SearchResult? = null
-                private set
-
-            // Constructeur
-            init {
-                view.setOnClickListener(this)
-            }
-
-            // Méthodes
-            fun bindVideo(video: SearchResult) {
-                this.video = video
-
-                // Prepare date
-                val date = Date(video.snippet.publishedAt.value)
-
-                // Filling views
-                with(view) {
-                    videoTitle.text = video.snippet.title
-                    description.text = video.snippet.description
-                    pubDate.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)
-
-                    image.setImageUrl(video.snippet.thumbnails.high.url, requestManager.imageLoader)
-                }
-            }
-
-            override fun onClick(v: View?) {
-                // Gardien
-                video?.also { video ->
-                    setTransitionNames()
-                    navController.navigate(
-                        R.id.action_video_details,
-                        bundleOf(
-                            YoutubeVideoFragment.ARGS_VIDEO_ID          to video.id.videoId,
-                            YoutubeVideoFragment.ARGS_VIDEO_TITLE       to video.snippet.title,
-                            YoutubeVideoFragment.ARGS_VIDEO_DESCRIPTION to video.snippet.description,
-                            YoutubeVideoFragment.ARGS_VIDEO_IMAGE_URL   to video.snippet.thumbnails.high.url
-                        ),
-                        null,
-                        FragmentNavigatorExtras(
-                            view.image       to "video_image",
-                            view.videoTitle  to "video_title",
-                            view.description to "video_description"
-                        )
-                    )
-                }
-            }
-
-            fun setTransitionNames() {
-                view.image.transitionName       = "video_image"
-                view.videoTitle.transitionName  = "video_title"
-                view.description.transitionName = "video_description"
-            }
-        }
     }
 }

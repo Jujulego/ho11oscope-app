@@ -44,8 +44,6 @@ dependencies {
     // OpenGL
     implementation project(':opengl')
     implementation project(':opengl.annotations')
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0-alpha1'
-    implementation 'androidx.appcompat:appcompat:1.0.0-alpha1'
     annotationProcessor project(":opengl.annotations")
 
     // Kotlin
@@ -55,13 +53,16 @@ dependencies {
     // AndroidX support
     implementation "androidx.appcompat:appcompat:$androidx_version"
     implementation "androidx.cardview:cardview:$androidx_version"
-    implementation "com.google.android.material:material:$androidx_version"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidx_version"
     implementation "androidx.preference:preference:$androidx_version"
     implementation "androidx.legacy:legacy-preference-v14:$androidx_version"
-    implementation "androidx.recyclerview:recyclerview:$androidx_version"
     implementation "androidx.legacy:legacy-support-v4:$androidx_version"
+    implementation "androidx.recyclerview:recyclerview:$androidx_version"
     implementation "androidx.transition:transition:$androidx_version"
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
+
+    implementation "com.google.android.material:material:$androidx_version"
+
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
 
     // Lifecyle
     def lifecycle_version = "2.0.0"
@@ -76,6 +77,11 @@ dependencies {
 
     implementation "android.arch.navigation:navigation-fragment-ktx:$nav_version"
     implementation "android.arch.navigation:navigation-ui-ktx:$nav_version"
+
+    // Paging
+    def paging_version = "2.1.0-beta01"
+
+    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
 
     // Volley
     implementation('com.android.volley:volley:1.1.1') {
