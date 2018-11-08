@@ -41,10 +41,12 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    // OpenGL
+    // Project
     implementation project(':opengl')
     implementation project(':opengl.annotations')
     annotationProcessor project(":opengl.annotations")
+
+    implementation project(':utils')
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

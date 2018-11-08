@@ -12,7 +12,7 @@ object PolyAPI {
     const val BASE_URL = "https://poly.googleapis.com/v1"
 
     // Classes
-    data class AssetData(val id: String, val name: String)
+    data class AssetData(val id: String, val name: String, val description: String?, val imageUrl: String?)
 
     // Méthodes
     fun assets(handler : (AssetData) -> Unit) {
@@ -29,11 +29,15 @@ object PolyAPI {
 
                 for (i in 0 until assets.length()) {
                     // Get infos
-                    val id   = assets.getJSONObject(i).getString("name")
-                    val name = assets.getJSONObject(i).getString("displayName")
+                    val obj = assets.getJSONObject(i)
 
                     //Log.d(TAG, "(ID: $id) -- $name")
-                    handler(AssetData(id, name))
+                    handler(AssetData(
+                            id          = obj.getString("name"),
+                            name        = obj.getString("displayName"),
+                            description = if (obj.has("descricption")) obj.getString("description") else null,
+                            imageUrl    = if (obj.has("thumbnail")) obj.getJSONObject("thumbnail").getString("url") else null
+                    ))
                 }
             }, {
                 Log.e(TAG, "Error while parsing JSON", it)

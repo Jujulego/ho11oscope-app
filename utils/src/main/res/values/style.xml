@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Préferences -->
+    <style name="Utils.SeekBarPreferenceTheme" parent="Preference.SeekBarPreference.Material">
+        <item name="android:layout">@layout/seekbar_preference</item>
+    </style>
+</resources>

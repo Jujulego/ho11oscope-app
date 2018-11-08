@@ -1,6 +1,9 @@
 // Uniformes
 // - valeurs
 uniform float uLightPower;
+uniform float uAmbientFactor;
+uniform float uDiffuseFactor;
+uniform float uSpecularFactor;
 
 // Communes au shaders
 // - world space
@@ -49,11 +52,11 @@ void main() {
     // Compute colors
     gl_FragColor = vec4(
         // Ambient color
-        (ambientColor * 0.1) +
+        (ambientColor * uAmbientFactor) +
         // Diffuse color
-        (diffuseColor * lightFactor * diffuseFactor) +
+        (diffuseColor * uDiffuseFactor * lightFactor * diffuseFactor) +
         // Specular color
-        (specularColor * lightFactor * specularFactor),
+        (specularColor * uSpecularFactor * lightFactor * specularFactor),
         // Transparence
         opacity
     );

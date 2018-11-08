@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+
+    android:paddingEnd="?android:attr/scrollbarSize"
+
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <ImageView android:id="@android:id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        tools:layout_width="48dp"
+        tools:layout_height="48dp"
+        tools:background="@android:color/black" />
+
+    <TextView android:id="@android:id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dip"
+        android:layout_marginEnd="8dip"
+        android:layout_marginTop="6dip"
+        android:layout_marginBottom="6dip"
+
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@android:id/icon"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        tools:text="Title" />
+
+    <TextView android:id="@android:id/summary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dip"
+
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?android:attr/textColorSecondary"
+        android:maxLines="4"
+
+        app:layout_constraintTop_toBottomOf="@android:id/title"
+        app:layout_constraintStart_toStartOf="@android:id/title"
+        app:layout_constraintEnd_toEndOf="@android:id/title"
+
+        tools:text="Summary" />
+
+    <!-- Using UnPressableLinearLayout as a workaround to disable the pressed state propagation
+    to the children of this container layout. Otherwise, the animated pressed state will also
+    play for the thumb in the AbsSeekBar in addition to the sharedPreference's ripple background.
+    The background of the SeekBar is also set to null to disable the ripple background -->
+    <androidx.preference.UnPressableLinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        android:clipChildren="false"
+        android:clipToPadding="false"
+
+        app:layout_constraintTop_toTopOf="@id/seekbar_value"
+        app:layout_constraintStart_toStartOf="@android:id/title"
+        app:layout_constraintBottom_toBottomOf="@id/seekbar_value"
+        app:layout_constraintEnd_toStartOf="@id/seekbar_value">
+
+        <SeekBar android:id="@+id/seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:focusable="false"
+            android:clickable="false"
+            android:background="@null"
+
+            tools:max="100"
+            tools:progress="55">
+        </SeekBar>
+    </androidx.preference.UnPressableLinearLayout>
+
+    <TextView android:id="@+id/seekbar_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="15sp"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+
+        app:layout_constraintTop_toBottomOf="@android:id/summary"
+        app:layout_constraintEnd_toEndOf="@android:id/title"
+
+        tools:text="55" />
+</androidx.constraintlayout.widget.ConstraintLayout>

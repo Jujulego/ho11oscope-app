@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView
 import android.preference.PreferenceManager
 import net.capellari.julien.opengl.Mat4
 import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.utils.sharedPreference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -20,14 +21,8 @@ class HologramRenderer(val context: Context) : GLSurfaceView.Renderer {
     val program = HologramProgram.instance
 
     // Propriétés
-    private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
-    private var transparency: Boolean
-        get()  = sharedPreferences.getBoolean("transparency", false)
-        set(v) = sharedPreferences.edit().putBoolean("transparency", v).apply()
-
-    private var wireRendering: Boolean
-        get()  = sharedPreferences.getBoolean("wire_rendering", false)
-        set(v) = sharedPreferences.edit().putBoolean("wire_rendering", v).apply()
+    private var transparency  by sharedPreference("transparency",   context, false)
+    private var wireRendering by sharedPreference("wire_rendering", context, false)
 
     // Events
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {

@@ -8,14 +8,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import kotlinx.android.synthetic.main.poly_fragment.*
 import kotlinx.android.synthetic.main.poly_fragment.view.*
-import kotlinx.android.synthetic.main.poly_search_result.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.ResultsFragment
-import net.capellari.julien.ho11oscope.inflate
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 
@@ -29,6 +25,7 @@ class PolyFragment : Fragment() {
 
     // Attributs
     private val resultsFragment = ResultsFragment()
+    private val polySettingsFragment = PolySettingsFragment()
 
     private var asset: Asset? = null
         set(asset) {
@@ -92,7 +89,8 @@ class PolyFragment : Fragment() {
         view.pager.adapter = Pager(childFragmentManager)
         view.bottomNav.setOnNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.poly_liste -> { view.pager.currentItem = 0; true }
+                R.id.poly_liste    -> { view.pager.currentItem = 0; true }
+                R.id.poly_settings -> { view.pager.currentItem = 1; true }
                 else -> false
             }
         }
@@ -111,7 +109,8 @@ class PolyFragment : Fragment() {
 
         PolyAPI.assets {
             resultsFragment.add(ResultsFragment.Result(
-                    it.name,
+                    it.name, it.description,
+                    imageUrl = it.imageUrl,
                     obj = it
             ))
             resultsFragment.isRefreshing = false
@@ -120,11 +119,12 @@ class PolyFragment : Fragment() {
 
     // Classe
     inner class Pager(fm: FragmentManager) : FragmentPagerAdapter(fm) {
-        override fun getCount(): Int = 1
+        override fun getCount(): Int = 2
 
         override fun getItem(position: Int): Fragment? {
             return when (position) {
                 0    -> resultsFragment
+                1    -> polySettingsFragment
                 else -> null
             }
         }

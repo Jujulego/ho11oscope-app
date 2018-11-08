@@ -22,8 +22,12 @@
     <string name="opengl_hexagone">Hexagone</string>
 
     <!-- Poly -->
-    <string name="poly_settings">Rendu</string>
     <string name="poly_list">Liste</string>
+
+    <string name="poly_settings">Rendu</string>
+    <string name="poly_settings_ambient">Couleur ambiente</string>
+    <string name="poly_settings_diffuse">Couleur diffuse</string>
+    <string name="poly_settings_specular">Couleur d\'éclat</string>
 
     <!-- Préferences -->
     <string name="player_settings">Lecteur</string>
@@ -32,4 +36,5 @@
     <string name="opengl_settings">OpenGL</string>
     <string name="opengl_transparency_setting">Transparence</string>
     <string name="opengl_wired_rendering_setting">Rendu fil de fer</string>
+    <string name="poly_settings_colors">Couleurs</string>
 </resources>

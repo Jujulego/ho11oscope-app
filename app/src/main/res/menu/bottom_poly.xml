@@ -13,7 +13,6 @@
         <item android:id="@+id/poly_settings"
             android:icon="@drawable/ic_flat_settings2_24dp"
             android:title="@string/poly_settings"
-            android:enabled="false"
 
             app:showAsAction="ifRoom" />
     </group>

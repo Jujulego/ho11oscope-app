@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-
-    android:fragment="net.capellari.julien.ho11oscope.SettingsFragment"
-    tools:context=".SettingsFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/player_settings">
         <CheckBoxPreference android:title="@string/player_brightness_setting"

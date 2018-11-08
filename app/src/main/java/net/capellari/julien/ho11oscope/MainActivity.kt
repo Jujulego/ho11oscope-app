@@ -3,7 +3,6 @@ package net.capellari.julien.ho11oscope
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
@@ -13,6 +12,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.*
 import kotlinx.android.synthetic.main.main_activity.*
+import net.capellari.julien.utils.sharedPreference
 
 class MainActivity : AppCompatActivity() {
     // Attributs
@@ -20,12 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     // Propriétés
-    private val sharedPreferences by lazy {
-        PreferenceManager.getDefaultSharedPreferences(this)
-    }
-    private var preferenceBrightness: Boolean
-        get()  = sharedPreferences.getBoolean("player_brightness", true)
-        set(v) = sharedPreferences.edit().putBoolean("player_brightness", v).apply()
+    private var preferenceBrightness by sharedPreference("player_brightness", true)
 
     private val navController get() = findNavController(R.id.navHostFragment)
     private val isAtTopLevel get()  = navController.currentDestination?.run {isTopLevelDestination(id) } ?: false

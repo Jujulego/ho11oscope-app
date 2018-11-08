@@ -1,16 +1,18 @@
 package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.preference.PreferenceManager
 import android.util.Log
+import androidx.preference.PreferenceManager
 import net.capellari.julien.opengl.Mat4
 import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.utils.sharedPreference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
+class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferences.OnSharedPreferenceChangeListener {
     // Companion
     companion object {
         // Attributs
@@ -33,8 +35,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     // Attributs
-    private var polyProgram: PolyProgram = PolyProgram.getInstance()
+    private var polyProgram: PolyProgram = PolyProgram.instance
     private var readyToRender = false
+
+    @Volatile
+    private var setupChange = true
 
     private var indexCount: Int = 0
     private var lastFrameTime: Long = 0
@@ -49,37 +54,40 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
         }
 
     // Propriétés
-    private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
-    private var transparency: Boolean
-        get()  = sharedPreferences.getBoolean("transparency", false)
-        set(v) = sharedPreferences.edit().putBoolean("transparency", v).apply()
+    private var transparency  by sharedPreference("transparency",   context, false)
+    private var wireRendering by sharedPreference("wire_rendering", context, false)
 
-    private var wireRendering: Boolean
-        get()  = sharedPreferences.getBoolean("wire_rendering", false)
-        set(v) = sharedPreferences.edit().putBoolean("wire_rendering", v).apply()
-
+    private var ambientFactor  by sharedPreference("ambientFactor",  context, 50)
+    private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
+    private var specularFactor by sharedPreference("specularFactor", context, 50)
 
     // Méthodes
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
 
-        if (transparency) {
-            activateTransparency()
-        } else {
-            disactivateTransparency()
-        }
-
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
 
-        if (wireRendering) {
-            polyProgram.mode = GLES20.GL_LINE_LOOP
-        } else {
-            polyProgram.mode = GLES20.GL_TRIANGLES
-        }
+        // Setup
+        setupRenderingMode()
+
+        // Events
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onDrawFrame(unused: GL10?) {
+        // Setup changes
+        if (setupChange) {
+            setupTransparency()
+
+            polyProgram.ambientFactor  = ambientFactor  / 100f
+            polyProgram.diffuseFactor  = diffuseFactor  / 100f
+            polyProgram.specularFactor = specularFactor / 100f
+
+            setupChange = false
+        }
+
         // Update spin animation
         val now    = System.currentTimeMillis()
         val deltaT = minOf((now - lastFrameTime) * 0.001f, 0.1f)
@@ -125,6 +133,29 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer {
 
         val ratio = width / height.toFloat()
         polyProgram.pMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        Log.d(TAG, "updated $key")
+        when(key) {
+            this::wireRendering.sharedPreference -> setupRenderingMode()
+            this::transparency.sharedPreference  -> setupChange = true
+
+            this::ambientFactor.sharedPreference,
+            this::diffuseFactor.sharedPreference,
+            this::specularFactor.sharedPreference -> setupChange = true
+        }
+    }
+
+    // Méthodes
+    private fun setupRenderingMode() {
+        Log.d(TAG, "rendering mode : ${if (wireRendering) "line loop" else "triangles"}")
+        polyProgram.mode = if (wireRendering) GLES20.GL_LINE_LOOP else GLES20.GL_TRIANGLES
+    }
+
+    private fun setupTransparency() {
+        Log.d(TAG, "transparency   : ${if (transparency) "activated" else "disactivated"}")
+        (if (transparency) this::activateTransparency else this::disactivateTransparency)()
     }
 
     private fun activateTransparency() {

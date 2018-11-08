@@ -83,7 +83,7 @@ class ProgramProcessor : AbstractProcessor() {
                     }.build()
         }
     }
-    inner class IndicesProperty(element: VariableElement, val annotation: IBO) {
+    inner class IndicesProperty(element: VariableElement, val annotation: Indices) {
         // Attributs
         lateinit var property: PropertySpec
             private set
@@ -198,11 +198,11 @@ class ProgramProcessor : AbstractProcessor() {
                     }
 
                     // IBO !
-                    it.getAnnotation(IBO::class.java)?.let { annot ->
+                    it.getAnnotation(Indices::class.java)?.let { annot ->
                         // Doublons ?
                         ibo?.let { ibo ->
                             processingEnv.messager.printMessage(Diagnostic.Kind.WARNING,
-                                    "@IBO used twice on the same program ('${ibo.name}' and '$name')"
+                                    "@Indices used twice on the same program ('${ibo.name}' and '$name')"
                             )
                         }
 

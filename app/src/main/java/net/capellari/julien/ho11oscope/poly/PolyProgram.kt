@@ -11,18 +11,14 @@ import net.capellari.julien.opengl.*
 abstract class PolyProgram : BaseProgram() {
     // Companion
     companion object {
-        private var instance: PolyProgram? = null
-
-        fun getInstance(): PolyProgram = instance ?: synchronized(this) {
-            instance ?: BaseProgram.getImplementation<PolyProgram>().also { instance = it }
-        }
+        val instance by lazy(this) { BaseProgram.getImplementation<PolyProgram>() }
     }
 
     // Attributs
     var pMatrix = Mat4()
 
     // - buffers
-    @IBO open var indices: ArrayList<Int>? = null
+    @Indices open var indices: ArrayList<Int>? = null
 
     // - uniforms
     @Uniform("uMVP")   open var mvpMatrix       = Mat4()
@@ -30,6 +26,10 @@ abstract class PolyProgram : BaseProgram() {
     @Uniform("uV")     open var vMatrix         = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
     @Uniform("uLight") open var lightPosition   = Vec3(0f, 2f, 25f)
     @Uniform("uLightPower") open var lightPower = 600f
+
+    @Uniform("uAmbientFactor")  open var ambientFactor  = .1f
+    @Uniform("uDiffuseFactor")  open var diffuseFactor  = .7f
+    @Uniform("uSpecularFactor") open var specularFactor = .5f
 
     // - attributes
     @Attribute("aPosition")      open var positions:      ArrayList<Vec3>? = null
