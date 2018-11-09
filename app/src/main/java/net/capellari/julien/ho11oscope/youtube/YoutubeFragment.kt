@@ -10,18 +10,19 @@ import androidx.appcompat.widget.*
 import android.util.Pair as UtilPair
 import android.view.*
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_fragment.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
-import net.capellari.julien.ho11oscope.ResultsFragment
+import net.capellari.julien.ho11oscope.ResultsViewModel
 import org.jetbrains.anko.bundleOf
 import java.text.SimpleDateFormat
 import java.util.*
 
-class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFragment.OnResultsListener {
+class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewModel.OnResultsListener {
     // Companion (equiv to static)
     companion object {
         const val TAG = "YoutubeFragment"
@@ -36,13 +37,11 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
     private var searchMenuItem: MenuItem? = null
 
     private var state = State.NONE
-    private var youtubeViewModel: YoutubeViewModel? = null
+    private lateinit var videos: YoutubeViewModel
+    private lateinit var results: ResultsViewModel
     private lateinit var requestManager: RequestManager
 
     // Propriétés
-    private val resultsFragment
-        get() = childFragmentManager.findFragmentById(R.id.resultsFragment) as? ResultsFragment
-
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
 
@@ -65,48 +64,32 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
         // Setup
         setHasOptionsMenu(true)
 
-        // Get ViewModel
-        youtubeViewModel = activity?.run {
-            ViewModelProviders.of(this).get(YoutubeViewModel::class.java)
-        }
+        // Get ViewModels
+        results = ViewModelProviders.of(activity!!)[ResultsViewModel::class.java]
+        results.addOnResultsListener(this)
+
+        videos  = ViewModelProviders.of(activity!!)[YoutubeViewModel::class.java]
+        videos.searchResults.observe(this@YoutubeFragment,
+                Observer<SearchListResponse> { results ->
+                    for (video in results.items) {
+                        this@YoutubeFragment.results.add(ResultsViewModel.Result(
+                                video.snippet.title,
+                                video.snippet.description,
+                                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
+                                        Date(video.snippet.publishedAt.value)
+                                ),
+                                video.snippet.thumbnails.high.url,
+                                video
+                        ))
+                    }
+
+                    this@YoutubeFragment.results.setRefreshing(false)
+                }
+        )
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.youtube_fragment, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Listeners
-        Log.d(TAG, "viewcreated !")
-        resultsFragment?.addListener(this)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-
-        // Results
-        youtubeViewModel?.run {
-            // Observe search results
-            searchResults.observe(this@YoutubeFragment,
-                    androidx.lifecycle.Observer<SearchListResponse> { results ->
-                        for (video in results.items) {
-                            resultsFragment?.add(ResultsFragment.Result(
-                                    video.snippet.title,
-                                    video.snippet.description,
-                                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
-                                            Date(video.snippet.publishedAt.value)
-                                    ),
-                                    video.snippet.thumbnails.high.url,
-                                    video
-                            ))
-                        }
-
-                        resultsFragment?.isRefreshing = false
-                    }
-            )
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -132,7 +115,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
 
     override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
         // Searching ...
-        youtubeViewModel?.apply {
+        videos.apply {
             query = query ?: ""
         }
         setupSearch()
@@ -142,7 +125,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
 
     override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
         // Stop searching ...
-        youtubeViewModel?.query = null
+        videos.query = null
         setupNone()
 
         return true
@@ -152,7 +135,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
         search()
     }
 
-    override fun onItemClick(res: ResultsFragment.Result) {
+    override fun onItemClick(res: ResultsViewModel.Result) {
         Log.d(TAG, "itemclick !")
 
         (res.obj as? SearchResult)?.also { video ->
@@ -168,16 +151,23 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        results.removeOnResultsListener(this)
+    }
+
     // Methods
     fun search(query: String? = null) {
         // Sauvegarde
         searchRecentSuggestions.saveRecentQuery(query, null)
 
         // Start searching
-        youtubeViewModel?.run {
+        videos.run {
             this.search(query)
-            resultsFragment?.clear()
-            resultsFragment?.isRefreshing = true
+
+            results.clear()
+            results.setRefreshing(true)
         }
     }
 
@@ -191,7 +181,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsFrag
                 setIconifiedByDefault(true)
 
                 // Restore state
-                youtubeViewModel?.query?.also { query ->
+                videos.query?.also { query ->
                     searchMenuItem?.expandActionView()
                     setQuery(query, false)
                     clearFocus() // with no focus

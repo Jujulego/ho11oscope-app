@@ -1,12 +1,12 @@
 package net.capellari.julien.ho11oscope.youtube
 
-import androidx.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_video_fragment.view.*
@@ -41,7 +41,6 @@ class YoutubeVideoFragment : Fragment() {
 
     // Attributs
     private lateinit var requestManager: RequestManager
-    private var youtubeViewModel: YoutubeViewModel? = null
 
     // Propriétés
     private val videoId: String?
@@ -69,9 +68,9 @@ class YoutubeVideoFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Get ViewModel
-        youtubeViewModel = activity?.run {
-            ViewModelProviders.of(this).get(YoutubeViewModel::class.java)
+        // Set activity's title
+        (activity as? AppCompatActivity)?.run {
+            supportActionBar?.setTitle(videoTitle ?: "Titre")
         }
     }
 

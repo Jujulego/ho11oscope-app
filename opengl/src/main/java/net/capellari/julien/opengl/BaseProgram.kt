@@ -35,6 +35,8 @@ abstract class BaseProgram {
 
     // Config
     var mode: Int = GLES20.GL_TRIANGLES
+    var defaultMode: Int = GLES20.GL_TRIANGLES
+        private set
 
     // Méthodes abstraites
     // - loading shaders

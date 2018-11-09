@@ -1,4 +1,4 @@
-package net.capellari.julien.utils;
+package net.capellari.julien;
 
 import org.junit.Test;
 

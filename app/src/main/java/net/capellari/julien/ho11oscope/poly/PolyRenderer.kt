@@ -61,6 +61,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
+    private var lightPower by sharedPreference("lightPower", context, 500)
+
     // Méthodes
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
@@ -80,10 +82,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         // Setup changes
         if (setupChange) {
             setupTransparency()
-
-            polyProgram.ambientFactor  = ambientFactor  / 100f
-            polyProgram.diffuseFactor  = diffuseFactor  / 100f
-            polyProgram.specularFactor = specularFactor / 100f
+            setupColorFactors()
+            setupLightPower()
 
             setupChange = false
         }
@@ -136,11 +136,12 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        Log.d(TAG, "updated $key")
+        Log.d(TAG, "Poly setup : updated $key")
         when(key) {
             this::wireRendering.sharedPreference -> setupRenderingMode()
-            this::transparency.sharedPreference  -> setupChange = true
 
+            this::transparency.sharedPreference,
+            this::lightPower.sharedPreference,
             this::ambientFactor.sharedPreference,
             this::diffuseFactor.sharedPreference,
             this::specularFactor.sharedPreference -> setupChange = true
@@ -149,13 +150,29 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
     // Méthodes
     private fun setupRenderingMode() {
-        Log.d(TAG, "rendering mode : ${if (wireRendering) "line loop" else "triangles"}")
-        polyProgram.mode = if (wireRendering) GLES20.GL_LINE_LOOP else GLES20.GL_TRIANGLES
+        Log.d(TAG, "rendering mode  : ${if (wireRendering) "line loop" else "triangles"}")
+        polyProgram.mode = if (wireRendering) GLES20.GL_LINE_LOOP else polyProgram.defaultMode
     }
 
     private fun setupTransparency() {
-        Log.d(TAG, "transparency   : ${if (transparency) "activated" else "disactivated"}")
+        Log.d(TAG, "transparency    : ${if (transparency) "activated" else "disactivated"}")
         (if (transparency) this::activateTransparency else this::disactivateTransparency)()
+    }
+
+    private fun setupLightPower() {
+        Log.d(TAG, "light power     : $lightPower")
+        polyProgram.lightPower = lightPower.toFloat()
+    }
+
+    private fun setupColorFactors() {
+        Log.d(TAG, "ambient factor  : $ambientFactor%")
+        Log.d(TAG, "diffuse factor  : $diffuseFactor%")
+        Log.d(TAG, "specular factor : $specularFactor%")
+
+        // update factors
+        polyProgram.ambientFactor  = ambientFactor  / 100f
+        polyProgram.diffuseFactor  = diffuseFactor  / 100f
+        polyProgram.specularFactor = specularFactor / 100f
     }
 
     private fun activateTransparency() {

@@ -65,8 +65,5 @@
     </style>
 
     <!-- Préférences -->
-    <style name="AppTheme.PreferenceThemeOverlay" parent="PreferenceThemeOverlay.v14.Material">
-        <item name="switchPreferenceCompatStyle">@style/Preference.SwitchPreferenceCompat</item>
-        <item name="seekBarPreferenceStyle">@style/Utils.SeekBarPreferenceTheme</item>
-    </style>
+    <style name="AppTheme.PreferenceThemeOverlay" parent="Utils.PreferenceTheme" />
 </resources>

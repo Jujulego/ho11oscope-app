@@ -31,7 +31,7 @@ object PolyAPI {
                     // Get infos
                     val obj = assets.getJSONObject(i)
 
-                    //Log.d(TAG, "(ID: $id) -- $name")
+                    Log.d(TAG, "(ID: ${obj.getString("name")} -- ${obj.getString("displayName")}")
                     handler(AssetData(
                             id          = obj.getString("name"),
                             name        = obj.getString("displayName"),

@@ -27,6 +27,18 @@ class OpenGLFragment : Fragment() {
             }
         })
 
+        savedInstanceState?.let {
+            view.tabs.getTabAt(it.getInt("tabIndex"))?.select()
+        }
+
         return view
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        view?.let { view ->
+            outState.putInt("tabIndex", view.tabs.selectedTabPosition)
+        }
     }
 }

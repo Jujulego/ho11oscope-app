@@ -24,8 +24,8 @@ abstract class PolyProgram : BaseProgram() {
     @Uniform("uMVP")   open var mvpMatrix       = Mat4()
     @Uniform("uM")     open var mMatrix         = Mat4()
     @Uniform("uV")     open var vMatrix         = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
-    @Uniform("uLight") open var lightPosition   = Vec3(0f, 2f, 25f)
-    @Uniform("uLightPower") open var lightPower = 600f
+    @Uniform("uLight") open var lightPosition   = Vec3(10f, 0f, 0f)
+    @Uniform("uLightPower") open var lightPower = 500f
 
     @Uniform("uAmbientFactor")  open var ambientFactor  = .1f
     @Uniform("uDiffuseFactor")  open var diffuseFactor  = .7f

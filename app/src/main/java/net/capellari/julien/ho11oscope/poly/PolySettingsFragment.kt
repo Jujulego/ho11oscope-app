@@ -6,6 +6,6 @@ import net.capellari.julien.ho11oscope.R
 
 class PolySettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        addPreferencesFromResource(R.xml.poly_preferences)
+        addPreferencesFromResource(R.xml.preferences_poly)
     }
 }

@@ -3,6 +3,7 @@ package net.capellari.julien.ho11oscope
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
@@ -11,10 +12,20 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.*
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import kotlinx.android.synthetic.main.main_activity.*
 import net.capellari.julien.utils.sharedPreference
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+    // Companion
+    companion object {
+        // Constantes
+        val PREFERENCE_FRAGMENTS = mapOf(
+                "net.capellari.julien.ho11oscope.poly.PolySettingsFragment" to R.id.action_to_rendering_settings
+        )
+    }
+
     // Attributs
     private lateinit var drawerToggle: ActionBarDrawerToggle
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -67,6 +78,14 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
+    }
+
+    override fun onPreferenceStartFragment(caller: PreferenceFragmentCompat, pref: Preference): Boolean {
+        PREFERENCE_FRAGMENTS[pref.fragment]?.let {
+            navController.navigate(it)
+        }
+
+        return true
     }
 
     // Méthodes

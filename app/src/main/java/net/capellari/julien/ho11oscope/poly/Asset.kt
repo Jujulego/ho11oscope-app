@@ -24,8 +24,9 @@ class Asset(val id: String) {
         var mtlFileName: String? = null
     }
 
+    // Listeners
     interface OnAssetReadyListener {
-        fun onReady() {}
+        fun onReady()
     }
 
     // Attributs
@@ -47,7 +48,10 @@ class Asset(val id: String) {
 
     private var objReady = false
     private var mtlReady = false
-    var listener: OnAssetReadyListener? = null
+    var ready = false
+        private set
+
+    private val listeners = mutableSetOf<OnAssetReadyListener>()
 
     // Méthodes
     fun getObjFile(context: Context): File {
@@ -55,6 +59,15 @@ class Asset(val id: String) {
     }
     fun getMtlFile(context: Context): File {
         return File(context.filesDir, "asset.mtl")
+    }
+    
+    fun addOnReadyListener(listener: OnAssetReadyListener) {
+        if (listeners.add(listener) && ready) {
+            listener.onReady()
+        }
+    }
+    fun removeOnReadyListener(listener: OnAssetReadyListener) {
+        listeners.remove(listener)
     }
 
     fun download(context: Context) {
@@ -73,9 +86,9 @@ class Asset(val id: String) {
                         geometry.parse(getObjFile(context).readText())
                         Log.d(TAG, ".obj file parsed")
 
-                        uiThread { _ ->
+                        synchronized(this@Asset) {
                             objReady = true
-                            if (mtlReady) listener?.onReady()
+                            if (mtlReady) ready()
                         }
                     }
                 }, {
@@ -95,15 +108,35 @@ class Asset(val id: String) {
                         materials.parse(getMtlFile(context).readText())
                         Log.d(TAG, ".mtl file parsed")
 
-                        uiThread {
+                        synchronized(this@Asset) {
                             mtlReady = true
-                            if (objReady) listener?.onReady()
+                            if (objReady) ready()
                         }
                     }
                 }, {
                     Log.e(TAG, "Error while downloading file", it)
                 })
             }
+        }
+    }
+
+    fun ready() {
+        val boundsCenter = geometry.boundsCenter
+        val boundsSize   = geometry.boundsSize
+        val maxSize = maxOf(boundsSize.x, boundsSize.y, boundsSize.z)
+
+        val scale = PolyFragment.ASSET_DISPLAY_SIZE / maxSize
+        val translation = boundsCenter * -1f
+
+        Log.d(PolyFragment.TAG, "Will apply translation: $translation, and scale: $scale")
+
+        convertObjAndMtl(translation, scale)
+
+        // Listener
+        ready = true
+
+        for (listener in listeners) {
+            listener.onReady()
         }
     }
 

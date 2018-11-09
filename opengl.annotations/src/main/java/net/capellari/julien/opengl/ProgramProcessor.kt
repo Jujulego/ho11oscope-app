@@ -389,6 +389,7 @@ class ProgramProcessor : AbstractProcessor() {
                 if (program.mode != 0) {
                     addInitializerBlock(CodeBlock.builder()
                             .addStatement("mode = %L", program.mode)
+                            .addStatement("defaultMode = %L", program.mode)
                             .build()
                     )
                 }

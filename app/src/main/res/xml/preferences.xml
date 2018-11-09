@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Preference android:title="@string/opengl_settings"
+        app:fragment="net.capellari.julien.ho11oscope.poly.PolySettingsFragment"
+
+        android:icon="@drawable/ic_flat_cube_24dp"/>
 
     <PreferenceCategory android:title="@string/player_settings">
         <CheckBoxPreference android:title="@string/player_brightness_setting"
@@ -9,18 +14,4 @@
 
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/opengl_settings">
-        <CheckBoxPreference android:title="@string/opengl_transparency_setting"
-            android:defaultValue="false"
-            android:key="transparency"
-
-            app:iconSpaceReserved="false" />
-
-        <CheckBoxPreference android:title="@string/opengl_wired_rendering_setting"
-            android:defaultValue="false"
-            android:key="wire_rendering"
-
-            app:iconSpaceReserved="false" />
-    </PreferenceCategory>
-</PreferenceScreen>
+</androidx.preference.PreferenceScreen>

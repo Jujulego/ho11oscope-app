@@ -1,4 +1,4 @@
-package net.capellari.julien.utils;
+package net.capellari.julien;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

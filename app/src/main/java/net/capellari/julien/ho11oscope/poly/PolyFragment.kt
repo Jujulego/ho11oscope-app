@@ -1,21 +1,22 @@
 package net.capellari.julien.ho11oscope.poly
 
+import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.poly_fragment.*
 import kotlinx.android.synthetic.main.poly_fragment.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.ResultsFragment
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
+import net.capellari.julien.ho11oscope.ResultsViewModel
 
-class PolyFragment : Fragment() {
+class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
     // Companion
     companion object {
         // Constantes
@@ -24,58 +25,21 @@ class PolyFragment : Fragment() {
     }
 
     // Attributs
-    private val resultsFragment = ResultsFragment()
-    private val polySettingsFragment = PolySettingsFragment()
+    private lateinit var polies: PolyViewModel
+    private lateinit var results: ResultsViewModel
 
-    private var asset: Asset? = null
-        set(asset) {
-            field = asset
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
 
-            asset?.run {
-                listener = object : Asset.OnAssetReadyListener {
-                    override fun onReady() {
-                        doAsync {
-                            val boundsCenter = asset.geometry.boundsCenter
-                            val boundsSize   = asset.geometry.boundsSize
-                            val maxSize = maxOf(boundsSize.x, boundsSize.y, boundsSize.z)
-
-                            val scale = ASSET_DISPLAY_SIZE / maxSize
-                            val translation = boundsCenter * -1f
-
-                            Log.d(TAG, "Will apply translation: $translation, and scale: $scale")
-
-                            asset.convertObjAndMtl(translation, scale)
-                            poly_surface.renderer.asset = asset
-
-                            uiThread {
-                                progress.visibility = View.GONE
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Results
-        resultsFragment.addListener(object : ResultsFragment.OnResultsListener {
-            override fun onRefresh() {
-                refresh()
-            }
-
-            override fun onItemClick(res: ResultsFragment.Result) {
-                (res.obj as? PolyAPI.AssetData)?.let {
-                    asset = Asset(it.id)
-                    progress.visibility = View.VISIBLE
-
-                    doAsync {
-                        asset?.download(requireContext())
-                    }
-                }
-            }
+        // ViewModels
+        polies = ViewModelProviders.of(activity!!)[PolyViewModel::class.java]
+        polies.getAsset().observe(this, Observer<Asset> {
+            progress.visibility = View.GONE
+            poly_surface.renderer.asset = it
         })
+
+        results = ViewModelProviders.of(activity!!)[ResultsViewModel::class.java]
+        results.addOnResultsListener(this)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -103,17 +67,35 @@ class PolyFragment : Fragment() {
         refresh()
     }
 
+    override fun onDetach() {
+        super.onDetach()
+
+        // Results
+        results.removeOnResultsListener(this)
+    }
+
+    override fun onRefresh() {
+        refresh()
+    }
+
+    override fun onItemClick(res: ResultsViewModel.Result) {
+        (res.obj as? PolyAPI.AssetData)?.let {
+            progress.visibility = View.VISIBLE
+            polies.setAsset(Asset(it.id))
+        }
+    }
+
     // Méthodes
-    fun refresh() {
-        resultsFragment.isRefreshing = true
+    private fun refresh() {
+        results.setRefreshing(true)
 
         PolyAPI.assets {
-            resultsFragment.add(ResultsFragment.Result(
+            results.add(ResultsViewModel.Result(
                     it.name, it.description,
                     imageUrl = it.imageUrl,
                     obj = it
             ))
-            resultsFragment.isRefreshing = false
+            results.setRefreshing(false)
         }
     }
 
@@ -123,8 +105,8 @@ class PolyFragment : Fragment() {
 
         override fun getItem(position: Int): Fragment? {
             return when (position) {
-                0    -> resultsFragment
-                1    -> polySettingsFragment
+                0    -> ResultsFragment()
+                1    -> PolySettingsFragment()
                 else -> null
             }
         }

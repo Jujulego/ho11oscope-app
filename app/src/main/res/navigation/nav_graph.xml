@@ -9,12 +9,11 @@
     <!-- Fragments -->
     <fragment android:id="@+id/youtubeFragment"
         android:name="net.capellari.julien.ho11oscope.youtube.YoutubeFragment"
-        android:label="YoutubeFragment"
+        android:label="@string/nav_youtube"
 
         tools:layout="@layout/youtube_fragment">
 
-        <action
-            android:id="@+id/action_video_details"
+        <action android:id="@+id/action_video_details"
             app:destination="@+id/youtubeVideoFragment"
             app:enterAnim="@anim/nav_default_enter_anim"
             app:exitAnim="@anim/nav_default_exit_anim"
@@ -26,19 +25,27 @@
 
     <fragment android:id="@+id/openglFragment"
         android:name="net.capellari.julien.ho11oscope.opengl.OpenGLFragment"
-        android:label="OpenGLFragment"
+        android:label="@string/nav_opengl"
 
         tools:layout="@layout/opengl_fragment" />
 
     <fragment android:id="@+id/polyFragment"
         android:name="net.capellari.julien.ho11oscope.poly.PolyFragment"
-        android:label="PolyFragment"
+        android:label="@string/nav_poly"
 
         tools:layout="@layout/poly_fragment" />
 
     <fragment android:id="@+id/settingsFragment"
         android:name="net.capellari.julien.ho11oscope.SettingsFragment"
-        android:label="SettingsFragment" />
+        android:label="@string/nav_settings">
+
+        <action android:id="@+id/action_to_rendering_settings"
+            app:destination="@id/polySettingsFragment" />
+    </fragment>
+
+    <fragment android:id="@+id/polySettingsFragment"
+        android:name="net.capellari.julien.ho11oscope.poly.PolySettingsFragment"
+        android:label="@string/opengl_settings" />
 
     <fragment android:id="@+id/youtubeVideoFragment"
         android:name="net.capellari.julien.ho11oscope.youtube.YoutubeVideoFragment"

@@ -47,7 +47,7 @@ void main() {
     position = (uM * vec4(aPosition, 1)).xyz;
 
     // Compute camera space normals
-    normal = (uV * uM * vec4(aNormal, 1)).xyz;
+    normal = (uV * uM * vec4(aNormal, 0)).xyz;
 
     // Vector from vertex to camera
     vec3 vertexCamera = (uV * uM * vec4(aPosition, 1)).xyz;
