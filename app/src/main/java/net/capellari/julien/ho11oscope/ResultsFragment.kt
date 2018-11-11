@@ -8,16 +8,42 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import kotlinx.android.synthetic.main.result_item.view.*
 import kotlinx.android.synthetic.main.results_fragment.view.*
 
 class ResultsFragment : Fragment() {
+    // Companion
+    companion object {
+        // Builder
+        class Builder() {
+            // Attributs
+            private val bundle = Bundle()
+
+            // Méthodes
+            fun setColumnNumber(col: Int) : Builder {
+                bundle.putInt("columnNumber", col)
+                return this
+            }
+
+            fun build(): ResultsFragment = ResultsFragment()
+                    .apply {
+                        arguments = bundle
+                    }
+        }
+    }
+
     // Attributs
     private lateinit var results: ResultsViewModel
 
+    private val columnNumber by lazy {
+        val def = context!!.resources.getInteger(R.integer.results_column_number)
+        arguments?.getInt("columnNumber", def) ?: def
+    }
+
+    // Events
     override fun onAttach(context: Context?) {
         super.onAttach(context)
 
@@ -46,7 +72,8 @@ class ResultsFragment : Fragment() {
         // Recycler view
         view.results.let {
             it.adapter = results.adapter
-            it.layoutManager = LinearLayoutManager(context)
+            it.itemAnimator = DefaultItemAnimator()
+            it.layoutManager = GridLayoutManager(context, columnNumber)
         }
     }
 }

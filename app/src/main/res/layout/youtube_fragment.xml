@@ -11,17 +11,10 @@
     tools:context=".youtube.YoutubeFragment"
     tools:menu="toolbar_youtube">
 
-    <FrameLayout android:id="@+id/search"
+    <fragment android:id="@+id/resultsFragment"
+        android:name="net.capellari.julien.ho11oscope.ResultsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 
-        android:visibility="gone">
-
-        <fragment android:id="@+id/resultsFragment"
-            android:name="net.capellari.julien.ho11oscope.ResultsFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-
-            tools:layout="@layout/results_fragment" />
-    </FrameLayout>
+        tools:layout="@layout/results_fragment" />
 </androidx.constraintlayout.widget.ConstraintLayout>

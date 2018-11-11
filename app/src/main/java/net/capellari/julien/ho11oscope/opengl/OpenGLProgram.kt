@@ -25,10 +25,10 @@ import net.capellari.julien.opengl.*
             )
         ]
 )
-abstract class HologramProgram : BaseProgram() {
+abstract class OpenGLProgram : BaseProgram() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseProgram.getImplementation<HologramProgram>() }
+        val instance by lazy(this) { BaseProgram.getImplementation<OpenGLProgram>() }
     }
 
     // Attributs
@@ -37,5 +37,5 @@ abstract class HologramProgram : BaseProgram() {
 
     @Attribute("vPosition") open var coords: ArrayList<Vec3>? = null
 
-    @Indices open var drawOrder: Array<Short>? = null
+    @Elements open var drawOrder: Array<Short>? = null
 }

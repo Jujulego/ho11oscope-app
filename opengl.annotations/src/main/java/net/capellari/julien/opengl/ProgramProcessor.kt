@@ -38,7 +38,7 @@ class ProgramProcessor : AbstractProcessor() {
         // Méthodes
         private fun createHandle() {
             handle = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
-                    .initializer("-1").mutable()
+                    .initializer("GLES31.GL_INVALID_INDEX").mutable()
                     .build()
         }
         protected abstract fun createProperty()
@@ -57,9 +57,7 @@ class ProgramProcessor : AbstractProcessor() {
                             addParameter(param)
 
                             addStatement("field = %N", param)
-                            addStatement("setUniformValue(%N, %N)", handle, param)
-                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform $name")
-                            //addStatement("Log.d(%S, %S)", "BaseProgram", "Loaded uniform $name")
+                            addStatement("reloadUniforms = true")
                         }.build())
                     }.build()
         }
@@ -83,7 +81,7 @@ class ProgramProcessor : AbstractProcessor() {
                     }.build()
         }
     }
-    inner class IndicesProperty(element: VariableElement, val annotation: Indices) {
+    inner class ElementsProperty(element: VariableElement, val annotation: Elements) {
         // Attributs
         lateinit var property: PropertySpec
             private set
@@ -112,6 +110,52 @@ class ProgramProcessor : AbstractProcessor() {
                             addStatement("reloadIBO = true")
                         }.build())
                     }.build()
+        }
+    }
+    inner class UniformBlockProperty(val annotation: UniformBlock) {
+        // Attributs
+        val properties = ArrayList<PropertySpec>()
+        val reload = PropertySpec.builder("reload${annotation.name}", Boolean::class, KModifier.PRIVATE)
+                .apply {
+                    mutable()
+                    initializer("true")
+                }.build()
+
+        val binding = PropertySpec.builder("binding${annotation.name}", Int::class, KModifier.PRIVATE)
+                .apply {
+                    mutable()
+                    initializer("GLES31.GL_INVALID_INDEX")
+                }.build()
+
+        val ubo = PropertySpec.builder("ubo${annotation.name}", ClassName("net.capellari.julien.opengl.buffers", "UniformBufferObject"), KModifier.PRIVATE)
+                .apply {
+                    initializer("UniformBufferObject()")
+                }.build()
+
+        val uboId = PropertySpec.builder("uboId${annotation.name}", Int::class, KModifier.PRIVATE)
+                .apply {
+                    mutable()
+                    initializer("GLES31.GL_INVALID_INDEX")
+                }.build()
+
+        // Méthodes
+        fun add(element: VariableElement) {
+            val name = element.simpleName.toString()
+            val type = element.asType().asTypeName()
+            val param = ParameterSpec.builder("value", type).build()
+
+            properties.add(PropertySpec.builder(name, type, KModifier.OVERRIDE)
+                    .apply {
+                        mutable()
+                        initializer("super.$name")
+
+                        setter(FunSpec.builder("set()").apply {
+                            addParameter(param)
+
+                            addStatement("field = %N", param)
+                            addStatement("%N = true", reload)
+                        }.build())
+                    }.build())
         }
     }
 
@@ -144,7 +188,8 @@ class ProgramProcessor : AbstractProcessor() {
             if ((it.file != "") or (it.script != "")) {
                 when (it.type) {
                     ShaderType.FRAGMENT -> hasFragment = true
-                    ShaderType.VERTEX -> hasVertex = true
+                    ShaderType.VERTEX   -> hasVertex = true
+                    ShaderType.COMPUTE  -> {}
                 }
             } else {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "One ${element.simpleName}'s ShaderScript must have a file or a script")
@@ -171,9 +216,10 @@ class ProgramProcessor : AbstractProcessor() {
         val implCls = ClassName(pkgProgram, "${element.simpleName}_Impl")
 
         // Attributes
+        var ibo: ElementsProperty? = null
         val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
-        var ibo: IndicesProperty? = null
+        val unifBlocks = mutableMapOf<String,UniformBlockProperty>()
 
         // Liste des attributs
         val fields = mutableMapOf<String,VariableElement>()
@@ -189,25 +235,32 @@ class ProgramProcessor : AbstractProcessor() {
                     // Annotations
                     val attr = it.getAnnotation(Attribute::class.java)
                     val unif = it.getAnnotation(Uniform::class.java)
+                    val unifBlock = it.getAnnotation(UniformBlock::class.java)
 
                     // Attributs & Uniforms
                     if (attr != null) {
                         attrs.add(AttributeProperty(fields[name]!!, attr))
                     } else if (unif != null) {
                         unifs.add(UniformProperty(fields[name]!!, unif))
+                    } else if (unifBlock != null) {
+                        if (!unifBlocks.containsKey(unifBlock.name)) {
+                            unifBlocks[unifBlock.name] = UniformBlockProperty(unifBlock)
+                        }
+
+                        unifBlocks[unifBlock.name]!!.add(fields[name]!!)
                     }
 
                     // IBO !
-                    it.getAnnotation(Indices::class.java)?.let { annot ->
+                    it.getAnnotation(Elements::class.java)?.let { annot ->
                         // Doublons ?
                         ibo?.let { ibo ->
                             processingEnv.messager.printMessage(Diagnostic.Kind.WARNING,
-                                    "@Indices used twice on the same program ('${ibo.name}' and '$name')"
+                                    "@Elements used twice on the same program ('${ibo.name}' and '$name')"
                             )
                         }
 
                         // Paire !
-                        ibo = IndicesProperty(fields[name]!!, annot)
+                        ibo = ElementsProperty(fields[name]!!, annot)
                     }
                 }
 
@@ -221,13 +274,13 @@ class ProgramProcessor : AbstractProcessor() {
                     for (shader in program.shaders) {
                         if (shader.file != "") {
                             addStatement(
-                                    "GLES20.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
+                                    "GLES31.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
                                     shader.file,
                                     ShaderType::class, shader.type.name
                             )
                         } else if (shader.script != "") {
                             addStatement(
-                                    "GLES20.glAttachShader(program, loadShader(%S, %T.%L))",
+                                    "GLES31.glAttachShader(program, loadShader(%S, %T.%L))",
                                     shader.script,
                                     ShaderType::class, shader.type.name
                             )
@@ -246,6 +299,22 @@ class ProgramProcessor : AbstractProcessor() {
                     for (prop in unifs) {
                         addStatement("%N = getUniformLocation(%S)", prop.handle, prop.annotation.name)
                     }
+
+                    if (!unifBlocks.isEmpty()) {
+                        addStatement("var binding = 0")
+                        for (prop in unifBlocks.values) {
+                            addStatement("if (bindUniformBlock(%S, binding)) %N = binding++", prop.annotation.name, prop.binding)
+                        }
+                    }
+                }.build()
+
+        val genUniformBuffers = FunSpec.builder("genUniformBuffers")
+                .apply {
+                    addModifiers(KModifier.OVERRIDE)
+
+                    for (prop in unifBlocks.values) {
+                        addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", prop.uboId)
+                    }
                 }.build()
 
         val loadUniforms = FunSpec.builder("loadUniforms")
@@ -255,6 +324,37 @@ class ProgramProcessor : AbstractProcessor() {
                     for (prop in unifs) {
                         addStatement("setUniformValue(%N, %N)", prop.handle, prop.property)
                         addStatement("GLUtils.checkGlError(%S)", "Loading uniform ${prop.annotation.name}")
+                    }
+                }.build()
+
+        val loadUniformBlocks = FunSpec.builder("loadUniformBlocks")
+                .apply {
+                    addModifiers(KModifier.OVERRIDE)
+
+                    for (prop in unifBlocks.values) {
+                        beginControlFlow("if (%N)", prop.reload)
+                            // Compute ubo size
+                            addStatement("var size = 0")
+                            for (p in prop.properties) {
+                                addStatement("size += bufferSize(%N)", p)
+                            }
+
+                            // Allocate UBO
+                            addStatement("%N.allocate(size)", prop.ubo)
+                            addStatement("%N.position = 0", prop.ubo)
+
+                            // Put data
+                            for (p in prop.properties) {
+                                addStatement("%N.put(%N)", prop.ubo, p)
+                            }
+
+                            // Bind UBO
+                            addStatement("%N.bind(%N)", prop.ubo, prop.uboId)
+                            addStatement("GLES31.glBindBufferRange(GLES31.GL_UNIFORM_BUFFER, %N, %N, 0, %N.size)", prop.binding, prop.uboId, prop.ubo)
+                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform ${prop.annotation.name}")
+
+                            addStatement("%N = false", prop.reload)
+                        endControlFlow()
                     }
                 }.build()
 
@@ -317,8 +417,8 @@ class ProgramProcessor : AbstractProcessor() {
 
                     for (prop in attrs) {
                         beginControlFlow("${prop.name}?.let")
-                            addStatement("GLES20.glEnableVertexAttribArray(%N)", prop.handle)
-                            addStatement("GLES20.glVertexAttribPointer(%N, numberComponents(it), bufferType(it), %L, 0, offset)", prop.handle, prop.annotation.normalized)
+                            addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
+                            addStatement("GLES31.glVertexAttribPointer(%N, numberComponents(it), bufferType(it), %L, 0, offset)", prop.handle, prop.annotation.normalized)
 
                             addStatement("offset += bufferSize(it)")
                         endControlFlow()
@@ -331,7 +431,7 @@ class ProgramProcessor : AbstractProcessor() {
 
                     ibo?.let { ibo ->
                         beginControlFlow("if (%N != null) {", ibo.property)
-                            addStatement("GLES20.glDrawElements(mode, ibo.size, bufferType(%N as %T, true), 0)", ibo.property, ibo.type.asNonNull())
+                            addStatement("GLES31.glDrawElements(mode, ibo.size, bufferType(%N as %T, true), 0)", ibo.property, ibo.type.asNonNull())
                             addStatement("GLUtils.checkGlError(\"Drawing\")")
                         endControlFlow()
                         beginControlFlow("else")
@@ -343,7 +443,7 @@ class ProgramProcessor : AbstractProcessor() {
                                 endControlFlow()
                             }
 
-                            addStatement("GLES20.glDrawArrays(mode, 0, count)")
+                            addStatement("GLES31.glDrawArrays(mode, 0, count)")
                             addStatement("GLUtils.checkGlError(\"Drawing\")")
                         endControlFlow()
                     } ?: {
@@ -355,7 +455,7 @@ class ProgramProcessor : AbstractProcessor() {
                             endControlFlow()
                         }
 
-                        addStatement("GLES20.glDrawArrays(mode, 0, count)")
+                        addStatement("GLES31.glDrawArrays(mode, 0, count)")
                         addStatement("GLUtils.checkGlError(\"Drawing\")")
                     }()
                 }.build()
@@ -365,7 +465,7 @@ class ProgramProcessor : AbstractProcessor() {
                     addModifiers(KModifier.OVERRIDE)
 
                     for (prop in attrs) {
-                        addStatement("GLES20.glDisableVertexAttribArray(%N)", prop.handle)
+                        addStatement("GLES31.glDisableVertexAttribArray(%N)", prop.handle)
                     }
                 }.build()
 
@@ -384,6 +484,13 @@ class ProgramProcessor : AbstractProcessor() {
                     addProperty(prop.handle)
                     addProperty(prop.property)
                 }
+                for (prop in unifBlocks.values) {
+                    addProperty(prop.binding)
+                    addProperty(prop.reload)
+                    addProperty(prop.ubo)
+                    addProperty(prop.uboId)
+                    addProperties(prop.properties)
+                }
 
                 // Contructeur
                 if (program.mode != 0) {
@@ -397,8 +504,10 @@ class ProgramProcessor : AbstractProcessor() {
                 // Méthodes
                 addFunction(loadShaders)
                 addFunction(getLocations)
+                addFunction(genUniformBuffers)
 
                 addFunction(loadUniforms)
+                addFunction(loadUniformBlocks)
                 addFunction(loadIBO)
                 addFunction(loadVBO)
                 addFunction(enableVBO)
@@ -410,7 +519,7 @@ class ProgramProcessor : AbstractProcessor() {
         // Ecriture
         val code = FileSpec.builder(pkgProgram, implCls.simpleName)
                 .apply {
-                    addImport("android.opengl", "GLES20")
+                    addImport("android.opengl", "GLES31")
                     addImport("android.util", "Log")
                     addImport("net.capellari.julien.opengl", "GLUtils")
 

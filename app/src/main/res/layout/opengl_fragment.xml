@@ -35,7 +35,7 @@
             android:text="@string/opengl_hexagone" />
     </com.google.android.material.tabs.TabLayout>
 
-    <net.capellari.julien.ho11oscope.opengl.HologramSurfaceView
+    <net.capellari.julien.ho11oscope.opengl.OpenGLSurfaceView
         android:id="@+id/hologram"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

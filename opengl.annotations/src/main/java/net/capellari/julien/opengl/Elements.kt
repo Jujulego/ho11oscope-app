@@ -2,4 +2,4 @@ package net.capellari.julien.opengl
 
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.SOURCE)
-annotation class Indices
+annotation class Elements

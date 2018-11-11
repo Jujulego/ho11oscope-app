@@ -15,21 +15,23 @@ abstract class PolyProgram : BaseProgram() {
     }
 
     // Attributs
-    var pMatrix = Mat4()
+    //var pMatrix = Mat4()
 
     // - buffers
-    @Indices open var indices: ArrayList<Int>? = null
+    @Elements open var indices: ArrayList<Int>? = null
 
     // - uniforms
-    @Uniform("uMVP")   open var mvpMatrix       = Mat4()
-    @Uniform("uM")     open var mMatrix         = Mat4()
-    @Uniform("uV")     open var vMatrix         = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
-    @Uniform("uLight") open var lightPosition   = Vec3(10f, 0f, 0f)
-    @Uniform("uLightPower") open var lightPower = 500f
+    @UniformBlock("Matrices") open var mvpMatrix   = Mat4()
+    @UniformBlock("Matrices") open var modelMatrix = Mat4()
 
-    @Uniform("uAmbientFactor")  open var ambientFactor  = .1f
-    @Uniform("uDiffuseFactor")  open var diffuseFactor  = .7f
-    @Uniform("uSpecularFactor") open var specularFactor = .5f
+    @UniformBlock("Stables") open var viewMatrix    = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
+    @UniformBlock("Stables") open var projMatrix    = Mat4()
+    @UniformBlock("Stables") open var lightPosition = Vec3(10f, 0f, 0f)
+
+    @UniformBlock("Parameters") open var lightPower     = 500f
+    @UniformBlock("Parameters") open var ambientFactor  = .1f
+    @UniformBlock("Parameters") open var diffuseFactor  = .7f
+    @UniformBlock("Parameters") open var specularFactor = .5f
 
     // - attributes
     @Attribute("aPosition")      open var positions:      ArrayList<Vec3>? = null

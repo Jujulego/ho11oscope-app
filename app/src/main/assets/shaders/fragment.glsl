@@ -1,63 +1,74 @@
+#version 310 es
+precision mediump float;
+
 // Uniformes
-// - valeurs
-uniform float uLightPower;
-uniform float uAmbientFactor;
-uniform float uDiffuseFactor;
-uniform float uSpecularFactor;
+layout (std140) uniform Parameters {
+    float lightPower;
+    float ambientFactor;
+    float diffuseFactor;
+    float specularFactor;
+};
 
-// Communes au shaders
-// - world space
-varying vec3 position;
+// Entrées
+in Vectors {
+    // - world space
+    vec3 position;
 
-// - camera space
-varying vec3 eyeDirection;
-varying vec3 lightDirection;
-varying vec3 normal;
+    // - camera space
+    vec3 eyeDirection;
+    vec3 lightDirection;
+    vec3 normal;
+} vecs;
 
 // - couleur
-varying vec3 ambientColor;
-varying vec3 diffuseColor;
-varying vec3 specularColor;
-varying float specularExp;
-varying float opacity;
+in Material {
+    vec3 ambientColor;
+    vec3 diffuseColor;
+    vec3 specularColor;
+    float specularExp;
+    float opacity;
+} material;
+
+// Sortie
+out vec4 FragColor;
 
 void main() {
-    // Normalize vectors
-    vec3 n = normalize(normal);
-    vec3 l = normalize(lightDirection);
-    vec3 e = normalize(eyeDirection);
+    // vecs.normalize vectors
+    vec3 n = normalize(vecs.normal);
+    vec3 l = normalize(vecs.lightDirection);
+    vec3 e = normalize(vecs.eyeDirection);
 
     // Light factor
-    float distance = length(lightDirection);
-    float lightFactor = uLightPower / (distance * distance);
+    float distance = length(vecs.lightDirection);
+    float lightFactor = lightPower / (distance * distance);
 
     // Prepare diffuse color
-    float diffuseFactor = dot(n, l);
-    if (diffuseFactor < float(0)) diffuseFactor = float(0);
+    float df = dot(n, l);
+    if (df < float(0)) df = float(0);
 
     // Prepare specular color
-    float specularFactor = float(0);
+    float sf = float(0);
 
     if (dot(n, l) > float(0)) {
         vec3 r = reflect(-l, n);
-        specularFactor = dot(e, r);
+        sf = dot(e, r);
 
-        if (specularFactor < float(0)) {
-            specularFactor = float(0);
+        if (sf < float(0)) {
+            sf = float(0);
         } else {
-            specularFactor = pow(specularFactor, specularExp);
+            sf = pow(sf, material.specularExp);
         }
     }
 
     // Compute colors
-    gl_FragColor = vec4(
+    FragColor = vec4(
         // Ambient color
-        (ambientColor * uAmbientFactor) +
+        (material.ambientColor * ambientFactor) +
         // Diffuse color
-        (diffuseColor * uDiffuseFactor * lightFactor * diffuseFactor) +
+        (material.diffuseColor * diffuseFactor * lightFactor * df) +
         // Specular color
-        (specularColor * uSpecularFactor * lightFactor * specularFactor),
+        (material.specularColor * specularFactor * lightFactor * sf),
         // Transparence
-        opacity
+        material.opacity
     );
 }

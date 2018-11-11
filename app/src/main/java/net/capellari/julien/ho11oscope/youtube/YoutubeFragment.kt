@@ -14,7 +14,6 @@ import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
-import kotlinx.android.synthetic.main.youtube_fragment.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
 import net.capellari.julien.ho11oscope.ResultsViewModel
@@ -28,15 +27,9 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
         const val TAG = "YoutubeFragment"
     }
 
-    // Enumeration
-    enum class State {
-        NONE, SEARCH
-    }
-
     // Attributs
     private var searchMenuItem: MenuItem? = null
 
-    private var state = State.NONE
     private lateinit var videos: YoutubeViewModel
     private lateinit var results: ResultsViewModel
     private lateinit var requestManager: RequestManager
@@ -118,7 +111,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
         videos.apply {
             query = query ?: ""
         }
-        setupSearch()
 
         return true
     }
@@ -126,7 +118,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
     override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
         // Stop searching ...
         videos.query = null
-        setupNone()
+        results.clear()
 
         return true
     }
@@ -218,20 +210,5 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
                 })
             }
         }
-    }
-
-    private fun setupNone() {
-        // Hide result list
-        search.visibility = View.GONE
-
-        // Update state
-        state = State.NONE
-    }
-    private fun setupSearch() {
-        // Show result list
-        search.visibility = View.VISIBLE
-
-        // Update state
-        state = State.SEARCH
     }
 }

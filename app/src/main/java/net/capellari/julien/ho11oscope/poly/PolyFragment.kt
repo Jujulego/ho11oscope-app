@@ -10,6 +10,8 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.viewpager.widget.ViewPager
+import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import kotlinx.android.synthetic.main.poly_fragment.*
 import kotlinx.android.synthetic.main.poly_fragment.view.*
 import net.capellari.julien.ho11oscope.R
@@ -58,6 +60,19 @@ class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
                 else -> false
             }
         }
+
+        view.pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {}
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+
+            override fun onPageSelected(position: Int) {
+                view.bottomNav.selectedItemId = when (position) {
+                    0    -> R.id.poly_liste
+                    1    -> R.id.poly_settings
+                    else -> R.id.poly_liste
+                }
+            }
+        })
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -105,7 +120,11 @@ class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
 
         override fun getItem(position: Int): Fragment? {
             return when (position) {
-                0    -> ResultsFragment()
+                0 -> ResultsFragment.Companion.Builder()
+                        .apply {
+                            setColumnNumber(1)
+                        }.build()
+
                 1    -> PolySettingsFragment()
                 else -> null
             }

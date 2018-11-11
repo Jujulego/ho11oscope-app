@@ -2,7 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.opengl.GLES20
+import android.opengl.GLES31
 import android.opengl.GLSurfaceView
 import android.util.Log
 import androidx.preference.PreferenceManager
@@ -64,8 +64,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var lightPower by sharedPreference("lightPower", context, 500)
 
     // Méthodes
-    override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
-        GLES20.glClearColor(0f, 0.15f, 0.15f, 1f)
+    override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
+        GLES31.glClearColor(0f, 0.15f, 0.15f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
@@ -96,13 +96,13 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         angle += deltaT * MODEL_ROTATION_SPEED
 
         // Draw background
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+        GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
 
         // model matrix rotate around Y axis
-        polyProgram.mMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
+        polyProgram.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
 
         // Compute MVP Matrix
-        polyProgram.mvpMatrix = polyProgram.pMatrix * (polyProgram.vMatrix * polyProgram.mMatrix)
+        polyProgram.mvpMatrix = polyProgram.projMatrix * (polyProgram.viewMatrix * polyProgram.modelMatrix)
 
         // render
         if (readyToRender) {
@@ -129,19 +129,19 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
-        GLES20.glViewport(0, 0, width, height)
+        GLES31.glViewport(0, 0, width, height)
 
         val ratio = width / height.toFloat()
-        polyProgram.pMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
+        polyProgram.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         Log.d(TAG, "Poly setup : updated $key")
         when(key) {
             this::wireRendering.sharedPreference -> setupRenderingMode()
+            this::lightPower.sharedPreference    -> setupLightPower()
 
             this::transparency.sharedPreference,
-            this::lightPower.sharedPreference,
             this::ambientFactor.sharedPreference,
             this::diffuseFactor.sharedPreference,
             this::specularFactor.sharedPreference -> setupChange = true
@@ -151,7 +151,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     // Méthodes
     private fun setupRenderingMode() {
         Log.d(TAG, "rendering mode  : ${if (wireRendering) "line loop" else "triangles"}")
-        polyProgram.mode = if (wireRendering) GLES20.GL_LINE_LOOP else polyProgram.defaultMode
+        polyProgram.mode = if (wireRendering) GLES31.GL_LINE_LOOP else polyProgram.defaultMode
     }
 
     private fun setupTransparency() {
@@ -176,17 +176,17 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     private fun activateTransparency() {
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        GLES20.glDepthMask(false)
+        GLES31.glDisable(GLES31.GL_DEPTH_TEST)
+        GLES31.glDepthMask(false)
 
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        GLES31.glEnable(GLES31.GL_BLEND)
+        GLES31.glBlendFunc(GLES31.GL_ONE, GLES31.GL_ONE_MINUS_SRC_ALPHA)
     }
 
     private fun disactivateTransparency() {
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        GLES20.glDepthMask(true)
+        GLES31.glEnable(GLES31.GL_DEPTH_TEST)
+        GLES31.glDepthMask(true)
 
-        GLES20.glDisable(GLES20.GL_BLEND)
+        GLES31.glDisable(GLES31.GL_BLEND)
     }
 }

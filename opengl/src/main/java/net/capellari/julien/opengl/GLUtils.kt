@@ -1,7 +1,7 @@
 package net.capellari.julien.opengl
 
 import android.content.Context
-import android.opengl.GLES20
+import android.opengl.GLES31
 import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -18,17 +18,18 @@ object GLUtils {
 
     // Fonctions
     fun checkGlError(glOperation: String) {
-        val error: Int = GLES20.glGetError()
+        val error: Int = GLES31.glGetError()
 
-        if (error != GLES20.GL_NO_ERROR) {
+        if (error != GLES31.GL_NO_ERROR) {
             Log.w("GLUtils", "$glOperation: glError $error")
         }
     }
 
     fun getGlShaderType(type: ShaderType): Int {
         return when (type) {
-            ShaderType.FRAGMENT -> GLES20.GL_FRAGMENT_SHADER
-            ShaderType.VERTEX -> GLES20.GL_VERTEX_SHADER
+            ShaderType.FRAGMENT -> GLES31.GL_FRAGMENT_SHADER
+            ShaderType.VERTEX   -> GLES31.GL_VERTEX_SHADER
+            ShaderType.COMPUTE  -> GLES31.GL_COMPUTE_SHADER
         }
     }
 

@@ -1,12 +1,13 @@
 package net.capellari.julien.opengl
 
 import android.content.Context
-import android.opengl.GLES20
+import android.opengl.GLES31
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
 import net.capellari.julien.opengl.base.BaseVec
+import net.capellari.julien.opengl.buffers.ElementBufferObject
+import net.capellari.julien.opengl.buffers.VertexBufferObject
 import java.nio.*
-import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 abstract class BaseProgram {
@@ -24,8 +25,9 @@ abstract class BaseProgram {
     // Attributs
     private var program: Int = -1
     private var isActive = false
+    protected var reloadUniforms = false
 
-    protected var ibo = IndiceBufferObject()
+    protected var ibo = ElementBufferObject()
     protected var iboId: Int = -1
     protected var reloadIBO  = false
 
@@ -34,17 +36,19 @@ abstract class BaseProgram {
     protected var reloadVBO  = false
 
     // Config
-    var mode: Int = GLES20.GL_TRIANGLES
-    var defaultMode: Int = GLES20.GL_TRIANGLES
+    var mode: Int = GLES31.GL_TRIANGLES
+    var defaultMode: Int = GLES31.GL_TRIANGLES
         private set
 
     // Méthodes abstraites
     // - loading shaders
     protected abstract fun loadShaders(context: Context, program: Int)
     protected abstract fun getLocations()
+    protected abstract fun genUniformBuffers()
 
     // - charge vars
     protected abstract fun loadUniforms()
+    protected abstract fun loadUniformBlocks()
     protected abstract fun loadIBO()
     protected abstract fun loadVBO()
     protected abstract fun enableVBO()
@@ -56,11 +60,11 @@ abstract class BaseProgram {
     // Méthodes
     fun compile(context: Context) {
         // Compile program
-        program = GLES20.glCreateProgram()
+        program = GLES31.glCreateProgram()
         loadShaders(context, program)
 
         // Link program
-        GLES20.glLinkProgram(program)
+        GLES31.glLinkProgram(program)
 
         GLUtils.checkGlError("Linking program")
         Log.d(TAG, "Program linked")
@@ -71,19 +75,27 @@ abstract class BaseProgram {
 
         // Initialisation
         usingProgram {
-            // Load variables
-            loadUniforms()
-
             // Création des buffers
-            iboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
-            vboId = IntArray(1).also { GLES20.glGenBuffers(1, it, 0) }[0]
-
-            reloadVBO = true
-            reloadIBO = true
+            iboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
+            vboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
+            genUniformBuffers()
         }
+
+        // First load
+        reloadUniforms = true
+        reloadVBO = true
+        reloadIBO = true
     }
     fun render() {
         usingProgram {
+            // Load variables
+            if (reloadUniforms) {
+                loadUniforms()
+                reloadUniforms = false
+            }
+
+            loadUniformBlocks()
+
             // Load buffers
             if (reloadVBO) {
                 loadVBO()
@@ -97,7 +109,7 @@ abstract class BaseProgram {
 
             // Bind VBO
             if (vboId != -1) {
-                GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboId)
+                GLES31.glBindBuffer(GLES31.GL_ARRAY_BUFFER, vboId)
                 enableVBO()
 
                 GLUtils.checkGlError("Binding VBO")
@@ -105,7 +117,7 @@ abstract class BaseProgram {
 
             // Bind IBO
             if (iboId != -1) {
-                GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboId)
+                GLES31.glBindBuffer(GLES31.GL_ELEMENT_ARRAY_BUFFER, iboId)
                 GLUtils.checkGlError("Binding IBO")
             }
 
@@ -114,8 +126,8 @@ abstract class BaseProgram {
 
             // Clean up
             clean()
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0)
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+            GLES31.glBindBuffer(GLES31.GL_ELEMENT_ARRAY_BUFFER, 0)
+            GLES31.glBindBuffer(GLES31.GL_ARRAY_BUFFER, 0)
         }
     }
 
@@ -127,7 +139,7 @@ abstract class BaseProgram {
             // Activate program
             synchronized(this) {
                 wasActive = isActive
-                GLES20.glUseProgram(program)
+                GLES31.glUseProgram(program)
                 isActive = true
             }
 
@@ -137,7 +149,7 @@ abstract class BaseProgram {
             // Disactivate program
             wasActive?.also {
                 synchronized(this) {
-                    if (it) GLES20.glUseProgram(0)
+                    if (it) GLES31.glUseProgram(0)
                     isActive = it
                 }
             }
@@ -147,19 +159,19 @@ abstract class BaseProgram {
     // - shaders
     protected fun loadShader(script: String, type: ShaderType, file: String? = null): Int {
         // Create shader
-        val shader = GLES20.glCreateShader(GLUtils.getGlShaderType(type))
-        GLES20.glShaderSource(shader, script)
+        val shader = GLES31.glCreateShader(GLUtils.getGlShaderType(type))
+        GLES31.glShaderSource(shader, script)
 
         // Compilation
-        GLES20.glCompileShader(shader)
+        GLES31.glCompileShader(shader)
         GLUtils.checkGlError("Compiling shader ${file ?: "<input>"}")
 
         val status = IntArray(1)
-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, status, 0)
+        GLES31.glGetShaderiv(shader, GLES31.GL_COMPILE_STATUS, status, 0)
 
-        if (status[0] != GLES20.GL_TRUE) {
+        if (status[0] != GLES31.GL_TRUE) {
             Log.e(TAG, file?.let { "Shader compile error ! (in $it)" } ?: "Shader compile error !")
-            Log.e(TAG, GLES20.glGetShaderInfoLog(shader))
+            Log.e(TAG, GLES31.glGetShaderInfoLog(shader))
         } else {
             Log.d(TAG, "${file ?: "Shader"} compiled")
         }
@@ -173,10 +185,10 @@ abstract class BaseProgram {
 
     // - locations
     protected fun getAttribLocation(name: String): Int {
-        val handle = GLES20.glGetAttribLocation(program, name)
+        val handle = GLES31.glGetAttribLocation(program, name)
 
         // Print
-        if (handle < 0) {
+        if (handle == GLES31.GL_INVALID_INDEX) {
             Log.w(TAG, "Attribute $name not found")
         } else {
             Log.d(TAG, "Attribute $name : $handle")
@@ -185,16 +197,29 @@ abstract class BaseProgram {
         return handle
     }
     protected fun getUniformLocation(name: String): Int {
-        val handle = GLES20.glGetUniformLocation(program, name)
+        val handle = GLES31.glGetUniformLocation(program, name)
 
         // Print
-        if (handle < 0) {
+        if (handle == GLES31.GL_INVALID_INDEX) {
             Log.w(TAG, "Uniform $name not found")
         } else {
             Log.d(TAG, "Uniform $name : $handle")
         }
 
         return handle
+    }
+    protected fun bindUniformBlock(name: String, binding: Int) : Boolean {
+        val index = GLES31.glGetUniformBlockIndex(program, name)
+
+        // Print
+        if (index == GLES31.GL_INVALID_INDEX) {
+            Log.w(TAG, "UniformBlock $name not found")
+            return false
+        }
+
+        Log.d(TAG, "UniformBlock $name : $index")
+        GLES31.glUniformBlockBinding(program, index, binding)
+        return true
     }
 
     // - buffers
@@ -244,18 +269,18 @@ abstract class BaseProgram {
     protected inline fun<reified T : Any> bufferType(v: T, unsigned: Boolean = false): Int {
         return when (v) {
             // Base
-            is Short -> if (unsigned) GLES20.GL_UNSIGNED_SHORT else GLES20.GL_SHORT
-            is Int   -> if (unsigned) GLES20.GL_UNSIGNED_INT   else GLES20.GL_INT
-            is Float -> GLES20.GL_FLOAT
+            is Short -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
+            is Int   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
+            is Float -> GLES31.GL_FLOAT
 
             // Composed
-            is BaseVec<*>   -> GLES20.GL_FLOAT
-            is BaseMat<*,*> -> GLES20.GL_FLOAT
+            is BaseVec<*>   -> GLES31.GL_FLOAT
+            is BaseMat<*,*> -> GLES31.GL_FLOAT
 
             // Buffers
-            is ShortBuffer -> if (unsigned) GLES20.GL_UNSIGNED_SHORT else GLES20.GL_SHORT
-            is IntBuffer   -> if (unsigned) GLES20.GL_UNSIGNED_INT   else GLES20.GL_INT
-            is FloatBuffer -> GLES20.GL_FLOAT
+            is ShortBuffer -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
+            is IntBuffer   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
+            is FloatBuffer -> GLES31.GL_FLOAT
 
             else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
         }
@@ -298,17 +323,50 @@ abstract class BaseProgram {
     }
 
     // - valeurs
+    protected fun setUniformValue(handle: Int, v: IntArray) {
+        if (handle != GLES31.GL_INVALID_INDEX) GLES31.glUniform1iv(handle, v.size, v, 0)
+    }
+    protected fun setUniformValue(handle: Int, v: IntBuffer) {
+        if (handle != GLES31.GL_INVALID_INDEX) GLES31.glUniform1iv(handle, v.capacity(), v)
+    }
+    protected fun setUniformValue(handle: Int, v: Array<Int>) = setUniformValue(handle, v.toIntArray())
+
+    protected fun setUniformValue(handle: Int, v: FloatArray) {
+        if (handle != GLES31.GL_INVALID_INDEX) GLES31.glUniform1fv(handle, v.size, v, 0)
+    }
+    protected fun setUniformValue(handle: Int, v: FloatBuffer) {
+        if (handle != GLES31.GL_INVALID_INDEX) GLES31.glUniform1fv(handle, v.capacity(), v)
+    }
+    protected fun setUniformValue(handle: Int, v: Array<Float>) = setUniformValue(handle, v.toFloatArray())
+
+    protected fun<T : BaseVec<*>> setUniformValue(handle: Int, v: Array<T>) {
+        if (!v.isEmpty() && handle != GLES31.GL_INVALID_INDEX) {
+            val vecSize = v[0].size
+            val array = FloatArray(v.size * vecSize) { i -> v[i / vecSize].data[i % vecSize] }
+
+            setUniformValue(handle, array)
+        }
+    }
+    protected fun<T : BaseMat<*,*>> setUniformValue(handle: Int, v: Array<T>) {
+        if (!v.isEmpty() && handle != GLES31.GL_INVALID_INDEX) {
+            val matSize = v[0].size * v[0].size
+            val array = FloatArray(v.size * matSize) { i -> v[i / matSize].data[i % matSize] }
+
+            setUniformValue(handle, array)
+        }
+    }
+
     protected fun setUniformValue(handle: Int, v: Any?) {
-        if (handle >= 0 && v != null) {
+        if (handle != GLES31.GL_INVALID_INDEX && v != null) {
             when (v) {
-                is Int   -> GLES20.glUniform1i(handle, v)
-                is Float -> GLES20.glUniform1f(handle, v)
-                is Vec2  -> GLES20.glUniform2f(handle, v.x, v.y)
-                is Vec3  -> GLES20.glUniform3f(handle, v.x, v.y, v.z)
-                is Vec4  -> GLES20.glUniform4f(handle, v.x, v.y, v.z, v.a)
-                is Mat2  -> GLES20.glUniformMatrix2fv(handle, 1, false, v.data, 0)
-                is Mat3  -> GLES20.glUniformMatrix3fv(handle, 1, false, v.data, 0)
-                is Mat4  -> GLES20.glUniformMatrix4fv(handle, 1, false, v.data, 0)
+                is Int   -> GLES31.glUniform1i(handle, v)
+                is Float -> GLES31.glUniform1f(handle, v)
+                is Vec2  -> GLES31.glUniform2f(handle, v.x, v.y)
+                is Vec3  -> GLES31.glUniform3f(handle, v.x, v.y, v.z)
+                is Vec4  -> GLES31.glUniform4f(handle, v.x, v.y, v.z, v.a)
+                is Mat2  -> GLES31.glUniformMatrix2fv(handle, 1, false, v.data, 0)
+                is Mat3  -> GLES31.glUniformMatrix3fv(handle, 1, false, v.data, 0)
+                is Mat4  -> GLES31.glUniformMatrix4fv(handle, 1, false, v.data, 0)
 
                 else -> throw RuntimeException("Unsupported value type : ${v::class.qualifiedName}")
             }

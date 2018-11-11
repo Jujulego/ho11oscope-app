@@ -4,16 +4,16 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
-import net.capellari.julien.opengl.Vec3
 
-class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurfaceView(context, attributeSet) {
+class OpenGLSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurfaceView(context, attributeSet) {
     // Companion
     companion object {
-        private const val TOUCH_SCALE_FACTOR: Float = -180.0f / 320f
+        // Constantes
+        private const val TOUCH_SCALE_FACTOR: Float = -180.0f / 20f
     }
 
     // Attributs
-    val renderer: HologramRenderer
+    val renderer: OpenGLRenderer
 
     private var prevX: Float = 0f
     private var prevY: Float = 0f
@@ -24,10 +24,8 @@ class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurf
         setEGLContextClientVersion(2)
 
         // Renderer
-        renderer = HologramRenderer(context)
+        renderer = OpenGLRenderer(context)
         setRenderer(renderer)
-
-        renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
     }
 
     // Méthodes
@@ -48,8 +46,7 @@ class HologramSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurf
                     dy *= -1
                 }
 
-                renderer.angle += (dx + dy) * TOUCH_SCALE_FACTOR
-                requestRender()
+                renderer.vit_angle = (dx + dy) * TOUCH_SCALE_FACTOR + OpenGLRenderer.VITESSE_MIN
             }
         }
 

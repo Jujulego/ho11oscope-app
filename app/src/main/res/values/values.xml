@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Results -->
+    <integer name="results_column_number">1</integer>
+</resources>

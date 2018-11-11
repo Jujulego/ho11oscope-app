@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <item android:id="@+id/tool_search"
-        android:icon="@drawable/ic_youtube_searched_for_36dp"
+        android:icon="@drawable/ic_search_36dp"
         android:title="@string/yt_tool_search"
 
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="always|collapseActionView"
-
-        tools:ignore="AlwaysShowAction" />
+        app:showAsAction="ifRoom|collapseActionView" />
 
     <item android:id="@+id/tool_clearhistory"
         android:icon="@drawable/ic_clear_36dp"
