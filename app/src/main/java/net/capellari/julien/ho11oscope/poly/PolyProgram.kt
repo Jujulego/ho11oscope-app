@@ -1,6 +1,7 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
+import net.capellari.julien.opengl.mtl.Material
 
 @Program(
     shaders = [
@@ -15,10 +16,9 @@ abstract class PolyProgram : BaseProgram() {
     }
 
     // Attributs
-    //var pMatrix = Mat4()
-
-    // - buffers
     @Elements open var indices: ArrayList<Int>? = null
+
+    @ShaderStorage("Materials") open var materials = arrayListOf<Material>()
 
     // - uniforms
     @UniformBlock("Matrices") open var mvpMatrix   = Mat4()
@@ -34,11 +34,7 @@ abstract class PolyProgram : BaseProgram() {
     @UniformBlock("Parameters") open var specularFactor = .5f
 
     // - attributes
-    @Attribute("aPosition")      open var positions:      ArrayList<Vec3>? = null
-    @Attribute("aNormal")        open var normals:        ArrayList<Vec3>? = null
-    @Attribute("aAmbientColor")  open var ambientColors:  ArrayList<Vec3>? = null
-    @Attribute("aDiffuseColor")  open var diffuseColors:  ArrayList<Vec3>? = null
-    @Attribute("aSpecularColor") open var specularColors: ArrayList<Vec3>? = null
-    @Attribute("aSpecularExp")   open var specularExps:  ArrayList<Float>? = null
-    @Attribute("aOpacity")       open var opacities:     ArrayList<Float>? = null
+    @Attribute("aPosition") open var positions:   ArrayList<Vec3>? = null
+    @Attribute("aNormal")   open var normals:     ArrayList<Vec3>? = null
+    @Attribute("aMaterial") open var materialIds: ArrayList<Int>?  = null
 }

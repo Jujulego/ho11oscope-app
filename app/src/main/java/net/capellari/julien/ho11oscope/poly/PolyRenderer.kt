@@ -95,6 +95,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         lastFrameTime = now
         angle += deltaT * MODEL_ROTATION_SPEED
 
+        if (angle >= 360) angle -= 360
+
         // Draw background
         GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
 
@@ -111,15 +113,12 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
             asset?.also {
                 // Prepare rendering
                 indexCount = it.indexCount
-                polyProgram.indices = it.indices
+                polyProgram.indices   = it.indices
+                polyProgram.materials = it.materials
 
-                polyProgram.positions = it.positions
-                polyProgram.normals   = it.normals
-                polyProgram.ambientColors  = it.ambientColors
-                polyProgram.diffuseColors  = it.diffuseColors
-                polyProgram.specularColors = it.specularColors
-                polyProgram.specularExps = it.specularExps
-                polyProgram.opacities    = it.opacities
+                polyProgram.positions   = it.positions
+                polyProgram.normals     = it.normals
+                polyProgram.materialIds = it.materialIds
 
                 // Ready !
                 readyToRender = true

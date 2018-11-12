@@ -44,11 +44,11 @@ abstract class BaseProgram {
     // - loading shaders
     protected abstract fun loadShaders(context: Context, program: Int)
     protected abstract fun getLocations()
-    protected abstract fun genUniformBuffers()
+    protected abstract fun genBuffers()
 
     // - charge vars
     protected abstract fun loadUniforms()
-    protected abstract fun loadUniformBlocks()
+    protected abstract fun loadBuffers()
     protected abstract fun loadIBO()
     protected abstract fun loadVBO()
     protected abstract fun enableVBO()
@@ -78,7 +78,7 @@ abstract class BaseProgram {
             // Création des buffers
             iboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
             vboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
-            genUniformBuffers()
+            genBuffers()
         }
 
         // First load
@@ -94,7 +94,7 @@ abstract class BaseProgram {
                 reloadUniforms = false
             }
 
-            loadUniformBlocks()
+            loadBuffers()
 
             // Load buffers
             if (reloadVBO) {
@@ -219,7 +219,29 @@ abstract class BaseProgram {
 
         Log.d(TAG, "UniformBlock $name : $index")
         GLES31.glUniformBlockBinding(program, index, binding)
+        GLUtils.checkGlError("Getting ShaderStorage $name")
         return true
+    }
+    protected fun bindSharedStorage(name: String) : Int {
+        val index = GLES31.glGetProgramResourceIndex(program, GLES31.GL_SHADER_STORAGE_BLOCK, name)
+
+        // Print
+        if (index == GLES31.GL_INVALID_INDEX) {
+            Log.w(TAG, "ShaderStorage $name not found")
+            return GLES31.GL_INVALID_INDEX
+        }
+
+        val binding = IntArray(1).also {
+                GLES31.glGetProgramResourceiv(program,
+                        GLES31.GL_SHADER_STORAGE_BLOCK, index,
+                        1, IntArray(1) {GLES31.GL_BUFFER_BINDING}, 0,
+                        1, IntArray(1) {1}, 0, it, 0)
+            }[0]
+
+        Log.d(TAG, "ShaderStorage $name : $index => $binding")
+        GLUtils.checkGlError("Getting ShaderStorage $name")
+
+        return binding
     }
 
     // - buffers
@@ -248,8 +270,9 @@ abstract class BaseProgram {
             is Float -> GLUtils.FLOAT_SIZE
 
             // Composed
-            is BaseVec<*>   -> (v as BaseVec<*>).size * GLUtils.FLOAT_SIZE
-            is BaseMat<*,*> -> (v as BaseMat<*,*>).run { size * size * GLUtils.FLOAT_SIZE }
+            is BaseVec<*>   -> v.size * GLUtils.FLOAT_SIZE
+            is BaseMat<*,*> -> v.size * v.size * GLUtils.FLOAT_SIZE
+            is Struct       -> v.getBufferSize()
 
             // Buffers
             is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
@@ -276,6 +299,7 @@ abstract class BaseProgram {
             // Composed
             is BaseVec<*>   -> GLES31.GL_FLOAT
             is BaseMat<*,*> -> GLES31.GL_FLOAT
+            is Struct       -> GLES31.GL_BYTE
 
             // Buffers
             is ShortBuffer -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
@@ -298,27 +322,11 @@ abstract class BaseProgram {
             is Short, is Int, is Float -> 1
 
             // Composed
-            is BaseVec<*>   -> (v as BaseVec<*>).size
-            is BaseMat<*,*> -> (v as BaseMat<*,*>).run { size * size }
+            is BaseVec<*>   -> v.size
+            is BaseMat<*,*> -> v.size * v.size
+            is Struct       -> v.getBufferSize()
 
             else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    protected fun<T:Buffer> allocateOrReuse(size: Int, buffer: T?, bufferType: BufferType) : T? {
-        // Reuse initial buffer
-        if (size <= buffer?.capacity() ?: 0) return buffer
-
-        // Allocation
-        val buf = ByteBuffer.allocateDirect(size)
-                .order(ByteOrder.nativeOrder())
-        buf.position(0)
-
-        return when (bufferType) {
-            BufferType.SHORT -> buf.asShortBuffer() as T
-            BufferType.INT   -> buf.asIntBuffer()   as T
-            BufferType.FLOAT -> buf.asFloatBuffer() as T
         }
     }
 

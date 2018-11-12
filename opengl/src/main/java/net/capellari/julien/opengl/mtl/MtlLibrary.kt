@@ -6,6 +6,7 @@ import java.lang.RuntimeException
 class MtlLibrary {
     // Attributs
     private val materials = mutableMapOf<String, Material>()
+    val names get() = materials.keys
 
     // Méthodes
     fun parse(file: String) {

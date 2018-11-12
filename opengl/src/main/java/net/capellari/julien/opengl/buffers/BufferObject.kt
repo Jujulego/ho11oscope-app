@@ -1,10 +1,13 @@
 package net.capellari.julien.opengl.buffers
 
 import android.opengl.GLES31
+import net.capellari.julien.opengl.Struct
+import net.capellari.julien.opengl.base.BaseMat
+import net.capellari.julien.opengl.base.BaseVec
 import java.lang.RuntimeException
 import java.nio.*
 
-abstract class BufferObject(protected val target: Int) : BO {
+abstract class BufferObject(protected val target: Int) {
     // Attributs
     protected var buffer: ByteBuffer? = null
         private set
@@ -55,6 +58,46 @@ abstract class BufferObject(protected val target: Int) : BO {
     }
 
     // Add values
-    override fun getByteBuffer(): ByteBuffer? = buffer
-    override fun put(value: Any): Unit = throw RuntimeException("Unsupported type ${value.javaClass.canonicalName}")
+    fun put(buffer: ShortBuffer) {
+        buffer.position(0)
+
+        while (buffer.hasRemaining()) {
+            put(buffer.get())
+        }
+    }
+    fun put(buffer: IntBuffer) {
+        buffer.position(0)
+
+        while (buffer.hasRemaining()) {
+            put(buffer.get())
+        }
+    }
+    fun put(buffer: FloatBuffer) {
+        buffer.position(0)
+
+        while (buffer.hasRemaining()) {
+            put(buffer.get())
+        }
+    }
+
+    fun put(array: ShortArray) = array.forEach { put(it) }
+    fun put(array: IntArray)   = array.forEach { put(it) }
+    fun put(array: FloatArray) = array.forEach { put(it) }
+
+    fun put(value: Any) {
+        when(value) {
+            is Short -> buffer?.putShort(value)
+            is Int   -> buffer?.putInt(value)
+            is Float -> buffer?.putFloat(value)
+
+            is BaseVec<*>   -> put(value.data)
+            is BaseMat<*,*> -> put(value.data)
+            is Struct       -> value.toBuffer(this)
+
+            else -> throw RuntimeException("Unsupported type ${value.javaClass.canonicalName}")
+        }
+    }
+
+    inline fun<reified T : Any> put(array: Array<T>)      = array.forEach { put(it) }
+    inline fun<reified T : Any> put(array: Collection<T>) = array.forEach { put(it) }
 }

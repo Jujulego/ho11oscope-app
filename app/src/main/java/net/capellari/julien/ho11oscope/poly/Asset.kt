@@ -6,8 +6,8 @@ import com.github.kittinunf.fuel.httpDownload
 import net.capellari.julien.opengl.mtl.MtlLibrary
 import net.capellari.julien.opengl.obj.ObjGeometry
 import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.opengl.mtl.Material
 import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 import java.io.File
 
 class Asset(val id: String) {
@@ -30,18 +30,14 @@ class Asset(val id: String) {
     }
 
     // Attributs
-    var positions = arrayListOf<Vec3>()
-    var normals   = arrayListOf<Vec3>()
-    var indices   = arrayListOf<Int>()
-
-    var ambientColors  = arrayListOf<Vec3>()
-    var diffuseColors  = arrayListOf<Vec3>()
-    var specularColors = arrayListOf<Vec3>()
-    var specularExps   = arrayListOf<Float>()
-    var opacities      = arrayListOf<Float>()
+    var positions   = arrayListOf<Vec3>()
+    var normals     = arrayListOf<Vec3>()
+    var indices     = arrayListOf<Int>()
+    var materialIds = arrayListOf<Int>()
+    var materials   = arrayListOf<Material>()
 
     val geometry = ObjGeometry()
-    val materials = MtlLibrary()
+    val library  = MtlLibrary()
 
     var vertexCount = 0
     var indexCount = 0
@@ -105,7 +101,7 @@ class Asset(val id: String) {
                 result.fold({
                     doAsync {
                         Log.d(TAG, ".mtl file downloaded to ${context.filesDir}")
-                        materials.parse(getMtlFile(context).readText())
+                        library.parse(getMtlFile(context).readText())
                         Log.d(TAG, ".mtl file parsed")
 
                         synchronized(this@Asset) {
@@ -141,30 +137,21 @@ class Asset(val id: String) {
     }
 
     fun convertObjAndMtl(translation: Vec3, scale: Float) {
-        // Count entries
-        vertexCount = 0
-        indexCount = 0
-
-        for (i in 0 until geometry.faceCount) {
-            val n = geometry.getFace(i).vertices.size
-
-            if (n >= 3) {
-                vertexCount += n
-                indexCount += 3 * (n - 2)
-            }
-        }
-
-        Log.d(TAG, "$vertexCount vertices, $indexCount indices")
-
         // Clear lists
         positions.clear()
         normals.clear()
         indices.clear()
-        ambientColors.clear()
-        diffuseColors.clear()
-        specularColors.clear()
-        specularExps.clear()
-        opacities.clear()
+        materialIds.clear()
+        materials.clear()
+
+        // Materials
+        val matNames = mutableMapOf<String,Int>()
+        for (mat in library.names) {
+            val id = materials.size
+
+            matNames[mat] = id
+            materials.add(library[mat])
+        }
 
         // Converting
         var currentVertexIndex = 0
@@ -173,11 +160,6 @@ class Asset(val id: String) {
             // Gather data
             val face = geometry.getFace(i)
 
-            val faceAmbientColor = materials[face.material].ambientColor
-            val faceDiffuseColor = materials[face.material].diffuseColor
-            val faceSpecularColor = materials[face.material].specularColor
-            val faceSpecularExp = materials[face.material].specularExp
-            val opacity = materials[face.material].opacity
             val numVerticesInFace = face.vertices.size
             val startVertexIndex = currentVertexIndex
 
@@ -202,12 +184,7 @@ class Asset(val id: String) {
                 // Add to buffers
                 positions.add(pos)
                 normals.add(normal)
-
-                ambientColors.add(faceAmbientColor)
-                diffuseColors.add(faceDiffuseColor)
-                specularColors.add(faceSpecularColor)
-                specularExps.add(faceSpecularExp)
-                opacities.add(opacity)
+                materialIds.add(matNames[face.material]!!)
 
                 ++currentVertexIndex
             }

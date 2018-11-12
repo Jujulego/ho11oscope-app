@@ -1,6 +1,15 @@
 #version 310 es
 precision mediump float;
 
+// Structures
+struct Material {
+    vec3 ambientColor;
+    vec3 diffuseColor;
+    vec3 specularColor;
+    float specularExp;
+    float opacity;
+};
+
 // Uniformes
 layout (std140) uniform Parameters {
     float lightPower;
@@ -21,13 +30,7 @@ in Vectors {
 } vecs;
 
 // - couleur
-in Material {
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
-    float specularExp;
-    float opacity;
-} material;
+in Material material;
 
 // Sortie
 out vec4 FragColor;

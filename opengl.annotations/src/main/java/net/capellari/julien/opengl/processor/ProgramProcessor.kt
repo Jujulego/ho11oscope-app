@@ -1,7 +1,8 @@
-package net.capellari.julien.opengl
+package net.capellari.julien.opengl.processor
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.*
+import net.capellari.julien.opengl.*
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -13,151 +14,9 @@ import javax.tools.Diagnostic
 
 @AutoService(Processor::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-class ProgramProcessor : AbstractProcessor() {
+internal class ProgramProcessor : AbstractProcessor() {
     // Propriétés
     private val sourceRoot get() = processingEnv.options["kapt.kotlin.generated"]
-
-    // Classes
-    abstract inner class HandleProperty(element: VariableElement) {
-        // Attributs
-        lateinit var handle: PropertySpec
-            protected set
-
-        lateinit var property: PropertySpec
-            protected set
-
-        val name = element.simpleName.toString()
-        val type = element.asType().asTypeName()
-
-        // Constructeur
-        init {
-            createHandle()
-            this.createProperty()
-        }
-
-        // Méthodes
-        private fun createHandle() {
-            handle = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
-                    .initializer("GLES31.GL_INVALID_INDEX").mutable()
-                    .build()
-        }
-        protected abstract fun createProperty()
-    }
-    inner class UniformProperty(element: VariableElement, val annotation: Uniform) : HandleProperty(element) {
-        // Méthodes
-        override fun createProperty() {
-            val param = ParameterSpec.builder("value", type).build()
-
-            property = PropertySpec.builder(name, type, KModifier.OVERRIDE)
-                    .apply {
-                        mutable()
-                        initializer("super.$name")
-
-                        setter(FunSpec.builder("set()").apply {
-                            addParameter(param)
-
-                            addStatement("field = %N", param)
-                            addStatement("reloadUniforms = true")
-                        }.build())
-                    }.build()
-        }
-    }
-    inner class AttributeProperty(element: VariableElement, val annotation: Attribute) : HandleProperty(element) {
-        // Méthodes
-        override fun createProperty() {
-            val param = ParameterSpec.builder("value", type).build()
-
-            property = PropertySpec.builder(name, type.asNullable(), KModifier.OVERRIDE)
-                    .apply {
-                        mutable()
-                        initializer("super.$name")
-
-                        setter(FunSpec.builder("set()").apply {
-                            addParameter(param)
-
-                            addStatement("field = %N", param)
-                            addStatement("reloadVBO = true")
-                        }.build())
-                    }.build()
-        }
-    }
-    inner class ElementsProperty(element: VariableElement, val annotation: Elements) {
-        // Attributs
-        lateinit var property: PropertySpec
-            private set
-
-        val name = element.simpleName.toString()
-        val type = element.asType().asTypeName().asNullable()
-
-        // Constructeur
-        init {
-            createProperty()
-        }
-
-        // Méthodes
-        private fun createProperty() {
-            val param = ParameterSpec.builder("value", type).build()
-
-            property = PropertySpec.builder(name, type, KModifier.OVERRIDE)
-                    .apply {
-                        mutable()
-                        initializer("super.$name")
-
-                        setter(FunSpec.builder("set()").apply {
-                            addParameter(param)
-
-                            addStatement("field = %N", param)
-                            addStatement("reloadIBO = true")
-                        }.build())
-                    }.build()
-        }
-    }
-    inner class UniformBlockProperty(val annotation: UniformBlock) {
-        // Attributs
-        val properties = ArrayList<PropertySpec>()
-        val reload = PropertySpec.builder("reload${annotation.name}", Boolean::class, KModifier.PRIVATE)
-                .apply {
-                    mutable()
-                    initializer("true")
-                }.build()
-
-        val binding = PropertySpec.builder("binding${annotation.name}", Int::class, KModifier.PRIVATE)
-                .apply {
-                    mutable()
-                    initializer("GLES31.GL_INVALID_INDEX")
-                }.build()
-
-        val ubo = PropertySpec.builder("ubo${annotation.name}", ClassName("net.capellari.julien.opengl.buffers", "UniformBufferObject"), KModifier.PRIVATE)
-                .apply {
-                    initializer("UniformBufferObject()")
-                }.build()
-
-        val uboId = PropertySpec.builder("uboId${annotation.name}", Int::class, KModifier.PRIVATE)
-                .apply {
-                    mutable()
-                    initializer("GLES31.GL_INVALID_INDEX")
-                }.build()
-
-        // Méthodes
-        fun add(element: VariableElement) {
-            val name = element.simpleName.toString()
-            val type = element.asType().asTypeName()
-            val param = ParameterSpec.builder("value", type).build()
-
-            properties.add(PropertySpec.builder(name, type, KModifier.OVERRIDE)
-                    .apply {
-                        mutable()
-                        initializer("super.$name")
-
-                        setter(FunSpec.builder("set()").apply {
-                            addParameter(param)
-
-                            addStatement("field = %N", param)
-                            addStatement("%N = true", reload)
-                        }.build())
-                    }.build())
-        }
-    }
 
     // Méthodes
     override fun getSupportedAnnotationTypes(): Set<String> {
@@ -188,8 +47,8 @@ class ProgramProcessor : AbstractProcessor() {
             if ((it.file != "") or (it.script != "")) {
                 when (it.type) {
                     ShaderType.FRAGMENT -> hasFragment = true
-                    ShaderType.VERTEX   -> hasVertex = true
-                    ShaderType.COMPUTE  -> {}
+                    ShaderType.VERTEX -> hasVertex = true
+                    ShaderType.COMPUTE -> {}
                 }
             } else {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "One ${element.simpleName}'s ShaderScript must have a file or a script")
@@ -219,7 +78,8 @@ class ProgramProcessor : AbstractProcessor() {
         var ibo: ElementsProperty? = null
         val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
-        val unifBlocks = mutableMapOf<String,UniformBlockProperty>()
+        val unifBlocks = mutableMapOf<String, UniformBlockProperty>()
+        val ssbos = mutableMapOf<String, ShaderStorageProperty>()
 
         // Liste des attributs
         val fields = mutableMapOf<String,VariableElement>()
@@ -236,6 +96,7 @@ class ProgramProcessor : AbstractProcessor() {
                     val attr = it.getAnnotation(Attribute::class.java)
                     val unif = it.getAnnotation(Uniform::class.java)
                     val unifBlock = it.getAnnotation(UniformBlock::class.java)
+                    val ssbo = it.getAnnotation(ShaderStorage::class.java)
 
                     // Attributs & Uniforms
                     if (attr != null) {
@@ -248,6 +109,12 @@ class ProgramProcessor : AbstractProcessor() {
                         }
 
                         unifBlocks[unifBlock.name]!!.add(fields[name]!!)
+                    } else if (ssbo != null) {
+                        if (!ssbos.containsKey(ssbo.name)) {
+                            ssbos[ssbo.name] = ShaderStorageProperty(ssbo)
+                        }
+
+                        ssbos[ssbo.name]!!.add(fields[name]!!)
                     }
 
                     // IBO !
@@ -303,17 +170,27 @@ class ProgramProcessor : AbstractProcessor() {
                     if (!unifBlocks.isEmpty()) {
                         addStatement("var binding = 0")
                         for (prop in unifBlocks.values) {
-                            addStatement("if (bindUniformBlock(%S, binding)) %N = binding++", prop.annotation.name, prop.binding)
+                            beginControlFlow("if (bindUniformBlock(%S, binding))", prop.annotation.name)
+                                addStatement("%N = binding++", prop.binding)
+                            endControlFlow()
                         }
+                    }
+
+                    for (prop in ssbos.values) {
+                        addStatement("%N = bindSharedStorage(%S)", prop.binding, prop.annotation.name)
                     }
                 }.build()
 
-        val genUniformBuffers = FunSpec.builder("genUniformBuffers")
+        val genBuffers = FunSpec.builder("genBuffers")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
                     for (prop in unifBlocks.values) {
-                        addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", prop.uboId)
+                        addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", prop.id)
+                    }
+
+                    for (prop in ssbos.values) {
+                        addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", prop.id)
                     }
                 }.build()
 
@@ -327,7 +204,7 @@ class ProgramProcessor : AbstractProcessor() {
                     }
                 }.build()
 
-        val loadUniformBlocks = FunSpec.builder("loadUniformBlocks")
+        val loadBuffers = FunSpec.builder("loadBuffers")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
@@ -340,18 +217,44 @@ class ProgramProcessor : AbstractProcessor() {
                             }
 
                             // Allocate UBO
-                            addStatement("%N.allocate(size)", prop.ubo)
-                            addStatement("%N.position = 0", prop.ubo)
+                            addStatement("%N.allocate(size)", prop.bo)
+                            addStatement("%N.position = 0", prop.bo)
 
                             // Put data
                             for (p in prop.properties) {
-                                addStatement("%N.put(%N)", prop.ubo, p)
+                                addStatement("%N.put(%N)", prop.bo, p)
                             }
 
                             // Bind UBO
-                            addStatement("%N.bind(%N)", prop.ubo, prop.uboId)
-                            addStatement("GLES31.glBindBufferRange(GLES31.GL_UNIFORM_BUFFER, %N, %N, 0, %N.size)", prop.binding, prop.uboId, prop.ubo)
-                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform ${prop.annotation.name}")
+                            addStatement("%N.bind(%N)", prop.bo, prop.id)
+                            addStatement("GLES31.glBindBufferBase(GLES31.GL_UNIFORM_BUFFER, %N, %N)", prop.binding, prop.id)
+                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform block ${prop.annotation.name}")
+
+                            addStatement("%N = false", prop.reload)
+                        endControlFlow()
+                    }
+
+                    for (prop in ssbos.values) {
+                        beginControlFlow("if (%N)", prop.reload)
+                            // Compute ssbo size
+                            addStatement("var size = 0")
+                            for (p in prop.properties) {
+                                addStatement("size += bufferSize(%N)", p)
+                            }
+
+                            // Allocate SSBO
+                            addStatement("%N.allocate(size)", prop.bo)
+                            addStatement("%N.position = 0", prop.bo)
+
+                            // Put data
+                            for (p in prop.properties) {
+                                addStatement("%N.put(%N)", prop.bo, p)
+                            }
+
+                            // Bind SSBO
+                            addStatement("%N.bind(%N)", prop.bo, prop.id)
+                            addStatement("GLES31.glBindBufferBase(GLES31.GL_SHADER_STORAGE_BUFFER, %N, %N)", prop.binding, prop.id)
+                            addStatement("GLUtils.checkGlError(%S)", "Loading shared storage ${prop.annotation.name}")
 
                             addStatement("%N = false", prop.reload)
                         endControlFlow()
@@ -475,21 +378,12 @@ class ProgramProcessor : AbstractProcessor() {
                 superclass(baseCls)
 
                 // Attributs
-                ibo?.also { ibo -> addProperty(ibo.property) }
-                for (prop in attrs) {
-                    addProperty(prop.handle)
-                    addProperty(prop.property)
-                }
-                for (prop in unifs) {
-                    addProperty(prop.handle)
-                    addProperty(prop.property)
-                }
-                for (prop in unifBlocks.values) {
-                    addProperty(prop.binding)
-                    addProperty(prop.reload)
-                    addProperty(prop.ubo)
-                    addProperty(prop.uboId)
-                    addProperties(prop.properties)
+                addProperties(attrs)
+                addProperties(unifs)
+                addProperties(unifBlocks.values)
+                addProperties(ssbos.values)
+                ibo?.also {
+                    ibo -> addProperties(ibo)
                 }
 
                 // Contructeur
@@ -504,10 +398,10 @@ class ProgramProcessor : AbstractProcessor() {
                 // Méthodes
                 addFunction(loadShaders)
                 addFunction(getLocations)
-                addFunction(genUniformBuffers)
+                addFunction(genBuffers)
 
                 addFunction(loadUniforms)
-                addFunction(loadUniformBlocks)
+                addFunction(loadBuffers)
                 addFunction(loadIBO)
                 addFunction(loadVBO)
                 addFunction(enableVBO)
