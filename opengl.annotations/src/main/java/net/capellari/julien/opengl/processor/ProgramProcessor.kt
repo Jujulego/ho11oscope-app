@@ -159,13 +159,8 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in attrs) {
-                        addStatement("%N = getAttribLocation(%S)", prop.handle, prop.annotation.name)
-                    }
-
-                    for (prop in unifs) {
-                        addStatement("%N = getUniformLocation(%S)", prop.handle, prop.annotation.name)
-                    }
+                    for (prop in attrs) prop.getLocationFunc(this)
+                    for (prop in unifs) prop.getLocationFunc(this)
 
                     if (!unifBlocks.isEmpty()) {
                         addStatement("var binding = 0")
@@ -176,22 +171,15 @@ internal class ProgramProcessor : AbstractProcessor() {
                         }
                     }
 
-                    for (prop in ssbos.values) {
-                        addStatement("%N = bindSharedStorage(%S)", prop.binding, prop.annotation.name)
-                    }
+                    for (prop in ssbos.values) prop.bindFunc(this)
                 }.build()
 
         val genBuffers = FunSpec.builder("genBuffers")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in unifBlocks.values) {
-                        addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", prop.id)
-                    }
-
-                    for (prop in ssbos.values) {
-                        addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", prop.id)
-                    }
+                    for (prop in unifBlocks.values) prop.genBufferFunc(this)
+                    for (prop in ssbos.values)      prop.genBufferFunc(this)
                 }.build()
 
         val loadUniforms = FunSpec.builder("loadUniforms")
@@ -208,57 +196,8 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in unifBlocks.values) {
-                        beginControlFlow("if (%N)", prop.reload)
-                            // Compute ubo size
-                            addStatement("var size = 0")
-                            for (p in prop.properties) {
-                                addStatement("size += bufferSize(%N)", p)
-                            }
-
-                            // Allocate UBO
-                            addStatement("%N.allocate(size)", prop.bo)
-                            addStatement("%N.position = 0", prop.bo)
-
-                            // Put data
-                            for (p in prop.properties) {
-                                addStatement("%N.put(%N)", prop.bo, p)
-                            }
-
-                            // Bind UBO
-                            addStatement("%N.bind(%N)", prop.bo, prop.id)
-                            addStatement("GLES31.glBindBufferBase(GLES31.GL_UNIFORM_BUFFER, %N, %N)", prop.binding, prop.id)
-                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform block ${prop.annotation.name}")
-
-                            addStatement("%N = false", prop.reload)
-                        endControlFlow()
-                    }
-
-                    for (prop in ssbos.values) {
-                        beginControlFlow("if (%N)", prop.reload)
-                            // Compute ssbo size
-                            addStatement("var size = 0")
-                            for (p in prop.properties) {
-                                addStatement("size += bufferSize(%N)", p)
-                            }
-
-                            // Allocate SSBO
-                            addStatement("%N.allocate(size)", prop.bo)
-                            addStatement("%N.position = 0", prop.bo)
-
-                            // Put data
-                            for (p in prop.properties) {
-                                addStatement("%N.put(%N)", prop.bo, p)
-                            }
-
-                            // Bind SSBO
-                            addStatement("%N.bind(%N)", prop.bo, prop.id)
-                            addStatement("GLES31.glBindBufferBase(GLES31.GL_SHADER_STORAGE_BUFFER, %N, %N)", prop.binding, prop.id)
-                            addStatement("GLUtils.checkGlError(%S)", "Loading shared storage ${prop.annotation.name}")
-
-                            addStatement("%N = false", prop.reload)
-                        endControlFlow()
-                    }
+                    for (prop in unifBlocks.values) prop.loadBufferFunc(this)
+                    for (prop in ssbos.values)      prop.loadBufferFunc(this)
                 }.build()
 
         val loadIBO = FunSpec.builder("loadIBO")
@@ -382,9 +321,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                 addProperties(unifs)
                 addProperties(unifBlocks.values)
                 addProperties(ssbos.values)
-                ibo?.also {
-                    ibo -> addProperties(ibo)
-                }
+                ibo?.addProperties(this)
 
                 // Contructeur
                 if (program.mode != 0) {

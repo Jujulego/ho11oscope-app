@@ -1,12 +1,9 @@
 package net.capellari.julien.opengl.processor
 
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.*
 import javax.lang.model.element.VariableElement
 
-abstract class HandleProperty(element: VariableElement) : BaseProperty() {
+internal abstract class HandleProperty(element: VariableElement) : BaseProperty() {
     // Attributs
     lateinit var handle: PropertySpec
         protected set
@@ -24,6 +21,9 @@ abstract class HandleProperty(element: VariableElement) : BaseProperty() {
     }
 
     // Méthodes
+    protected abstract fun createProperty()
+    abstract fun getLocationFunc(func: FunSpec.Builder)
+
     private fun createHandle() {
         handle = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
                 .initializer("GLES31.GL_INVALID_INDEX").mutable()
@@ -34,6 +34,4 @@ abstract class HandleProperty(element: VariableElement) : BaseProperty() {
         type.addProperty(handle)
         type.addProperty(property)
     }
-
-    protected abstract fun createProperty()
 }

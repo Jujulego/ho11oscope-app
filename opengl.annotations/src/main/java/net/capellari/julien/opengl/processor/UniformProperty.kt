@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import net.capellari.julien.opengl.Uniform
 import javax.lang.model.element.VariableElement
 
-class UniformProperty(element: VariableElement, val annotation: Uniform) : HandleProperty(element) {
+internal class UniformProperty(element: VariableElement, val annotation: Uniform) : HandleProperty(element) {
     // Méthodes
     override fun createProperty() {
         val param = ParameterSpec.builder("value", type).build()
@@ -24,5 +24,9 @@ class UniformProperty(element: VariableElement, val annotation: Uniform) : Handl
                         addStatement("reloadUniforms = true")
                     }.build())
                 }.build()
+    }
+
+    override fun getLocationFunc(func: FunSpec.Builder) {
+        func.addStatement("%N = getUniformLocation(%S)", handle, annotation.name)
     }
 }

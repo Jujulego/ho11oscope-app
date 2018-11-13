@@ -3,8 +3,11 @@ package net.capellari.julien.opengl.processor
 import com.squareup.kotlinpoet.*
 import javax.lang.model.element.VariableElement
 
-abstract class BufferProperty(name: String) : BaseProperty() {
+internal abstract class BufferProperty(name: String) : BaseProperty() {
     // Attributs
+    abstract val log: String
+    abstract val bufferType: String
+
     val properties = ArrayList<PropertySpec>()
 
     val id = PropertySpec.builder("id$name", Int::class, KModifier.PRIVATE)
@@ -35,6 +38,7 @@ abstract class BufferProperty(name: String) : BaseProperty() {
 
     // Méthodes
     protected abstract fun createBO(name: String)
+    abstract fun bindFunc(func: FunSpec.Builder)
 
     fun add(element: VariableElement) {
         val name = element.simpleName.toString()
@@ -53,6 +57,36 @@ abstract class BufferProperty(name: String) : BaseProperty() {
                         addStatement("%N = true", reload)
                     }.build())
                 }.build())
+    }
+
+    fun genBufferFunc(func: FunSpec.Builder) {
+        func.addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", id)
+    }
+
+    fun loadBufferFunc(func: FunSpec.Builder) {
+        func.beginControlFlow("if (%N)", reload)
+            // Compute ssbo size
+            func.addStatement("var size = 0")
+            for (p in properties) {
+                func.addStatement("size += bufferSize(%N)", p)
+            }
+
+            // Allocate SSBO
+            func.addStatement("%N.allocate(size)", bo)
+            func.addStatement("%N.position = 0", bo)
+
+            // Put data
+            for (p in properties) {
+                func.addStatement("%N.put(%N)", bo, p)
+            }
+
+            // Bind SSBO
+            func.addStatement("%N.bind(%N)", bo, id)
+            func.addStatement("GLES31.glBindBufferBase($bufferType, %N, %N)", binding, id)
+            func.addStatement("GLUtils.checkGlError(%S)", "Loading $log")
+
+            func.addStatement("%N = false", reload)
+        func.endControlFlow()
     }
 
     override fun addProperties(type: TypeSpec.Builder) {

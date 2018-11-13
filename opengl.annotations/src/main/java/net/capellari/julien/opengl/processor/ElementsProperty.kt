@@ -4,7 +4,7 @@ import com.squareup.kotlinpoet.*
 import net.capellari.julien.opengl.Elements
 import javax.lang.model.element.VariableElement
 
-class ElementsProperty(element: VariableElement, val annotation: Elements) : BaseProperty() {
+internal class ElementsProperty(element: VariableElement, val annotation: Elements) : BaseProperty() {
     // Attributs
     lateinit var property: PropertySpec
         private set

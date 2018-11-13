@@ -217,9 +217,9 @@ abstract class BaseProgram {
             return false
         }
 
-        Log.d(TAG, "UniformBlock $name : $index")
+        Log.d(TAG, "UniformBlock $name : $index => $binding")
         GLES31.glUniformBlockBinding(program, index, binding)
-        GLUtils.checkGlError("Getting ShaderStorage $name")
+        GLUtils.checkGlError("Getting UniformBlock $name")
         return true
     }
     protected fun bindSharedStorage(name: String) : Int {

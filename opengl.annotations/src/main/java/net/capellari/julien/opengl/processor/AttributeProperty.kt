@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import net.capellari.julien.opengl.Attribute
 import javax.lang.model.element.VariableElement
 
-class AttributeProperty(element: VariableElement, val annotation: Attribute) : HandleProperty(element) {
+internal class AttributeProperty(element: VariableElement, val annotation: Attribute) : HandleProperty(element) {
     // Méthodes
     override fun createProperty() {
         val param = ParameterSpec.builder("value", type).build()
@@ -24,5 +24,9 @@ class AttributeProperty(element: VariableElement, val annotation: Attribute) : H
                         addStatement("reloadVBO = true")
                     }.build())
                 }.build()
+    }
+
+    override fun getLocationFunc(func: FunSpec.Builder) {
+        func.addStatement("%N = getAttribLocation(%S)", handle, annotation.name)
     }
 }
