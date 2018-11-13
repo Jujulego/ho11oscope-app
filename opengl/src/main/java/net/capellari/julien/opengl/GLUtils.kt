@@ -2,16 +2,14 @@ package net.capellari.julien.opengl
 
 import android.content.Context
 import android.opengl.GLES31
+import android.opengl.GLES31Ext
+import android.opengl.GLES32
 import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object GLUtils {
     // Attributs
-    const val COORDS_PER_VERTEX    = 3 // xyz
-    const val NUM_COLOR_COMPONENTS = 3 // rgb
-
-    // - type size
     const val INT_SIZE   = 4 // sizeof(int)   = 4
     const val SHORT_SIZE = 2 // sizeof(short) = 2
     const val FLOAT_SIZE = 4 // sizeof(float) = 4
@@ -30,6 +28,7 @@ object GLUtils {
             ShaderType.FRAGMENT -> GLES31.GL_FRAGMENT_SHADER
             ShaderType.VERTEX   -> GLES31.GL_VERTEX_SHADER
             ShaderType.COMPUTE  -> GLES31.GL_COMPUTE_SHADER
+            ShaderType.GEOMETRY -> GLES31Ext.GL_GEOMETRY_SHADER_EXT
         }
     }
 

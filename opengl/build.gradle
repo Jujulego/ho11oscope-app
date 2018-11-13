@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
-apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 28
@@ -27,13 +27,17 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+
     // OpenGL
     implementation project(':opengl.annotations')
     annotationProcessor project(":opengl.annotations")
+
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
     // AndroidX
     implementation "androidx.appcompat:appcompat:$androidx_version"
+
     // Tests
     testImplementation 'junit:junit:4.12'
 }

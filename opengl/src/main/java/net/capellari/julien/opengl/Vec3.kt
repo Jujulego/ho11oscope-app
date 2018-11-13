@@ -23,7 +23,7 @@ class Vec3() : BaseVec<Vec3>(3, Vec3::class) {
     }
 
     // Infixes
-    infix fun vect(other: Vec3): Vec3 = Vec3(
+    infix fun cross(other: Vec3): Vec3 = Vec3(
             (y * other.z) - (z * other.y),
             (z * other.x) - (x * other.z),
             (x * other.y) - (y * other.x)

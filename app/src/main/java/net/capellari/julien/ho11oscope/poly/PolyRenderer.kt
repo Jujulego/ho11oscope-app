@@ -9,8 +9,10 @@ import androidx.preference.PreferenceManager
 import net.capellari.julien.opengl.Mat4
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.utils.sharedPreference
+import java.lang.Math.abs
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.sign
 
 class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferences.OnSharedPreferenceChangeListener {
     // Companion
@@ -35,11 +37,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     // Attributs
-    private var polyProgram: PolyProgram = PolyProgram.instance
+    private var polyProgram:    PolyProgram    = PolyProgram.instance
+    private var normalsProgram: NormalsProgram = NormalsProgram.instance
     private var readyToRender = false
 
-    @Volatile
-    private var setupChange = true
+    @Volatile private var setupChange = true
 
     private var indexCount: Int = 0
     private var lastFrameTime: Long = 0
@@ -54,24 +56,29 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         }
 
     // Propriétés
-    private var transparency  by sharedPreference("transparency",   context, false)
-    private var wireRendering by sharedPreference("wire_rendering", context, false)
+    private var transparency       by sharedPreference("transparency",        context, false)
+    private var wireframeRendering by sharedPreference("wireframe_rendering", context, false)
+    private var normalsRendering   by sharedPreference("normals_rendering",   context, false)
 
     private var ambientFactor  by sharedPreference("ambientFactor",  context, 50)
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
-    private var lightPower by sharedPreference("lightPower", context, 500)
+    private var lightPower by sharedPreference("lightPower",       context, 50)
+    private var magnitude  by sharedPreference("explodeMagnitude", context, 50)
 
     // Méthodes
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
         GLES31.glClearColor(0f, 0.15f, 0.15f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
+        normalsProgram.compile(context)
         polyProgram.compile(context)
 
         // Setup
         setupRenderingMode()
+        setupLightPower()
+        setupColorFactors()
 
         // Events
         PreferenceManager.getDefaultSharedPreferences(context)
@@ -82,8 +89,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         // Setup changes
         if (setupChange) {
             setupTransparency()
-            setupColorFactors()
-            setupLightPower()
 
             setupChange = false
         }
@@ -102,13 +107,27 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         // model matrix rotate around Y axis
         polyProgram.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
+        normalsProgram.model = polyProgram.modelMatrix
 
         // Compute MVP Matrix
         polyProgram.mvpMatrix = polyProgram.projMatrix * (polyProgram.viewMatrix * polyProgram.modelMatrix)
 
+        val m = magnitude / 20f
+        if (polyProgram.magnitude != m) {
+            polyProgram.magnitude += (m - polyProgram.magnitude) * deltaT
+
+            if (polyProgram.magnitude < m) {
+                polyProgram.magnitude = minOf(m, polyProgram.magnitude)
+            } else {
+                polyProgram.magnitude = maxOf(m, polyProgram.magnitude)
+            }
+        }
+
         // render
         if (readyToRender) {
             polyProgram.render()
+
+            if (normalsRendering) normalsProgram.render()
         } else {
             asset?.also {
                 // Prepare rendering
@@ -119,6 +138,10 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
                 polyProgram.positions   = it.positions
                 polyProgram.normals     = it.normals
                 polyProgram.materialIds = it.materialIds
+
+                normalsProgram.indices   = it.indices
+                normalsProgram.positions = it.positions
+                normalsProgram.normals   = it.normals
 
                 // Ready !
                 readyToRender = true
@@ -132,25 +155,26 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         val ratio = width / height.toFloat()
         polyProgram.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
+        normalsProgram.projection = polyProgram.projMatrix
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         Log.d(TAG, "Poly setup : updated $key")
         when(key) {
-            this::wireRendering.sharedPreference -> setupRenderingMode()
-            this::lightPower.sharedPreference    -> setupLightPower()
+            this::wireframeRendering.sharedPreference -> setupRenderingMode()
+            this::lightPower.sharedPreference -> setupLightPower()
 
-            this::transparency.sharedPreference,
+            this::transparency.sharedPreference  -> setupChange = true
             this::ambientFactor.sharedPreference,
             this::diffuseFactor.sharedPreference,
-            this::specularFactor.sharedPreference -> setupChange = true
+            this::specularFactor.sharedPreference -> setupColorFactors()
         }
     }
 
     // Méthodes
     private fun setupRenderingMode() {
-        Log.d(TAG, "rendering mode  : ${if (wireRendering) "line loop" else "triangles"}")
-        polyProgram.mode = if (wireRendering) GLES31.GL_LINE_LOOP else polyProgram.defaultMode
+        Log.d(TAG, "rendering mode  : ${if (wireframeRendering) "line loop" else "triangles"}")
+        polyProgram.mode = if (wireframeRendering) GLES31.GL_LINE_LOOP else polyProgram.defaultMode
     }
 
     private fun setupTransparency() {
@@ -162,7 +186,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         Log.d(TAG, "light power     : $lightPower")
         polyProgram.lightPower = lightPower.toFloat()
     }
-
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
         Log.d(TAG, "diffuse factor  : $diffuseFactor%")

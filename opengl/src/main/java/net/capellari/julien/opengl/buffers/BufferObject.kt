@@ -1,7 +1,7 @@
 package net.capellari.julien.opengl.buffers
 
 import android.opengl.GLES31
-import net.capellari.julien.opengl.Struct
+import net.capellari.julien.opengl.BaseStructure
 import net.capellari.julien.opengl.base.BaseMat
 import net.capellari.julien.opengl.base.BaseVec
 import java.lang.RuntimeException
@@ -92,7 +92,7 @@ abstract class BufferObject(protected val target: Int) {
 
             is BaseVec<*>   -> put(value.data)
             is BaseMat<*,*> -> put(value.data)
-            is Struct       -> value.toBuffer(this)
+            is BaseStructure       -> value.toBuffer(this)
 
             else -> throw RuntimeException("Unsupported type ${value.javaClass.canonicalName}")
         }

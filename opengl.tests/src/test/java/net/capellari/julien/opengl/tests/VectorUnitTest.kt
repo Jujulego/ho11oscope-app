@@ -44,6 +44,6 @@ class VectorUnitTest {
     }
     @Test fun vect() {
         val res = Vec3(-1f, 2f, -1f)
-        assertEquals(res, t1 vect t2)
+        assertEquals(res, t1 cross t2)
     }
 }

@@ -3,10 +3,6 @@ package net.capellari.julien.opengl.processor
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.*
 import net.capellari.julien.opengl.*
-import java.io.OutputStreamWriter
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.*
@@ -16,7 +12,7 @@ import javax.tools.Diagnostic
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 internal class ProgramProcessor : AbstractProcessor() {
     // Propriétés
-    private val sourceRoot get() = processingEnv.options["kapt.kotlin.generated"]
+    private val sourceRoot get() = processingEnv.options["kapt.kotlin.generated"]!!
 
     // Méthodes
     override fun getSupportedAnnotationTypes(): Set<String> {
@@ -25,46 +21,55 @@ internal class ProgramProcessor : AbstractProcessor() {
         )
     }
     override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        // Check if classes has both vertex and fragment shader
+        // Générate implementation code
         roundEnv.getElementsAnnotatedWith(Program::class.java)
                 .forEach {
-                    shadersCheck(it as TypeElement)
-                    createProgramImpl(it)
+                    if (it is TypeElement && programCheck(it)) {
+                        createProgramImpl(it)
+                    }
                 }
 
         return false
     }
 
     // - tests
-    private fun shadersCheck(element: TypeElement) {
+    private fun programCheck(type: TypeElement) : Boolean {
         // Get annotation
-        val program = element.getAnnotation(Program::class.java)
+        val program = type.getAnnotation(Program::class.java)
         var hasFragment = false
         var hasVertex = false
+
+        // should inherit from BaseProgram
+        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.BaseProgram")) {
+            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${type.simpleName} should inherit from BaseProgram")
+            return false
+        }
 
         // Check Scripts
         program.shaders.forEach {
             if ((it.file != "") or (it.script != "")) {
                 when (it.type) {
                     ShaderType.FRAGMENT -> hasFragment = true
-                    ShaderType.VERTEX -> hasVertex = true
+                    ShaderType.VERTEX   -> hasVertex = true
+                    ShaderType.GEOMETRY -> {}
                     ShaderType.COMPUTE -> {}
                 }
             } else {
-                processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "One ${element.simpleName}'s ShaderScript must have a file or a script")
+                processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "One ${type.simpleName}'s ShaderScript must have a file or a script")
             }
         }
 
         // Check consistency
         if (!hasFragment) {
-            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "${element.simpleName} has no fragment shader")
+            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "${type.simpleName} has no fragment shader")
         }
 
         if (!hasVertex) {
-            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "${element.simpleName} has no vertex shader")
+            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "${type.simpleName} has no vertex shader")
         }
-    }
 
+        return true
+    }
     private fun createProgramImpl(element: TypeElement) {
         // Get infos
         val pkgProgram = processingEnv.elementUtils.getPackageOf(element).toString()
@@ -345,7 +350,7 @@ internal class ProgramProcessor : AbstractProcessor() {
 
                 addFunction(draw)
                 addFunction(clean)
-            }
+            }.build()
 
         // Ecriture
         val code = FileSpec.builder(pkgProgram, implCls.simpleName)
@@ -354,53 +359,10 @@ internal class ProgramProcessor : AbstractProcessor() {
                     addImport("android.util", "Log")
                     addImport("net.capellari.julien.opengl", "GLUtils")
 
-                    addType(cls.build())
+                    addType(cls)
                 }.build()
 
         // Create file
-        var output = Paths.get(sourceRoot)
-
-        if (!Files.exists(output)) Files.createDirectory(output)
-        if (code.packageName.isNotEmpty()) {
-            for (packageComponent in code.packageName.split('.').dropLastWhile { it.isEmpty() }) {
-                output = output.resolve(packageComponent)
-            }
-        }
-
-        Files.createDirectories(output)
-        output = output.resolve("${code.name}.kt")
-
-        // Write down to file
-        val writer = OutputStreamWriter(Files.newOutputStream(output), StandardCharsets.UTF_8)
-
-        code.writeTo(object : Appendable {
-            fun replace(str: CharSequence?): CharSequence {
-                return (str ?: "null")
-                        .replace("java\\.lang".toRegex(), "kotlin")
-                        .replace("kotlin\\.Integer".toRegex(), "kotlin.*")
-
-                        .replace("Integer".toRegex(), "Int")
-                        .replace("Array<Short>".toRegex(), "ShortArray")
-                        .replace("Array<Int>".toRegex(),   "IntArray")
-                        .replace("Array<Float>".toRegex(), "FloatArray")
-            }
-
-            override fun append(str: CharSequence?): java.lang.Appendable {
-                writer.append(replace(str))
-                return this
-            }
-
-            override fun append(str: CharSequence?, p1: Int, p2: Int): java.lang.Appendable {
-                writer.append(replace(str), p1, p2)
-                return this
-            }
-
-            override fun append(c: Char): java.lang.Appendable {
-                writer.append(c)
-                return this
-            }
-        })
-
-        writer.close()
+        Utils.writeTo(sourceRoot, code)
     }
 }

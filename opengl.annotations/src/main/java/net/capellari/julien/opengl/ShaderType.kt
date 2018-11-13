@@ -1,5 +1,5 @@
 package net.capellari.julien.opengl
 
 enum class ShaderType {
-    VERTEX, FRAGMENT, COMPUTE
+    VERTEX, FRAGMENT, GEOMETRY, COMPUTE
 }

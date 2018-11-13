@@ -46,17 +46,17 @@ out Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
-} vecs;
 
-// - material
-out Material material;
+    // - material
+    Material material;
+} vecs;
 
 void main() {
     // vertex positions
     gl_Position = mvpMatrix * vec4(aPosition, 1);
 
     // Transmit color to fragment shader
-    material = materials[aMaterial];
+    vecs.material = materials[aMaterial];
 
     // Compute world space positions
     vecs.position = (modelMatrix * vec4(aPosition, 1)).xyz;

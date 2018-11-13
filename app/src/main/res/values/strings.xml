@@ -32,8 +32,9 @@
     <string name="poly_settings_specular">Couleur d\'éclat</string>
     <string name="poly_settings_colors_format" formatted="true">%d %%</string>
 
-    <string name="poly_settings_lumiere">Lumière</string>
-    <string name="poly_settings_lumiere_power">Puissance</string>
+    <string name="poly_settings_effects">Effets</string>
+    <string name="poly_settings_lumiere_power">Lumière</string>
+    <string name="poly_settings_explode_magnitude">Explosion</string>
 
     <!-- Préferences -->
     <string name="player_settings">Lecteur</string>
@@ -41,5 +42,6 @@
 
     <string name="opengl_settings">Rendu OpenGL</string>
     <string name="opengl_transparency_setting">Transparence</string>
-    <string name="opengl_wired_rendering_setting">Rendu fil de fer</string>
+    <string name="opengl_wireframe_rendering_setting">Rendu fil de fer</string>
+    <string name="opengl_normals_rendering_setting">Affichage des normales</string>
 </resources>

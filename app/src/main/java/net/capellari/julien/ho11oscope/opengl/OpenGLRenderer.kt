@@ -33,7 +33,7 @@ class OpenGLRenderer(val context: Context) : GLSurfaceView.Renderer {
     val program = OpenGLProgram.instance
 
     // Propriétés
-    private var wireRendering by sharedPreference("wire_rendering", context, false)
+    private var wireRendering by sharedPreference("wireframe_rendering", context, false)
 
     // Events
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {

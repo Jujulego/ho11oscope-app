@@ -6,7 +6,8 @@ import net.capellari.julien.opengl.mtl.Material
 @Program(
     shaders = [
         ShaderScript(ShaderType.VERTEX,   file = "shaders/vertex.glsl"),
-        ShaderScript(ShaderType.FRAGMENT, file = "shaders/fragment.glsl")
+        ShaderScript(ShaderType.FRAGMENT, file = "shaders/fragment.glsl"),
+        ShaderScript(ShaderType.GEOMETRY, file = "shaders/geometry.glsl")
     ]
 )
 abstract class PolyProgram : BaseProgram() {
@@ -21,6 +22,8 @@ abstract class PolyProgram : BaseProgram() {
     @ShaderStorage("Materials") open var materials = arrayListOf<Material>()
 
     // - uniforms
+    @Uniform("magnitude") open var magnitude = .5f
+
     @UniformBlock("Matrices") open var mvpMatrix   = Mat4()
     @UniformBlock("Matrices") open var modelMatrix = Mat4()
 
@@ -28,7 +31,7 @@ abstract class PolyProgram : BaseProgram() {
     @UniformBlock("Stables") open var projMatrix    = Mat4()
     @UniformBlock("Stables") open var lightPosition = Vec3(10f, 0f, 0f)
 
-    @UniformBlock("Parameters") open var lightPower     = 500f
+    @UniformBlock("Parameters") open var lightPower     = 50f
     @UniformBlock("Parameters") open var ambientFactor  = .1f
     @UniformBlock("Parameters") open var diffuseFactor  = .7f
     @UniformBlock("Parameters") open var specularFactor = .5f

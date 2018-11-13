@@ -2,6 +2,7 @@ package net.capellari.julien.opengl
 
 import android.content.Context
 import android.opengl.GLES31
+import android.opengl.GLES31Ext
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
 import net.capellari.julien.opengl.base.BaseVec
@@ -161,6 +162,7 @@ abstract class BaseProgram {
         // Create shader
         val shader = GLES31.glCreateShader(GLUtils.getGlShaderType(type))
         GLES31.glShaderSource(shader, script)
+        GLUtils.checkGlError("Creating shader ${file ?: "<input>"}")
 
         // Compilation
         GLES31.glCompileShader(shader)
@@ -272,7 +274,7 @@ abstract class BaseProgram {
             // Composed
             is BaseVec<*>   -> v.size * GLUtils.FLOAT_SIZE
             is BaseMat<*,*> -> v.size * v.size * GLUtils.FLOAT_SIZE
-            is Struct       -> v.getBufferSize()
+            is BaseStructure       -> v.getBufferSize()
 
             // Buffers
             is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
@@ -299,7 +301,7 @@ abstract class BaseProgram {
             // Composed
             is BaseVec<*>   -> GLES31.GL_FLOAT
             is BaseMat<*,*> -> GLES31.GL_FLOAT
-            is Struct       -> GLES31.GL_BYTE
+            is BaseStructure       -> GLES31.GL_BYTE
 
             // Buffers
             is ShortBuffer -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
@@ -324,7 +326,7 @@ abstract class BaseProgram {
             // Composed
             is BaseVec<*>   -> v.size
             is BaseMat<*,*> -> v.size * v.size
-            is Struct       -> v.getBufferSize()
+            is BaseStructure       -> v.getBufferSize()
 
             else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
         }

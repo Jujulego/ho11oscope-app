@@ -27,10 +27,10 @@ in Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
-} vecs;
 
-// - couleur
-in Material material;
+    // - material
+    Material material;
+} vecs;
 
 // Sortie
 out vec4 FragColor;
@@ -59,19 +59,19 @@ void main() {
         if (sf < float(0)) {
             sf = float(0);
         } else {
-            sf = pow(sf, material.specularExp);
+            sf = pow(sf, vecs.material.specularExp);
         }
     }
 
     // Compute colors
     FragColor = vec4(
         // Ambient color
-        (material.ambientColor * ambientFactor) +
+        (vecs.material.ambientColor * ambientFactor) +
         // Diffuse color
-        (material.diffuseColor * diffuseFactor * lightFactor * df) +
+        (vecs.material.diffuseColor * diffuseFactor * lightFactor * df) +
         // Specular color
-        (material.specularColor * specularFactor * lightFactor * sf),
+        (vecs.material.specularColor * specularFactor * lightFactor * sf),
         // Transparence
-        material.opacity
+        vecs.material.opacity
     );
 }

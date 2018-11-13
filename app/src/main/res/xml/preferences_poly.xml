@@ -2,14 +2,24 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory android:title="@string/poly_settings_lumiere">
+    <PreferenceCategory android:title="@string/poly_settings_effects">
         <!--suppress AndroidElementNotAllowed -->
         <net.capellari.julien.preference.SeekBarPreference
             android:title="@string/poly_settings_lumiere_power"
 
             android:key="lightPower"
-            android:defaultValue="500"
+            android:defaultValue="50"
             android:max="200"
+
+            app:iconSpaceReserved="false" />
+
+        <!--suppress AndroidElementNotAllowed -->
+        <net.capellari.julien.preference.SeekBarPreference
+            android:title="@string/poly_settings_explode_magnitude"
+
+            android:key="explodeMagnitude"
+            android:defaultValue="0"
+            android:max="100"
 
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
@@ -53,9 +63,15 @@
 
             app:iconSpaceReserved="false" />
 
-        <CheckBoxPreference android:title="@string/opengl_wired_rendering_setting"
+        <CheckBoxPreference android:title="@string/opengl_wireframe_rendering_setting"
             android:defaultValue="false"
-            android:key="wire_rendering"
+            android:key="wireframe_rendering"
+
+            app:iconSpaceReserved="false" />
+
+        <CheckBoxPreference android:title="@string/opengl_normals_rendering_setting"
+            android:defaultValue="false"
+            android:key="normals_rendering"
 
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
