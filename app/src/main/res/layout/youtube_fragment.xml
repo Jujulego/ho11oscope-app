@@ -9,7 +9,7 @@
     android:orientation="vertical"
 
     tools:context=".youtube.YoutubeFragment"
-    tools:menu="toolbar_youtube">
+    tools:menu="toolbar_recherche">
 
     <fragment android:id="@+id/resultsFragment"
         android:name="net.capellari.julien.ho11oscope.ResultsFragment"

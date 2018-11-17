@@ -1,5 +1,6 @@
 package net.capellari.julien.opengl.processor
 
+import androidx.annotation.RequiresApi
 import com.squareup.kotlinpoet.FileSpec
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
@@ -11,6 +12,7 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 
+@RequiresApi(26)
 object Utils {
     fun inherit(processingEnv: ProcessingEnvironment, type: TypeElement, base: String) : Boolean {
         var superTypeValid = true

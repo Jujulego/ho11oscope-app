@@ -87,7 +87,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         // Inflate menu
-        inflater.inflate(R.menu.toolbar_youtube, menu)
+        inflater.inflate(R.menu.toolbar_recherche, menu)
 
         // SearchItem
         searchMenuItem = menu.findItem(R.id.tool_search)
