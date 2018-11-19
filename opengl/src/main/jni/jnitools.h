@@ -16,11 +16,12 @@ namespace jnitools {
     };
 
     class JNIConvert {
-        // Destructeur
-        virtual ~JNIConvert() = default;
+        public:
+            // Destructeur
+            virtual ~JNIConvert() = default;
 
-        // Méthodes
-        virtual jobject toJava(JNIEnv* env) const = 0;
+            // Méthodes
+            virtual jobject toJava(JNIEnv* env) const = 0;
     };
 
     template<class R> R fromJava(JNIEnv* env, jobject jobj);

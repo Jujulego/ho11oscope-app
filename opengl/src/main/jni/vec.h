@@ -37,21 +37,21 @@ class Vec {
 
         template<size_t S2, class... Args>
         Vec(Vec<S2> const& o, Args... v) {
-            static_assert((S2 + sizeof(Args)) == SIZE, "Too many args !");
+            static_assert((S2 + sizeof...(Args)) == SIZE, "Too many args !");
 
             for (size_t i = 0; i < S2; ++i) {
                 m_data[i] = o[i];
             }
 
             auto args = {v...};
-            for (size_t i = S2; i < (S2 + sizeof(Args)); ++i) {
+            for (size_t i = S2; i < (S2 + sizeof...(Args)); ++i) {
                 m_data[i] = args[i];
             }
         }
 
         template<class... Args>
         Vec(Args... v) : m_data({v...}) {
-            static_assert(sizeof(Args) == SIZE, "Too many args !");
+            static_assert(sizeof...(Args) == SIZE, "Too many args !");
         }
 
         // Opérateurs
@@ -212,49 +212,52 @@ std::ostream& operator << (std::ostream& stream, Vec<size> const& v) {
 }
 
 // Classe
-struct Vec2 : Vec<2>, jnitools::JNIConvert {
-    // Méthodes
-    float& x() { return this->operator[](0); }
-    float& y() { return this->operator[](1); }
+class Vec2 : Vec<2>, jnitools::JNIConvert {
+    public:
+        // Méthodes
+        float& x() { return this->operator[](0); }
+        float& y() { return this->operator[](1); }
 
-    float const& x() const { return this->operator[](0); }
-    float const& y() const { return this->operator[](1); }
+        float const& x() const { return this->operator[](0); }
+        float const& y() const { return this->operator[](1); }
 
-    virtual jobject toJava(JNIEnv *env) const override {
-        return jnitools::construct(env, "net/capellari/julien/opengl/Vec2", "(FF)V", x(), y());
-    }
+        virtual jobject toJava(JNIEnv *env) const override {
+            return jnitools::construct(env, "net/capellari/julien/opengl/Vec2", "(FF)V", x(), y());
+        }
 };
 
-struct Vec3 : Vec<3>, jnitools::JNIConvert {
-    // Méthodes
-    float& x() { return this->operator[](0); }
-    float& y() { return this->operator[](1); }
-    float& z() { return this->operator[](2); }
+class Vec3 : Vec<3>, jnitools::JNIConvert {
+    public:
+        // Méthodes
+        float& x() { return this->operator[](0); }
+        float& y() { return this->operator[](1); }
+        float& z() { return this->operator[](2); }
 
-    float const& x() const { return this->operator[](0); }
-    float const& y() const { return this->operator[](1); }
-    float const& z() const { return this->operator[](2); }
+        float const& x() const { return this->operator[](0); }
+        float const& y() const { return this->operator[](1); }
+        float const& z() const { return this->operator[](2); }
 
-    virtual jobject toJava(JNIEnv *env) const override {
-        return jnitools::construct(env, "net/capellari/julien/opengl/Vec3", "(FFF)V", x(), y(), z());
-    }
+        virtual jobject toJava(JNIEnv *env) const override {
+            return jnitools::construct(env, "net/capellari/julien/opengl/Vec3", "(FFF)V", x(), y(), z());
+        }
 };
 
-struct Vec4 : Vec<4>, jnitools::JNIConvert {
-    // Méthodes
-    float& x() { return this->operator[](0); }
-    float& y() { return this->operator[](1); }
-    float& z() { return this->operator[](2); }
-    float& a() { return this->operator[](3); }
+class Vec4 : Vec<4>, jnitools::JNIConvert {
+    public:
+        // Méthodes
+        float& x() { return this->operator[](0); }
+        float& y() { return this->operator[](1); }
+        float& z() { return this->operator[](2); }
+        float& a() { return this->operator[](3); }
 
-    float const& x() const { return this->operator[](0); }
-    float const& y() const { return this->operator[](1); }
-    float const& z() const { return this->operator[](2); }
-    float const& a() const { return this->operator[](3); }
+        float const& x() const { return this->operator[](0); }
+        float const& y() const { return this->operator[](1); }
+        float const& z() const { return this->operator[](2); }
+        float const& a() const { return this->operator[](3); }
 
-    virtual jobject toJava(JNIEnv *env) const override {
-        return jnitools::construct(env, "net/capellari/julien/opengl/Vec4", "(FFFF)V", x(), y(), z(), a());
-    }
+        virtual jobject toJava(JNIEnv *env) const override {
+            return jnitools::construct(env, "net/capellari/julien/opengl/Vec4", "(FFFF)V", x(), y(), z(), a());
+        }
 };
 
 namespace jnitools {
