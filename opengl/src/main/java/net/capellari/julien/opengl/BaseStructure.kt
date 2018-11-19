@@ -2,8 +2,8 @@ package net.capellari.julien.opengl
 
 import net.capellari.julien.opengl.buffers.BufferObject
 
-abstract class BaseStructure {
+interface BaseStructure {
     // Méthodes
-    abstract fun toBuffer(buffer: BufferObject)
-    abstract fun getBufferSize(): Int
+    fun toBuffer(buffer: BufferObject)
+    fun getBufferSize(): Int
 }

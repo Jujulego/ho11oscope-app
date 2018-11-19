@@ -4,7 +4,7 @@ import android.util.Log
 import net.capellari.julien.opengl.*
 import net.capellari.julien.opengl.buffers.BufferObject
 
-class Material(val name: String) : BaseStructure() {
+class Material(val name: String) : BaseStructure {
     // Attributs
     var ambientColor = Vec3(1f, 1f, 1f)
     var diffuseColor = Vec3(1f, 1f, 1f)
