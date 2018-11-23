@@ -2,9 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -18,7 +16,7 @@ import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.ResultsFragment
 import net.capellari.julien.ho11oscope.ResultsViewModel
 
-class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
+class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewModel.OnResultsListener {
     // Companion
     companion object {
         // Constantes
@@ -27,8 +25,16 @@ class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
     }
 
     // Attributs
+    private var searchMenuItem: MenuItem? = null
+
     private lateinit var polies: PolyViewModel
     private lateinit var results: ResultsViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setHasOptionsMenu(true)
+    }
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -82,15 +88,25 @@ class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
         refresh()
     }
 
-    override fun onDetach() {
-        super.onDetach()
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        // Inflate menu
+        inflater.inflate(R.menu.toolbar_recherche, menu)
 
-        // Results
-        results.removeOnResultsListener(this)
+        // SearchItem
+        searchMenuItem = menu.findItem(R.id.tool_search)
+                ?.setOnActionExpandListener(this)
     }
 
     override fun onRefresh() {
         refresh()
+    }
+
+    override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+        return false
+    }
+
+    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+        return true
     }
 
     override fun onItemClick(res: ResultsViewModel.Result) {
@@ -98,6 +114,14 @@ class PolyFragment : Fragment(), ResultsViewModel.OnResultsListener {
             progress.visibility = View.VISIBLE
             polies.setAsset(Asset(it.id))
         }
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+
+        // Results
+        results.clear()
+        results.removeOnResultsListener(this)
     }
 
     // Méthodes

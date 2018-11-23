@@ -1,7 +1,6 @@
-package net.capellari.julien.opengl.mtl
+package net.capellari.julien.opengl
 
 import android.util.Log
-import net.capellari.julien.opengl.*
 import net.capellari.julien.opengl.buffers.BufferObject
 
 class Material(val name: String) : BaseStructure {

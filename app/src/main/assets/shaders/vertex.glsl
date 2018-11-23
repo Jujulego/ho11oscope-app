@@ -1,14 +1,5 @@
 #version 310 es
 
-// Structures
-struct Material {
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
-    float specularExp;
-    float opacity;
-};
-
 // Uniforms
 layout (std140) uniform Matrices {
     mat4 mvpMatrix;
@@ -22,15 +13,9 @@ layout (std140) uniform Stables {
     vec3 lightPosition; // in world space
 };
 
-// SSBO
-readonly buffer Materials {
-    Material materials[];
-};
-
 // Entrées
 in vec3 aPosition;
 in vec3 aNormal;
-in int aMaterial;
 in vec3 aAmbientColor;
 in vec3 aDiffuseColor;
 in vec3 aSpecularColor;
@@ -46,17 +31,11 @@ out Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
-
-    // - material
-    Material material;
 } vecs;
 
 void main() {
     // vertex positions
     gl_Position = mvpMatrix * vec4(aPosition, 1);
-
-    // Transmit color to fragment shader
-    vecs.material = materials[aMaterial];
 
     // Compute world space positions
     vecs.position = (modelMatrix * vec4(aPosition, 1)).xyz;

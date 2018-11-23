@@ -14,9 +14,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -g3")
 
-# Libraries
+# Dépendances
+# - Assimp
 add_library(assimp SHARED IMPORTED)
 set_target_properties(assimp PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libassimpd.so)
+
+# - NDK
+find_library(log-lib log)
 
 # JNI
 include_directories(src/main/jni)
@@ -24,8 +28,11 @@ include_directories(libs/include)
 
 add_library(opengl SHARED
         src/main/jni/jnitools.cpp
+        src/main/jni/material.cpp
         src/main/jni/mesh.cpp
+        src/main/jni/model.cpp
         src/main/jni/test.cpp
+        src/main/jni/vec.cpp
 )
 
-target_link_libraries(opengl assimp)
+target_link_libraries(opengl assimp ${log-lib})

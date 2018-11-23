@@ -1,5 +1,6 @@
 package net.capellari.julien.opengl.processor
 
+import androidx.annotation.RequiresApi
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.*
 import net.capellari.julien.opengl.*
@@ -8,6 +9,7 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.*
 import javax.tools.Diagnostic
 
+@RequiresApi(26)
 @AutoService(Processor::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 internal class ProgramProcessor : AbstractProcessor() {
@@ -46,13 +48,13 @@ internal class ProgramProcessor : AbstractProcessor() {
         }
 
         // Check Scripts
-        program.shaders.forEach {
+        program.shaders.scripts.forEach {
             if ((it.file != "") or (it.script != "")) {
                 when (it.type) {
                     ShaderType.FRAGMENT -> hasFragment = true
                     ShaderType.VERTEX   -> hasVertex = true
                     ShaderType.GEOMETRY -> {}
-                    ShaderType.COMPUTE -> {}
+                    ShaderType.COMPUTE  -> {}
                 }
             } else {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "One ${type.simpleName}'s ShaderScript must have a file or a script")
@@ -80,11 +82,15 @@ internal class ProgramProcessor : AbstractProcessor() {
         val implCls = ClassName(pkgProgram, "${element.simpleName}_Impl")
 
         // Attributes
-        var ibo: ElementsProperty? = null
         val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
         val unifBlocks = mutableMapOf<String, UniformBlockProperty>()
         val ssbos = mutableMapOf<String, ShaderStorageProperty>()
+
+        // Attributs
+        program.attributs.forEach {
+            attrs.add(AttributeProperty(it))
+        }
 
         // Liste des attributs
         val fields = mutableMapOf<String,VariableElement>()
@@ -98,15 +104,12 @@ internal class ProgramProcessor : AbstractProcessor() {
                     val name = it.simpleName.split("$").first()
 
                     // Annotations
-                    val attr = it.getAnnotation(Attribute::class.java)
                     val unif = it.getAnnotation(Uniform::class.java)
                     val unifBlock = it.getAnnotation(UniformBlock::class.java)
                     val ssbo = it.getAnnotation(ShaderStorage::class.java)
 
                     // Attributs & Uniforms
-                    if (attr != null) {
-                        attrs.add(AttributeProperty(fields[name]!!, attr))
-                    } else if (unif != null) {
+                    if (unif != null) {
                         unifs.add(UniformProperty(fields[name]!!, unif))
                     } else if (unifBlock != null) {
                         if (!unifBlocks.containsKey(unifBlock.name)) {
@@ -121,19 +124,6 @@ internal class ProgramProcessor : AbstractProcessor() {
 
                         ssbos[ssbo.name]!!.add(fields[name]!!)
                     }
-
-                    // IBO !
-                    it.getAnnotation(Elements::class.java)?.let { annot ->
-                        // Doublons ?
-                        ibo?.let { ibo ->
-                            processingEnv.messager.printMessage(Diagnostic.Kind.WARNING,
-                                    "@Elements used twice on the same program ('${ibo.name}' and '$name')"
-                            )
-                        }
-
-                        // Paire !
-                        ibo = ElementsProperty(fields[name]!!, annot)
-                    }
                 }
 
         // Méthodes
@@ -143,7 +133,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                     addParameter("context", ClassName("android.content", "Context"))
                     addParameter("program", Int::class)
 
-                    for (shader in program.shaders) {
+                    for (shader in program.shaders.scripts) {
                         if (shader.file != "") {
                             addStatement(
                                     "GLES31.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
@@ -205,114 +195,25 @@ internal class ProgramProcessor : AbstractProcessor() {
                     for (prop in ssbos.values)      prop.loadBufferFunc(this)
                 }.build()
 
-        val loadIBO = FunSpec.builder("loadIBO")
-                .apply {
-                    addModifiers(KModifier.OVERRIDE)
-
-                    ibo?.let { ibo ->
-                        beginControlFlow("if (iboId != -1)")
-                            beginControlFlow("%N?.also", ibo.property)
-                                // Allocation
-                                addStatement("ibo.allocate(bufferSize(it))")
-
-                                // Remplissage
-                                addStatement("ibo.position = 0")
-                                addStatement("ibo.put(it)")
-
-                                beginControlFlow("usingProgram")
-                                    addStatement("ibo.bind(iboId)")
-                                    addStatement("GLUtils.checkGlError(\"Loading ibo\")")
-                                endControlFlow()
-                            endControlFlow()
-                        endControlFlow()
-                    }
-                }.build()
-
-        val loadVBO = FunSpec.builder("loadVBO")
-                .apply {
-                    addModifiers(KModifier.OVERRIDE)
-
-                    // Compute vbo size
-                    addStatement("var size = 0")
-                    for (prop in attrs) {
-                        beginControlFlow("${prop.name}?.let")
-                        addStatement("size += bufferSize(it)")
-                        endControlFlow()
-                    }
-
-                    // Allocate VBO
-                    addStatement("vbo.allocate(size)")
-                    addStatement("vbo.position = 0")
-
-                    // Put data
-                    for (prop in attrs) {
-                        beginControlFlow("${prop.name}?.let")
-                        addStatement("vbo.put(it)")
-                        endControlFlow()
-                    }
-
-                    // Bind VBO
-                    addStatement("vbo.bind(vboId)")
-                }.build()
-
         val enableVBO = FunSpec.builder("enableVBO")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
+                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
 
                     // Link to arrays
-                    addStatement("var offset = 0")
-
                     for (prop in attrs) {
-                        beginControlFlow("${prop.name}?.let")
-                            addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                            addStatement("GLES31.glVertexAttribPointer(%N, numberComponents(it), bufferType(it), %L, 0, offset)", prop.handle, prop.annotation.normalized)
-
-                            addStatement("offset += bufferSize(it)")
-                        endControlFlow()
-                    }
-                }.build()
-
-        val draw = FunSpec.builder("draw")
-                .apply {
-                    addModifiers(KModifier.OVERRIDE)
-
-                    ibo?.let { ibo ->
-                        beginControlFlow("if (%N != null) {", ibo.property)
-                            addStatement("GLES31.glDrawElements(mode, ibo.size, bufferType(%N as %T, true), 0)", ibo.property, ibo.type.asNonNull())
-                            addStatement("GLUtils.checkGlError(\"Drawing\")")
-                        endControlFlow()
-                        beginControlFlow("else")
-                            addStatement("var count = 0")
-
-                            for (prop in attrs) {
-                                beginControlFlow("${prop.name}?.let")
-                                    addStatement("count = if (count == 0) vertexCount(it) else minOf(count, vertexCount(it))")
+                        when (prop.annotation.type) {
+                            AttributeType.VERTICES -> {
+                                addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.vertexType, %L, 0, 0)", prop.handle, prop.annotation.normalized)
+                            }
+                            AttributeType.NORMALS -> {
+                                beginControlFlow("if (mesh.hasNormals)")
+                                    addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
+                                    addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
                                 endControlFlow()
                             }
-
-                            addStatement("GLES31.glDrawArrays(mode, 0, count)")
-                            addStatement("GLUtils.checkGlError(\"Drawing\")")
-                        endControlFlow()
-                    } ?: {
-                        addStatement("var count = 0")
-
-                        for (prop in attrs) {
-                            beginControlFlow("${prop.name}?.let")
-                                addStatement("count = if (count == 0) vertexCount(it) else minOf(count, vertexCount(it))")
-                            endControlFlow()
                         }
-
-                        addStatement("GLES31.glDrawArrays(mode, 0, count)")
-                        addStatement("GLUtils.checkGlError(\"Drawing\")")
-                    }()
-                }.build()
-
-        val clean = FunSpec.builder("clean")
-                .apply {
-                    addModifiers(KModifier.OVERRIDE)
-
-                    for (prop in attrs) {
-                        addStatement("GLES31.glDisableVertexAttribArray(%N)", prop.handle)
                     }
                 }.build()
 
@@ -326,7 +227,6 @@ internal class ProgramProcessor : AbstractProcessor() {
                 addProperties(unifs)
                 addProperties(unifBlocks.values)
                 addProperties(ssbos.values)
-                ibo?.addProperties(this)
 
                 // Contructeur
                 if (program.mode != 0) {
@@ -344,12 +244,7 @@ internal class ProgramProcessor : AbstractProcessor() {
 
                 addFunction(loadUniforms)
                 addFunction(loadBuffers)
-                addFunction(loadIBO)
-                addFunction(loadVBO)
                 addFunction(enableVBO)
-
-                addFunction(draw)
-                addFunction(clean)
             }.build()
 
         // Ecriture

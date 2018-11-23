@@ -1,5 +1,6 @@
 package net.capellari.julien.opengl.mtl
 
+import net.capellari.julien.opengl.Material
 import net.capellari.julien.opengl.Vec3
 import java.lang.RuntimeException
 

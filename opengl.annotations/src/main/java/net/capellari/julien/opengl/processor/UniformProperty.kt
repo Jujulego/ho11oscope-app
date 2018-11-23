@@ -1,15 +1,28 @@
 package net.capellari.julien.opengl.processor
 
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.*
 import net.capellari.julien.opengl.Uniform
 import javax.lang.model.element.VariableElement
 
-internal class UniformProperty(element: VariableElement, val annotation: Uniform) : HandleProperty(element) {
+internal class UniformProperty(element: VariableElement, val annotation: Uniform) : BaseProperty() {
+    // Attributs
+    lateinit var handle: PropertySpec
+        protected set
+
+    lateinit var property: PropertySpec
+        protected set
+
+    val name = element.simpleName.toString()
+    val type = element.asType().asTypeName()
+
+    // Constructeur
+    init {
+        createHandle()
+        this.createProperty()
+    }
+
     // Méthodes
-    override fun createProperty() {
+    fun createProperty() {
         val param = ParameterSpec.builder("value", type).build()
 
         property = PropertySpec.builder(name, type, KModifier.OVERRIDE)
@@ -26,7 +39,18 @@ internal class UniformProperty(element: VariableElement, val annotation: Uniform
                 }.build()
     }
 
-    override fun getLocationFunc(func: FunSpec.Builder) {
+    fun getLocationFunc(func: FunSpec.Builder) {
         func.addStatement("%N = getUniformLocation(%S)", handle, annotation.name)
+    }
+
+    private fun createHandle() {
+        handle = PropertySpec.builder("${name}Handle", Int::class, KModifier.PRIVATE)
+                .initializer("GLES31.GL_INVALID_INDEX").mutable()
+                .build()
+    }
+
+    override fun addProperties(type: TypeSpec.Builder) {
+        type.addProperty(handle)
+        type.addProperty(property)
     }
 }

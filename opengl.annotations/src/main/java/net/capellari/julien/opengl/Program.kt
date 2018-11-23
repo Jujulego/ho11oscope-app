@@ -4,5 +4,6 @@ package net.capellari.julien.opengl
 @Retention(AnnotationRetention.SOURCE)
 annotation class Program(
         val mode: Int = 0,
-        vararg val shaders: ShaderScript
+        val shaders: Shaders,
+        vararg val attributs: Attribute
 )

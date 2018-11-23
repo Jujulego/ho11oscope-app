@@ -5,6 +5,7 @@ import android.opengl.GLES31
 import android.opengl.GLES31Ext
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
+import net.capellari.julien.opengl.base.BaseMesh
 import net.capellari.julien.opengl.base.BaseVec
 import net.capellari.julien.opengl.buffers.ElementBufferObject
 import net.capellari.julien.opengl.buffers.VertexBufferObject
@@ -28,14 +29,6 @@ abstract class BaseProgram {
     private var isActive = false
     protected var reloadUniforms = false
 
-    protected var ibo = ElementBufferObject()
-    protected var iboId: Int = -1
-    protected var reloadIBO  = false
-
-    protected var vbo = VertexBufferObject()
-    protected var vboId: Int = -1
-    protected var reloadVBO  = false
-
     // Config
     var mode: Int = GLES31.GL_TRIANGLES
     var defaultMode: Int = GLES31.GL_TRIANGLES
@@ -50,13 +43,7 @@ abstract class BaseProgram {
     // - charge vars
     protected abstract fun loadUniforms()
     protected abstract fun loadBuffers()
-    protected abstract fun loadIBO()
-    protected abstract fun loadVBO()
-    protected abstract fun enableVBO()
-
-    // - draw & clean
-    protected abstract fun draw()
-    protected abstract fun clean()
+    protected abstract fun enableVBO(mesh: BaseMesh)
 
     // Méthodes
     fun compile(context: Context) {
@@ -77,17 +64,24 @@ abstract class BaseProgram {
         // Initialisation
         usingProgram {
             // Création des buffers
-            iboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
-            vboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
             genBuffers()
         }
 
         // First load
         reloadUniforms = true
-        reloadVBO = true
-        reloadIBO = true
     }
-    fun render() {
+
+    fun prepare(mesh: BaseMesh) = prepare(arrayListOf(mesh))
+    fun prepare(meshes: Collection<BaseMesh>) {
+        usingProgram {
+            for (mesh in meshes) {
+                mesh.genBuffers()
+            }
+        }
+    }
+
+    fun render(mesh: BaseMesh) = render(arrayListOf(mesh))
+    fun render(meshes: Collection<BaseMesh>) {
         usingProgram {
             // Load variables
             if (reloadUniforms) {
@@ -97,38 +91,19 @@ abstract class BaseProgram {
 
             loadBuffers()
 
-            // Load buffers
-            if (reloadVBO) {
-                loadVBO()
-                reloadVBO = false
+            for (mesh in meshes) {
+                // Préparations des buffers
+                mesh.loadBuffers()
+
+                // Attributs
+                mesh.bindVAO {
+                    mesh.bindBuffers()
+                    enableVBO(mesh)
+
+                    // Draw
+                    mesh.draw(mode)
+                }
             }
-
-            if (reloadIBO) {
-                loadIBO()
-                reloadIBO = false
-            }
-
-            // Bind VBO
-            if (vboId != -1) {
-                GLES31.glBindBuffer(GLES31.GL_ARRAY_BUFFER, vboId)
-                enableVBO()
-
-                GLUtils.checkGlError("Binding VBO")
-            }
-
-            // Bind IBO
-            if (iboId != -1) {
-                GLES31.glBindBuffer(GLES31.GL_ELEMENT_ARRAY_BUFFER, iboId)
-                GLUtils.checkGlError("Binding IBO")
-            }
-
-            // Draw
-            draw()
-
-            // Clean up
-            clean()
-            GLES31.glBindBuffer(GLES31.GL_ELEMENT_ARRAY_BUFFER, 0)
-            GLES31.glBindBuffer(GLES31.GL_ARRAY_BUFFER, 0)
         }
     }
 
@@ -140,18 +115,21 @@ abstract class BaseProgram {
             // Activate program
             synchronized(this) {
                 wasActive = isActive
-                GLES31.glUseProgram(program)
-                isActive = true
+
+                if (!isActive) {
+                    GLES31.glUseProgram(program)
+                    isActive = true
+                }
             }
 
             return lambda()
 
         } finally {
             // Disactivate program
-            wasActive?.also {
+            if (wasActive == false) {
                 synchronized(this) {
-                    if (it) GLES31.glUseProgram(0)
-                    isActive = it
+                    GLES31.glUseProgram(0)
+                    isActive = false
                 }
             }
         }
@@ -247,71 +225,6 @@ abstract class BaseProgram {
     }
 
     // - buffers
-    protected inline fun<reified T : Any> vertexCount(c: T) : Int {
-        return when(c) {
-            // Get Size
-            is Collection<*> -> (c as Collection<*>).size
-            is Array<*>      -> (c as Array<*>).size
-            is Buffer        -> (c as Buffer).capacity()
-
-            else -> 1
-        }
-    }
-
-    protected inline fun<reified T : Any> bufferSize(c: Collection<T>) : Int {
-        return if (c.isEmpty()) 0 else c.size * bufferSize(c.first())
-    }
-    protected inline fun<reified T : Any> bufferSize(c: Array<T>) : Int {
-        return if (c.isEmpty()) 0 else c.size * bufferSize(c.first())
-    }
-    protected inline fun<reified T : Any> bufferSize(v: T) : Int {
-        return when (v) {
-            // Base
-            is Short -> GLUtils.SHORT_SIZE
-            is Int   -> GLUtils.INT_SIZE
-            is Float -> GLUtils.FLOAT_SIZE
-
-            // Composed
-            is BaseVec<*>   -> v.size * GLUtils.FLOAT_SIZE
-            is BaseMat<*,*> -> v.size * v.size * GLUtils.FLOAT_SIZE
-            is BaseStructure       -> v.getBufferSize()
-
-            // Buffers
-            is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
-            is IntBuffer   -> (v as Buffer).capacity() * GLUtils.INT_SIZE
-            is FloatBuffer -> (v as Buffer).capacity() * GLUtils.FLOAT_SIZE
-
-            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
-        }
-    }
-
-    protected inline fun<reified T : Any> bufferType(c: Collection<T>, unsigned: Boolean = false) : Int {
-        return if (c.isEmpty()) -1 else bufferType(c.first(), unsigned)
-    }
-    protected inline fun<reified T : Any> bufferType(c: Array<T>, unsigned: Boolean = false) : Int {
-        return if (c.isEmpty()) -1 else bufferType(c.first(), unsigned)
-    }
-    protected inline fun<reified T : Any> bufferType(v: T, unsigned: Boolean = false): Int {
-        return when (v) {
-            // Base
-            is Short -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
-            is Int   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
-            is Float -> GLES31.GL_FLOAT
-
-            // Composed
-            is BaseVec<*>   -> GLES31.GL_FLOAT
-            is BaseMat<*,*> -> GLES31.GL_FLOAT
-            is BaseStructure       -> GLES31.GL_BYTE
-
-            // Buffers
-            is ShortBuffer -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
-            is IntBuffer   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
-            is FloatBuffer -> GLES31.GL_FLOAT
-
-            else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
-        }
-    }
-
     protected inline fun<reified T : Any> numberComponents(c: Collection<T>) : Int {
         return if (c.isEmpty()) 0 else numberComponents(c.first())
     }

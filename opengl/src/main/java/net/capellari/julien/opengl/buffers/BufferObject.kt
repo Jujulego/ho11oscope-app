@@ -53,7 +53,6 @@ abstract class BufferObject(protected val target: Int) {
             position = 0
             GLES31.glBindBuffer(target, id)
             GLES31.glBufferData(target, size, it, usage)
-            GLES31.glBindBuffer(target, 0)
         }
     }
 
@@ -80,19 +79,22 @@ abstract class BufferObject(protected val target: Int) {
         }
     }
 
-    fun put(array: ShortArray) = array.forEach { put(it) }
-    fun put(array: IntArray)   = array.forEach { put(it) }
-    fun put(array: FloatArray) = array.forEach { put(it) }
-
     fun put(value: Any) {
         when(value) {
             is Short -> buffer?.putShort(value)
             is Int   -> buffer?.putInt(value)
             is Float -> buffer?.putFloat(value)
 
-            is BaseVec<*>   -> put(value.data)
-            is BaseMat<*,*> -> put(value.data)
-            is BaseStructure       -> value.toBuffer(this)
+            is BaseVec<*>    -> put(value.data)
+            is BaseMat<*,*>  -> put(value.data)
+            is BaseStructure -> value.toBuffer(this)
+
+            is ShortArray -> value.forEach { put(it) }
+            is IntArray   -> value.forEach { put(it) }
+            is FloatArray -> value.forEach { put(it) }
+
+            is Array<*>      -> value.forEach { put(it!!) }
+            is Collection<*> -> value.forEach { put(it!!) }
 
             else -> throw RuntimeException("Unsupported type ${value.javaClass.canonicalName}")
         }

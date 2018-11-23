@@ -16,6 +16,8 @@ layout (std140) uniform Parameters {
     float ambientFactor;
     float diffuseFactor;
     float specularFactor;
+
+    Material material;
 };
 
 // Entrées
@@ -27,9 +29,6 @@ in Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
-
-    // - material
-    Material material;
 } vecs;
 
 // Sortie
@@ -52,26 +51,26 @@ void main() {
     // Prepare specular color
     float sf = float(0);
 
-    if (dot(n, l) > float(0)) {
+    if (material.specularExp != float(0) && dot(n, l) > float(0)) {
         vec3 r = reflect(-l, n);
         sf = dot(e, r);
 
         if (sf < float(0)) {
             sf = float(0);
         } else {
-            sf = pow(sf, vecs.material.specularExp);
+            sf = pow(sf, material.specularExp);
         }
     }
 
     // Compute colors
     FragColor = vec4(
         // Ambient color
-        (vecs.material.ambientColor * ambientFactor) +
+        (material.ambientColor * ambientFactor) +
         // Diffuse color
-        (vecs.material.diffuseColor * diffuseFactor * lightFactor * df) +
+        (material.diffuseColor * diffuseFactor * lightFactor * df) +
         // Specular color
-        (vecs.material.specularColor * specularFactor * lightFactor * sf),
+        (material.specularColor * specularFactor * lightFactor * sf),
         // Transparence
-        vecs.material.opacity
+        material.opacity
     );
 }

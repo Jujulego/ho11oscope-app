@@ -6,7 +6,9 @@ import android.opengl.GLES31
 import android.opengl.GLSurfaceView
 import android.util.Log
 import androidx.preference.PreferenceManager
+import net.capellari.julien.opengl.AssimpMesh
 import net.capellari.julien.opengl.Mat4
+import net.capellari.julien.opengl.Material
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.utils.sharedPreference
 import java.lang.Math.abs
@@ -31,7 +33,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         const val MODEL_ROTATION_SPEED: Float = 45f
 
         // Camera positions and orientation
-        val EYE =    Vec3(0f, 3f, -10f)
+        val EYE =    Vec3(0f, 0f, -3f)
         val TARGET = Vec3(0f, 0f,  0f)
         val UP =     Vec3(0f, 1f,  0f)
     }
@@ -39,11 +41,15 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     // Attributs
     private var polyProgram:    PolyProgram    = PolyProgram.instance
     private var normalsProgram: NormalsProgram = NormalsProgram.instance
+
+    private var indices  = ArrayList<IntArray>()
+    private var vertices = ArrayList<Array<Vec3>>()
+    private var normals  = ArrayList<Array<Vec3>>()
+    private lateinit var materials: Map<String,Material>
     private var readyToRender = false
 
     @Volatile private var setupChange = true
 
-    private var indexCount: Int = 0
     private var lastFrameTime: Long = 0
     private var angle: Float = 0f // current rotation angle (deg)
 
@@ -54,6 +60,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
             readyToRender = false
             Log.d(TAG, "Recieved new object to render")
         }
+    private var meshes = arrayListOf<AssimpMesh>()
 
     // Propriétés
     private var transparency       by sharedPreference("transparency",        context, false)
@@ -125,27 +132,21 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         // render
         if (readyToRender) {
-            polyProgram.render()
+            polyProgram.render(meshes)
 
-            if (normalsRendering) normalsProgram.render()
+            if (normalsRendering) normalsProgram.render(meshes)
+
         } else {
             asset?.also {
-                // Prepare rendering
-                indexCount = it.indexCount
-                polyProgram.indices   = it.indices
-                polyProgram.materials = it.materials
+                meshes.clear()
 
-                polyProgram.positions   = it.positions
-                polyProgram.normals     = it.normals
-                polyProgram.materialIds = it.materialIds
+                for (mesh in it.model.meshes) {
+                    meshes.add(AssimpMesh(mesh))
+                }
 
-                normalsProgram.indices   = it.indices
-                normalsProgram.positions = it.positions
-                normalsProgram.normals   = it.normals
+                polyProgram.prepare(meshes)
 
-                // Ready !
                 readyToRender = true
-                Log.d(TAG, "VBOs/IBO created : ready to render")
             }
         }
     }

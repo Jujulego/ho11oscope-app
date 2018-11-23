@@ -2,6 +2,8 @@ package net.capellari.julien.opengl.processor
 
 import androidx.annotation.RequiresApi
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asTypeName
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -14,6 +16,13 @@ import javax.lang.model.type.TypeKind
 
 @RequiresApi(26)
 object Utils {
+    fun getTypeName(type: TypeName): TypeName {
+        return when(type) {
+            IntArray::class.asTypeName() -> IntArray::class.asTypeName()
+            else -> type
+        }
+    }
+
     fun inherit(processingEnv: ProcessingEnvironment, type: TypeElement, base: String) : Boolean {
         var superTypeValid = true
 
@@ -47,35 +56,17 @@ object Utils {
         out = out.resolve("${code.name}.kt")
 
         // Write down to file
+        val buffer = StringBuffer()
+        code.writeTo(buffer)
+
         val writer = OutputStreamWriter(Files.newOutputStream(out), StandardCharsets.UTF_8)
 
-        code.writeTo(object : Appendable {
-            fun replace(str: CharSequence?): CharSequence {
-                return (str ?: "null")
-                        .replace("java\\.lang".toRegex(), "kotlin")
-                        .replace("kotlin\\.Integer".toRegex(), "kotlin.*")
-
-                        .replace("Integer".toRegex(), "Int")
-                        .replace("Array<Short>".toRegex(), "ShortArray")
-                        .replace("Array<Int>".toRegex(),   "IntArray")
-                        .replace("Array<Float>".toRegex(), "FloatArray")
-            }
-
-            override fun append(str: CharSequence?): java.lang.Appendable {
-                writer.append(replace(str))
-                return this
-            }
-
-            override fun append(str: CharSequence?, p1: Int, p2: Int): java.lang.Appendable {
-                writer.append(replace(str), p1, p2)
-                return this
-            }
-
-            override fun append(c: Char): java.lang.Appendable {
-                writer.append(c)
-                return this
-            }
-        })
+        writer.write(buffer
+                .replace("java\\.lang".toRegex(), "kotlin")
+                .replace("kotlin\\.Integer".toRegex(), "kotlin.*")
+                .replace("Integer".toRegex(), "Int")
+                .replace("Array<Int>".toRegex(), "IntArray")
+        )
 
         writer.close()
     }

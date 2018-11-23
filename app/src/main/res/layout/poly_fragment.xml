@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
 
-    tools:context=".poly.PolyFragment">
+    tools:context=".poly.PolyFragment"
+    tools:menu="toolbar_recherche">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

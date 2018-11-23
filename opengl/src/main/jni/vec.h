@@ -7,6 +7,8 @@
 #include <array>
 #include <jni.h>
 #include <ostream>
+#include <assimp/vector3.h>
+#include <assimp/types.h>
 
 #include "jnitools.h"
 
@@ -28,7 +30,7 @@ class Vec {
         using difference_type = std::ptrdiff_t;
 
         // Constructeur
-        Vec() {}
+        Vec() = default;
 
         template<size_t S2>
         Vec(Vec<S2> const& o) : m_data(o.m_data) {
@@ -212,8 +214,16 @@ std::ostream& operator << (std::ostream& stream, Vec<size> const& v) {
 }
 
 // Classe
-class Vec2 : Vec<2>, jnitools::JNIConvert {
+class Vec2 : public Vec<2>, public jnitools::JNIConvert {
     public:
+        // Constructeur
+        Vec2() = default;
+        Vec2(aiVector3D vec);
+
+        template<size_t S2> Vec2(Vec<S2> const& o) : Vec(o) {}
+        template<class... Args> Vec2(Args const&... args) : Vec(args...) {}
+        template<size_t S2, class... Args> Vec2(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
+
         // Méthodes
         float& x() { return this->operator[](0); }
         float& y() { return this->operator[](1); }
@@ -221,13 +231,20 @@ class Vec2 : Vec<2>, jnitools::JNIConvert {
         float const& x() const { return this->operator[](0); }
         float const& y() const { return this->operator[](1); }
 
-        virtual jobject toJava(JNIEnv *env) const override {
-            return jnitools::construct(env, "net/capellari/julien/opengl/Vec2", "(FF)V", x(), y());
-        }
+        virtual jobject toJava(JNIEnv *env) const override;
 };
 
-class Vec3 : Vec<3>, jnitools::JNIConvert {
+class Vec3 : public Vec<3>, public jnitools::JNIConvert {
     public:
+        // Constructeurs
+        Vec3() = default;
+        Vec3(aiVector3D vec);
+        Vec3(aiColor3D color);
+
+        template<size_t S2> Vec3(Vec<S2> const& o) : Vec(o) {}
+        template<class... Args> Vec3(Args const&... args) : Vec(args...) {}
+        template<size_t S2, class... Args> Vec3(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
+
         // Méthodes
         float& x() { return this->operator[](0); }
         float& y() { return this->operator[](1); }
@@ -237,12 +254,10 @@ class Vec3 : Vec<3>, jnitools::JNIConvert {
         float const& y() const { return this->operator[](1); }
         float const& z() const { return this->operator[](2); }
 
-        virtual jobject toJava(JNIEnv *env) const override {
-            return jnitools::construct(env, "net/capellari/julien/opengl/Vec3", "(FFF)V", x(), y(), z());
-        }
+        virtual jobject toJava(JNIEnv *env) const override;
 };
 
-class Vec4 : Vec<4>, jnitools::JNIConvert {
+class Vec4 : public Vec<4>, public jnitools::JNIConvert {
     public:
         // Méthodes
         float& x() { return this->operator[](0); }
@@ -255,37 +270,5 @@ class Vec4 : Vec<4>, jnitools::JNIConvert {
         float const& z() const { return this->operator[](2); }
         float const& a() const { return this->operator[](3); }
 
-        virtual jobject toJava(JNIEnv *env) const override {
-            return jnitools::construct(env, "net/capellari/julien/opengl/Vec4", "(FFFF)V", x(), y(), z(), a());
-        }
+        virtual jobject toJava(JNIEnv *env) const override;
 };
-
-namespace jnitools {
-    template<> Vec2 fromJava<Vec2>(JNIEnv* env, jobject jobj) {
-        Vec2 r;
-
-        r.x() = call<jfloat>(env, "net/capellari/julien/opengl/Vec2", "getX", "()F", jobj);
-        r.y() = call<jfloat>(env, "net/capellari/julien/opengl/Vec2", "getY", "()F", jobj);
-
-        return r;
-    }
-    template<> Vec3 fromJava<Vec3>(JNIEnv* env, jobject jobj) {
-        Vec3 r;
-
-        r.x() = call<jfloat>(env, "net/capellari/julien/opengl/Vec3", "getX", "()F", jobj);
-        r.y() = call<jfloat>(env, "net/capellari/julien/opengl/Vec3", "getY", "()F", jobj);
-        r.z() = call<jfloat>(env, "net/capellari/julien/opengl/Vec3", "getZ", "()F", jobj);
-
-        return r;
-    }
-    template<> Vec4 fromJava<Vec4>(JNIEnv* env, jobject jobj) {
-        Vec4 r;
-
-        r.x() = call<jfloat>(env, "net/capellari/julien/opengl/Vec4", "getX", "()F", jobj);
-        r.y() = call<jfloat>(env, "net/capellari/julien/opengl/Vec4", "getY", "()F", jobj);
-        r.z() = call<jfloat>(env, "net/capellari/julien/opengl/Vec4", "getZ", "()F", jobj);
-        r.a() = call<jfloat>(env, "net/capellari/julien/opengl/Vec4", "getA", "()F", jobj);
-
-        return r;
-    }
-}

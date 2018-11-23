@@ -1,8 +1,10 @@
 package net.capellari.julien.opengl.processor
 
+import androidx.annotation.RequiresApi
 import com.squareup.kotlinpoet.*
 import javax.lang.model.element.VariableElement
 
+@RequiresApi(26)
 internal abstract class BufferProperty(name: String) : BaseProperty() {
     // Attributs
     abstract val log: String
@@ -42,7 +44,7 @@ internal abstract class BufferProperty(name: String) : BaseProperty() {
 
     fun add(element: VariableElement) {
         val name = element.simpleName.toString()
-        val type = element.asType().asTypeName()
+        val type = Utils.getTypeName(element.asType().asTypeName())
         val param = ParameterSpec.builder("value", type).build()
 
         properties.add(PropertySpec.builder(name, type, KModifier.OVERRIDE)
@@ -68,7 +70,7 @@ internal abstract class BufferProperty(name: String) : BaseProperty() {
             // Compute ssbo size
             func.addStatement("var size = 0")
             for (p in properties) {
-                func.addStatement("size += bufferSize(%N)", p)
+                func.addStatement("size += GLUtils.bufferSize(%N)", p)
             }
 
             // Allocate SSBO

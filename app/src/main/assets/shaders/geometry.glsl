@@ -3,14 +3,6 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
 // Structures
-struct Material {
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
-    float specularExp;
-    float opacity;
-};
-
 uniform float magnitude;
 
 // Entrée - Sorties
@@ -22,9 +14,6 @@ in Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
-
-    // - material
-    Material material;
 } gs_in[];
 
 out Vectors {
@@ -35,9 +24,6 @@ out Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
-
-    // - material
-    Material material;
 } gs_out;
 
 // Fonctions
@@ -64,9 +50,11 @@ void main() {
     EmitVertex();
 
     gl_Position = explode(gl_in[1].gl_Position, normal);
+    gs_out = gs_in[1];
     EmitVertex();
 
     gl_Position = explode(gl_in[2].gl_Position, normal);
+    gs_out = gs_in[2];
     EmitVertex();
 
     EndPrimitive();

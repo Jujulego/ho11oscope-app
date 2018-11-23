@@ -1,13 +1,17 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
-import net.capellari.julien.opengl.mtl.Material
+import net.capellari.julien.opengl.Material
 
 @Program(
-    shaders = [
+    shaders = Shaders(
         ShaderScript(ShaderType.VERTEX,   file = "shaders/vertex.glsl"),
         ShaderScript(ShaderType.FRAGMENT, file = "shaders/fragment.glsl"),
         ShaderScript(ShaderType.GEOMETRY, file = "shaders/geometry.glsl")
+    ),
+    attributs = [
+        Attribute(AttributeType.VERTICES, "aPosition"),
+        Attribute(AttributeType.NORMALS,  "aNormal")
     ]
 )
 abstract class PolyProgram : BaseProgram() {
@@ -17,11 +21,6 @@ abstract class PolyProgram : BaseProgram() {
     }
 
     // Attributs
-    @Elements open var indices: ArrayList<Int>? = null
-
-    @ShaderStorage("Materials") open var materials = arrayListOf<Material>()
-
-    // - uniforms
     @Uniform("magnitude") open var magnitude = .5f
 
     @UniformBlock("Matrices") open var mvpMatrix   = Mat4()
@@ -35,9 +34,5 @@ abstract class PolyProgram : BaseProgram() {
     @UniformBlock("Parameters") open var ambientFactor  = .1f
     @UniformBlock("Parameters") open var diffuseFactor  = .7f
     @UniformBlock("Parameters") open var specularFactor = .5f
-
-    // - attributes
-    @Attribute("aPosition") open var positions:   ArrayList<Vec3>? = null
-    @Attribute("aNormal")   open var normals:     ArrayList<Vec3>? = null
-    @Attribute("aMaterial") open var materialIds: ArrayList<Int>?  = null
+    @UniformBlock("Parameters") open var material       = Material("")
 }
