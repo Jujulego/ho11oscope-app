@@ -39,8 +39,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     // Attributs
-    private var polyProgram:    PolyProgram    = PolyProgram.instance
-    private var normalsProgram: NormalsProgram = NormalsProgram.instance
+    private var polyProgram:      PolyProgram      = PolyProgram.instance
+    private var normalsProgram:   NormalsProgram   = NormalsProgram.instance
+    private var wireframeProgram: WireframeProgram = WireframeProgram.instance
 
     private var readyToRender = false
 
@@ -75,11 +76,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         GLES31.glClearColor(0f, 0.15f, 0.15f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
-        normalsProgram.compile(context)
         polyProgram.compile(context)
+        normalsProgram.compile(context)
+        wireframeProgram.compile(context)
 
         // Setup
-        setupRenderingMode()
         setupLightPower()
         setupColorFactors()
 
@@ -111,9 +112,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         // model matrix rotate around Y axis
         polyProgram.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
         normalsProgram.model = polyProgram.modelMatrix
+        wireframeProgram.modelMatrix = polyProgram.modelMatrix
 
         // Compute MVP Matrix
         polyProgram.mvpMatrix = polyProgram.projMatrix * (polyProgram.viewMatrix * polyProgram.modelMatrix)
+        wireframeProgram.mvpMatrix = polyProgram.mvpMatrix
 
         val m = magnitude / 20f
         if (polyProgram.magnitude != m) {
@@ -124,13 +127,21 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
             } else {
                 polyProgram.magnitude = maxOf(m, polyProgram.magnitude)
             }
+
+            wireframeProgram.magnitude = polyProgram.magnitude
         }
 
         // render
         if (readyToRender) {
-            polyProgram.render(meshes)
+            if (wireframeRendering) {
+                wireframeProgram.render(meshes)
+            } else {
+                polyProgram.render(meshes)
+            }
 
-            if (normalsRendering) normalsProgram.render(meshes)
+            if (normalsRendering) {
+                normalsProgram.render(meshes)
+            }
 
         } else {
             asset?.also {
@@ -153,12 +164,12 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         val ratio = width / height.toFloat()
         polyProgram.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
         normalsProgram.projection = polyProgram.projMatrix
+        wireframeProgram.projMatrix = polyProgram.projMatrix
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         Log.d(TAG, "Poly setup : updated $key")
         when(key) {
-            ::wireframeRendering.sharedPreference -> setupRenderingMode()
             ::lightPower.sharedPreference -> setupLightPower()
 
             ::transparency.sharedPreference  -> setupChange = true
@@ -169,19 +180,17 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     // Méthodes
-    private fun setupRenderingMode() {
-        Log.d(TAG, "rendering mode  : ${if (wireframeRendering) "line loop" else "triangles"}")
-        polyProgram.mode = if (wireframeRendering) GLES31.GL_LINE_LOOP else polyProgram.defaultMode
-    }
-
     private fun setupTransparency() {
         Log.d(TAG, "transparency    : ${if (transparency) "activated" else "disactivated"}")
-        (if (transparency) this::activateTransparency else this::disactivateTransparency)()
+        if (transparency) activateTransparency() else disactivateTransparency()
     }
 
     private fun setupLightPower() {
         Log.d(TAG, "light power     : $lightPower")
+
         polyProgram.lightPower = lightPower.toFloat()
+
+        wireframeProgram.lightPower = lightPower.toFloat()
     }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
@@ -192,6 +201,10 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         polyProgram.ambientFactor  = ambientFactor  / 100f
         polyProgram.diffuseFactor  = diffuseFactor  / 100f
         polyProgram.specularFactor = specularFactor / 100f
+
+        wireframeProgram.ambientFactor  = ambientFactor  / 100f
+        wireframeProgram.diffuseFactor  = diffuseFactor  / 100f
+        wireframeProgram.specularFactor = specularFactor / 100f
     }
 
     private fun activateTransparency() {

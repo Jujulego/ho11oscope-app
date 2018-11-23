@@ -1,6 +1,6 @@
 #version 310 es
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 3) out;
+layout (line_strip, max_vertices = 3) out;
 
 // Structures
 uniform float magnitude;
@@ -44,17 +44,12 @@ vec4 explode(vec4 position, vec3 normal) {
 
 void main() {
     vec3 normal = getNormal();
+    vec4 pts[3];
 
-    gl_Position = explode(gl_in[0].gl_Position, normal);
-    gs_out = gs_in[0];
-    EmitVertex();
-
-    gl_Position = explode(gl_in[1].gl_Position, normal);
-    gs_out = gs_in[1];
-    EmitVertex();
-
-    gl_Position = explode(gl_in[2].gl_Position, normal);
-    gs_out = gs_in[2];
-    EmitVertex();
+    for (int i = 0; i < 3; ++i) {
+        gl_Position = explode(gl_in[i].gl_Position, normal);
+        gs_out = gs_in[(i+1) % 3];
+        EmitVertex();
+    }
     EndPrimitive();
 }
