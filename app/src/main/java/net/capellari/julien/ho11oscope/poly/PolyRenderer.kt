@@ -42,10 +42,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var polyProgram:    PolyProgram    = PolyProgram.instance
     private var normalsProgram: NormalsProgram = NormalsProgram.instance
 
-    private var indices  = ArrayList<IntArray>()
-    private var vertices = ArrayList<Array<Vec3>>()
-    private var normals  = ArrayList<Array<Vec3>>()
-    private lateinit var materials: Map<String,Material>
     private var readyToRender = false
 
     @Volatile private var setupChange = true
@@ -162,13 +158,13 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         Log.d(TAG, "Poly setup : updated $key")
         when(key) {
-            this::wireframeRendering.sharedPreference -> setupRenderingMode()
-            this::lightPower.sharedPreference -> setupLightPower()
+            ::wireframeRendering.sharedPreference -> setupRenderingMode()
+            ::lightPower.sharedPreference -> setupLightPower()
 
-            this::transparency.sharedPreference  -> setupChange = true
-            this::ambientFactor.sharedPreference,
-            this::diffuseFactor.sharedPreference,
-            this::specularFactor.sharedPreference -> setupColorFactors()
+            ::transparency.sharedPreference  -> setupChange = true
+            ::ambientFactor.sharedPreference,
+            ::diffuseFactor.sharedPreference,
+            ::specularFactor.sharedPreference -> setupColorFactors()
         }
     }
 

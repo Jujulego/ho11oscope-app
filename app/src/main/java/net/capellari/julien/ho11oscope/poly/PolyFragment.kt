@@ -21,7 +21,6 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewMod
     companion object {
         // Constantes
         const val TAG = "PolyFragment"
-        const val ASSET_DISPLAY_SIZE = 5
     }
 
     // Attributs

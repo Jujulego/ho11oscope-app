@@ -22,6 +22,7 @@ abstract class PolyProgram : BaseProgram() {
 
     // Attributs
     @Uniform("magnitude") open var magnitude = .5f
+    @Uniform("material", true) var material  = Material("")
 
     @UniformBlock("Matrices") open var mvpMatrix   = Mat4()
     @UniformBlock("Matrices") open var modelMatrix = Mat4()
@@ -34,5 +35,4 @@ abstract class PolyProgram : BaseProgram() {
     @UniformBlock("Parameters") open var ambientFactor  = .1f
     @UniformBlock("Parameters") open var diffuseFactor  = .7f
     @UniformBlock("Parameters") open var specularFactor = .5f
-    @UniformBlock("Parameters") open var material       = Material("")
 }

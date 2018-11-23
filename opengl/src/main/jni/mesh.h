@@ -7,9 +7,12 @@
 #include <list>
 
 #include <assimp/mesh.h>
+#include <assimp/scene.h>
 
 #include "jnitools.h"
+#include "material.h"
 #include "vec.h"
+#include "model.h"
 
 class Mesh : public jnitools::JNIClass {
 public:
@@ -29,16 +32,18 @@ public:
 
     // Constructeur
     Mesh();
-    Mesh(aiMesh* mesh);
+    Mesh(Model const& model, aiMesh *mesh);
 
     // Méthodes
+    Material getMaterial() const;
+
     jobjectArray jvertices(JNIEnv* env) const;
     jobjectArray jnormals(JNIEnv* env) const;
     jintArray jindices(JNIEnv* env) const;
 
 private:
     // Attributs
-    unsigned int material;
+    Material material;
     std::list<Face> faces;
     std::vector<Vertex> vertices;
 };

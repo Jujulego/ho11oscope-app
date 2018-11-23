@@ -87,6 +87,8 @@ internal class ProgramProcessor : AbstractProcessor() {
         val unifBlocks = mutableMapOf<String, UniformBlockProperty>()
         val ssbos = mutableMapOf<String, ShaderStorageProperty>()
 
+        var meshMaterialAttribute: UniformProperty? = null
+
         // Attributs
         program.attributs.forEach {
             attrs.add(AttributeProperty(it))
@@ -110,7 +112,13 @@ internal class ProgramProcessor : AbstractProcessor() {
 
                     // Attributs & Uniforms
                     if (unif != null) {
-                        unifs.add(UniformProperty(fields[name]!!, unif))
+                        val prop = UniformProperty(fields[name]!!, unif)
+
+                        if (unif.meshMaterial) {
+                            meshMaterialAttribute = prop
+                        } else {
+                            unifs.add(prop)
+                        }
                     } else if (unifBlock != null) {
                         if (!unifBlocks.containsKey(unifBlock.name)) {
                             unifBlocks[unifBlock.name] = UniformBlockProperty(unifBlock)
@@ -155,7 +163,6 @@ internal class ProgramProcessor : AbstractProcessor() {
                     addModifiers(KModifier.OVERRIDE)
 
                     for (prop in attrs) prop.getLocationFunc(this)
-                    for (prop in unifs) prop.getLocationFunc(this)
 
                     if (!unifBlocks.isEmpty()) {
                         addStatement("var binding = 0")
@@ -182,8 +189,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                     addModifiers(KModifier.OVERRIDE)
 
                     for (prop in unifs) {
-                        addStatement("setUniformValue(%N, %N)", prop.handle, prop.property)
-                        addStatement("GLUtils.checkGlError(%S)", "Loading uniform ${prop.annotation.name}")
+                        addStatement("setUniformValue(%S, %N)", prop.annotation.name, prop.property)
                     }
                 }.build()
 
@@ -217,6 +223,17 @@ internal class ProgramProcessor : AbstractProcessor() {
                     }
                 }.build()
 
+        val setMeshMaterial = FunSpec.builder("setMeshMaterial")
+                .apply {
+                    addModifiers(KModifier.OVERRIDE)
+                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
+
+                    meshMaterialAttribute?.also {
+                        // Chargement du material
+                        addStatement("setUniformValue(%S, mesh.getMaterial());", it.annotation.name)
+                    }
+                }.build()
+
         // Implementation de la classe
         val cls = TypeSpec.classBuilder(implCls)
             .apply {
@@ -231,9 +248,10 @@ internal class ProgramProcessor : AbstractProcessor() {
                 // Contructeur
                 if (program.mode != 0) {
                     addInitializerBlock(CodeBlock.builder()
-                            .addStatement("mode = %L", program.mode)
-                            .addStatement("defaultMode = %L", program.mode)
-                            .build()
+                            .apply {
+                                addStatement("mode = %L", program.mode)
+                                addStatement("defaultMode = %L", program.mode)
+                            }.build()
                     )
                 }
 
@@ -245,6 +263,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                 addFunction(loadUniforms)
                 addFunction(loadBuffers)
                 addFunction(enableVBO)
+                addFunction(setMeshMaterial)
             }.build()
 
         // Ecriture

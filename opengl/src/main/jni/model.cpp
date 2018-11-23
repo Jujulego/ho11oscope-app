@@ -26,21 +26,26 @@ Model::Model(std::string const& file) {
     }
 
     // Récupération des données
-    processNode(scene->mRootNode, scene);
-
+    materials.reserve(scene->mNumMaterials);
     for (unsigned int i = 0; i < scene->mNumMaterials; ++i) {
         Material mat(scene->mMaterials[i]);
-        materials[mat.name()] = mat;
+        materials.push_back(mat);
     }
+
+    processNode(scene->mRootNode, scene);
 
     loaded = true;
     __android_log_print(ANDROID_LOG_DEBUG, "Model", "%s loaded !", file.data());
 }
 
+Material Model::getMaterial(unsigned int i) const {
+    return materials[i];
+}
+
 void Model::processNode(aiNode *node, aiScene const* scene) {
     meshes.reserve(meshes.size() + node->mNumMeshes);
     for (unsigned i = 0; i < node->mNumMeshes; ++i) {
-        Mesh mesh(scene->mMeshes[node->mMeshes[i]]);
+        Mesh mesh(*this, scene->mMeshes[node->mMeshes[i]]);
         meshes.push_back(mesh);
     }
 
@@ -69,9 +74,9 @@ jobject Model::jmaterials(JNIEnv *env) const {
 
     jobject jmap = jnitools::construct(env, jcls, "(I)V", materials.size());
 
-    for (auto p : materials) {
-        jstring jkey = (jstring) jnitools::toJava(env, p.first);
-        jobject jval = p.second.toJava(env);
+    for (auto mat : materials) {
+        jstring jkey = (jstring) jnitools::toJava(env, mat.name());
+        jobject jval = mat.toJava(env);
 
         jnitools::call<jobject>(env, jmap, jput, jkey, jval);
 

@@ -1,12 +1,19 @@
 package net.capellari.julien.opengl
 
-import net.capellari.julien.opengl.Material
 import net.capellari.julien.opengl.base.BaseMesh
 import net.capellari.julien.opengl.jni.JNIMesh
 
 class AssimpMesh(val mesh: JNIMesh) : BaseMesh(true, true) {
+    // Attributs
+    private lateinit var material: Material
+
+    // Méthodes
     override fun getMaterial(): Material {
-        return Material("")
+        if (!::material.isInitialized) {
+            material = mesh.material
+        }
+
+        return material
     }
 
     override fun getVertices(): Any {

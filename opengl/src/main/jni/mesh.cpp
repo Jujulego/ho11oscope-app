@@ -7,10 +7,10 @@
 
 // Constructeurs
 Mesh::Mesh() {}
-Mesh::Mesh(aiMesh* mesh) {
+Mesh::Mesh(Model const& model, aiMesh *mesh) {
     // Process data
     // - material
-    material = mesh->mMaterialIndex;
+    material = model.getMaterial(mesh->mMaterialIndex);
 
     // - vertices
     vertices.reserve(mesh->mNumVertices);
@@ -34,6 +34,10 @@ Mesh::Mesh(aiMesh* mesh) {
 
         faces.push_back(face);
     }
+}
+
+Material Mesh::getMaterial() const {
+    return material;
 }
 
 jobjectArray Mesh::jvertices(JNIEnv *env) const {
@@ -87,6 +91,16 @@ jintArray Mesh::jindices(JNIEnv *env) const {
 }
 
 // JNI Calls
+extern "C" JNIEXPORT jobject JNICALL
+Java_net_capellari_julien_opengl_jni_JNIMesh_getMaterial(JNIEnv *env, jobject jthis) {
+    return jnitools::handle<Mesh>(env, jthis)->getMaterial().toJava(env);
+}
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_net_capellari_julien_opengl_jni_JNIMesh_getIndices(JNIEnv *env, jobject jthis) {
+    return jnitools::handle<Mesh>(env, jthis)->jindices(env);
+}
+
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_net_capellari_julien_opengl_jni_JNIMesh_getVertices(JNIEnv *env, jobject jthis) {
     return jnitools::handle<Mesh>(env, jthis)->jvertices(env);
@@ -95,9 +109,4 @@ Java_net_capellari_julien_opengl_jni_JNIMesh_getVertices(JNIEnv *env, jobject jt
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_net_capellari_julien_opengl_jni_JNIMesh_getNormals(JNIEnv *env, jobject jthis) {
     return jnitools::handle<Mesh>(env, jthis)->jnormals(env);
-}
-
-extern "C" JNIEXPORT jintArray JNICALL
-Java_net_capellari_julien_opengl_jni_JNIMesh_getIndices(JNIEnv *env, jobject jthis) {
-    return jnitools::handle<Mesh>(env, jthis)->jindices(env);
 }

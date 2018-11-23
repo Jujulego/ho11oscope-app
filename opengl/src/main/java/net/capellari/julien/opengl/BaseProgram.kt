@@ -45,6 +45,8 @@ abstract class BaseProgram {
     protected abstract fun loadBuffers()
     protected abstract fun enableVBO(mesh: BaseMesh)
 
+    protected abstract fun setMeshMaterial(mesh: BaseMesh)
+
     // Méthodes
     fun compile(context: Context) {
         // Compile program
@@ -57,12 +59,12 @@ abstract class BaseProgram {
         GLUtils.checkGlError("Linking program")
         Log.d(TAG, "Program linked")
 
-        // Get locations
-        getLocations()
-        Log.d(TAG, "All locations gathered")
-
         // Initialisation
         usingProgram {
+            // Get locations
+            getLocations()
+            Log.d(TAG, "All locations gathered")
+
             // Création des buffers
             genBuffers()
         }
@@ -94,6 +96,7 @@ abstract class BaseProgram {
             for (mesh in meshes) {
                 // Préparations des buffers
                 mesh.loadBuffers()
+                setMeshMaterial(mesh)
 
                 // Attributs
                 mesh.bindVAO {
@@ -182,8 +185,8 @@ abstract class BaseProgram {
         // Print
         if (handle == GLES31.GL_INVALID_INDEX) {
             Log.w(TAG, "Uniform $name not found")
-        } else {
-            Log.d(TAG, "Uniform $name : $handle")
+        //} else {
+        //    Log.d(TAG, "Uniform $name : $handle")
         }
 
         return handle
@@ -262,37 +265,43 @@ abstract class BaseProgram {
     }
     protected fun setUniformValue(handle: Int, v: Array<Float>) = setUniformValue(handle, v.toFloatArray())
 
-    protected fun<T : BaseVec<*>> setUniformValue(handle: Int, v: Array<T>) {
-        if (!v.isEmpty() && handle != GLES31.GL_INVALID_INDEX) {
+    fun<T : BaseVec<*>> setUniformValue(nom: String, v: Array<T>) {
+        if (!v.isEmpty()) {
             val vecSize = v[0].size
             val array = FloatArray(v.size * vecSize) { i -> v[i / vecSize].data[i % vecSize] }
 
-            setUniformValue(handle, array)
+            setUniformValue(nom, array)
         }
     }
-    protected fun<T : BaseMat<*,*>> setUniformValue(handle: Int, v: Array<T>) {
-        if (!v.isEmpty() && handle != GLES31.GL_INVALID_INDEX) {
+    fun<T : BaseMat<*,*>> setUniformValue(nom: String, v: Array<T>) {
+        if (!v.isEmpty()) {
             val matSize = v[0].size * v[0].size
             val array = FloatArray(v.size * matSize) { i -> v[i / matSize].data[i % matSize] }
 
-            setUniformValue(handle, array)
+            setUniformValue(nom, array)
         }
     }
 
-    protected fun setUniformValue(handle: Int, v: Any?) {
-        if (handle != GLES31.GL_INVALID_INDEX && v != null) {
+    fun setUniformValue(nom: String, v: Any?) {
+        if (v != null) {
             when (v) {
-                is Int   -> GLES31.glUniform1i(handle, v)
-                is Float -> GLES31.glUniform1f(handle, v)
-                is Vec2  -> GLES31.glUniform2f(handle, v.x, v.y)
-                is Vec3  -> GLES31.glUniform3f(handle, v.x, v.y, v.z)
-                is Vec4  -> GLES31.glUniform4f(handle, v.x, v.y, v.z, v.a)
-                is Mat2  -> GLES31.glUniformMatrix2fv(handle, 1, false, v.data, 0)
-                is Mat3  -> GLES31.glUniformMatrix3fv(handle, 1, false, v.data, 0)
-                is Mat4  -> GLES31.glUniformMatrix4fv(handle, 1, false, v.data, 0)
+                is Int   -> GLES31.glUniform1i(getUniformLocation(nom), v)
+                is Float -> GLES31.glUniform1f(getUniformLocation(nom), v)
+
+                is Vec2  -> GLES31.glUniform2f(getUniformLocation(nom), v.x, v.y)
+                is Vec3  -> GLES31.glUniform3f(getUniformLocation(nom), v.x, v.y, v.z)
+                is Vec4  -> GLES31.glUniform4f(getUniformLocation(nom), v.x, v.y, v.z, v.a)
+
+                is Mat2  -> GLES31.glUniformMatrix2fv(getUniformLocation(nom), 1, false, v.data, 0)
+                is Mat3  -> GLES31.glUniformMatrix3fv(getUniformLocation(nom), 1, false, v.data, 0)
+                is Mat4  -> GLES31.glUniformMatrix4fv(getUniformLocation(nom), 1, false, v.data, 0)
+
+                is BaseStructure -> v.toUniform(nom, this)
 
                 else -> throw RuntimeException("Unsupported value type : ${v::class.qualifiedName}")
             }
+
+            GLUtils.checkGlError("Load uniform $nom")
         }
     }
 }

@@ -16,9 +16,9 @@ layout (std140) uniform Parameters {
     float ambientFactor;
     float diffuseFactor;
     float specularFactor;
-
-    Material material;
 };
+
+uniform Material material;
 
 // Entrées
 in Vectors {
