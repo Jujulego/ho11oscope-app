@@ -225,8 +225,8 @@ abstract class BaseProgram {
         val binding = IntArray(1).also {
                 GLES31.glGetProgramResourceiv(program,
                         GLES31.GL_SHADER_STORAGE_BLOCK, index,
-                        1, IntArray(1) {GLES31.GL_BUFFER_BINDING}, 0,
-                        1, IntArray(1) {1}, 0, it, 0)
+                        1, IntArray(1) { GLES31.GL_BUFFER_BINDING }, 0,
+                        1, IntArray(1) { 1 }, 0, it, 0)
             }[0]
 
         Log.d(TAG, "ShaderStorage $name : $index => $binding")
