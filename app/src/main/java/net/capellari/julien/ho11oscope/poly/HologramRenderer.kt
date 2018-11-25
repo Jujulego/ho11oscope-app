@@ -30,7 +30,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         const val FAR_CLIP:  Float = 1000f
 
         // Model spin speed (deg / s)
-        const val MODEL_ROTATION_SPEED: Float = 45f
+        const val MODEL_ROTATION_SPEED: Float = 5f
 
         // Camera positions and orientation
         val EYE =    Vec3(0f, 0f, -3f)
@@ -47,6 +47,26 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
     private var lastFrameTime: Long = 0
     private var angle: Float = 0f // current rotation angle (deg)
+
+    private val scale = Mat4.scale(.45f, .45f, .45f)
+    private val positions = arrayOf(
+            Mat4.rotate( 90f, 0f, 0f, 1f),
+            Mat4.rotate(180f, 0f, 0f, 1f) * Mat4.rotate(180f, 0f, 1f, 0f),
+            Mat4.rotate( 90f, 0f, 0f, 1f),
+            Mat4.rotate(  0f, 0f, 0f, 1f)
+    )
+    private val eyes = arrayOf(
+            Vec3( 0f, 0f, -3f),
+            Vec3(-3f, 0f,  0f),
+            Vec3( 0f, 0f,  3f),
+            Vec3( 3f, 0f,  0f)
+    )
+    private val targets = arrayOf(
+            Vec3( 1f,  0f, 0f),
+            Vec3( 0f,  1f, 0f),
+            Vec3( 1f,  0f, 0f),
+            Vec3( 0f, -1f, 0f)
+    )
 
     @Volatile
     var asset: Asset? = null // object to render
@@ -71,7 +91,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
     // Méthodes
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
-        GLES31.glClearColor(0f, 0.15f, 0.15f, 1f)
+        GLES31.glClearColor(0f, 0f, 0f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
@@ -81,12 +101,10 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         // Setup
         setupLightPower()
         setupColorFactors()
+        setupTransparency()
     }
 
     override fun onDrawFrame(unused: GL10?) {
-        // Setup changes
-        setupTransparency()
-
         // Update spin animation
         val now    = System.currentTimeMillis()
         val deltaT = minOf((now - lastFrameTime) * 0.001f, 0.1f)
@@ -98,13 +116,6 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
         // Draw background
         GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
-
-        // model matrix rotate around Y axis
-        polyProgram.matrices.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
-        normalsProgram.model = polyProgram.matrices.modelMatrix
-
-        // Compute MVP Matrix
-        polyProgram.matrices.mvpMatrix = polyProgram.stables.projMatrix * (polyProgram.stables.viewMatrix * polyProgram.matrices.modelMatrix)
 
         val m = magnitude / 20f
         if (polyProgram.magnitude != m) {
@@ -121,14 +132,21 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
         // render
         if (readyToRender) {
-            if (wireframeRendering) {
-                wireframeProgram.render(meshes)
-            } else {
-                polyProgram.render(meshes)
-            }
+            for (i in 0 until 4) {
+                // Compute MVP Matrix
+                polyProgram.matrices.modelMatrix = positions[i] * Mat4.rotate(angle, 0f, 1f, 0f) * scale
+                polyProgram.stables.viewMatrix = Mat4.lookAt(eyes[i], targets[i], HologramRenderer.UP)
+                polyProgram.matrices.mvpMatrix = polyProgram.stables.projMatrix * (polyProgram.stables.viewMatrix * polyProgram.matrices.modelMatrix)
 
-            if (normalsRendering) {
-                normalsProgram.render(meshes)
+                if (wireframeRendering) {
+                    wireframeProgram.render(meshes)
+                } else {
+                    polyProgram.render(meshes)
+                }
+
+                if (normalsRendering) {
+                    normalsProgram.render(meshes)
+                }
             }
 
         } else {
@@ -151,7 +169,6 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
         val ratio = width / height.toFloat()
         polyProgram.stables.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
-        normalsProgram.projection = polyProgram.stables.projMatrix
     }
 
     // Méthodes

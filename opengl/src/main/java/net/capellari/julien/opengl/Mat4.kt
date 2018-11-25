@@ -11,6 +11,17 @@ class Mat4() : BaseMat<Mat4,Vec4>(4, Mat4::class, Vec4::class) {
         fun zero():     Mat4 = BaseMat.zero(Mat4::class)
         fun identity(): Mat4 = Mat4().apply { Matrix.setIdentityM(data, 0) }
 
+        fun scale(fx: Float, fy: Float, fz: Float): Mat4 = identity().apply {
+            Matrix.scaleM(data, 0, fx, fy, fz)
+        }
+
+        fun translate(dir: Vec3): Mat4 = identity().apply {
+            Matrix.translateM(data, 0, dir.x, dir.y, dir.z)
+        }
+        fun translate(x: Float, y: Float, z: Float): Mat4 = identity().apply {
+            Matrix.translateM(data, 0, x, y, z)
+        }
+
         fun rotate(angle: Float, axis: Vec3): Mat4 = Mat4().apply {
             Matrix.setRotateM(data, 0, angle, axis.x, axis.y, axis.z)
         }

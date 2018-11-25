@@ -1,5 +1,17 @@
 #version 310 es
 
+layout (std140) uniform Matrices {
+    mat4 mvpMatrix;
+    mat4 modelMatrix;
+};
+
+layout (std140) uniform Stables {
+    mat4 viewMatrix;
+    mat4 projMatrix;
+
+    vec3 lightPosition; // in world space
+};
+
 in vec3 aPos;
 in vec3 aNormal;
 
@@ -7,12 +19,9 @@ out VS_OUT {
     vec3 normal;
 } vs_out;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
 void main() {
-    mat3 normalMatrix = mat3(transpose(inverse(view * model)));
-    vs_out.normal = vec3(projection * vec4(normalMatrix * aNormal, 0.0));
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    mat3 normalMatrix = mat3(transpose(inverse(viewMatrix * modelMatrix)));
+
+    vs_out.normal = vec3(projMatrix * vec4(normalMatrix * aNormal, 0.0));
+    gl_Position = mvpMatrix * vec4(aPos, 1.0);
 }

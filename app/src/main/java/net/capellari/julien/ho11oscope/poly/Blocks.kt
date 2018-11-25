@@ -28,7 +28,7 @@ abstract class StablesBlock : BaseUniformBlock() {
     // Attributs
     @Field open var viewMatrix    = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
     @Field open var projMatrix    = Mat4()
-    @Field open var lightPosition = Vec3(10f, 0f, 0f)
+    @Field open var lightPosition = Vec3(10f, 0f, -10f)
 }
 
 @UniformBlock

@@ -22,7 +22,6 @@ abstract class NormalsProgram : BaseProgram() {
 
     // Attributs
     // - uniforms
-    @Uniform("projection") open var projection = Mat4()
-    @Uniform("view")       open var view       = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
-    @Uniform("model")      open var model      = Mat4()
+    @UniformBlock("Matrices") val matrices = MatricesBlock.instance
+    @UniformBlock("Stables")  val stables  = StablesBlock.instance
 }

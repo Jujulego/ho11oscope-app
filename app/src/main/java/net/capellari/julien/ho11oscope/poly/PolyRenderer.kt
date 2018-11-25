@@ -80,6 +80,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         normalsProgram.compile(context)
         wireframeProgram.compile(context)
 
+        // Initialisation
+        polyProgram.stables.viewMatrix = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
+
         // Setup
         setupLightPower()
         setupColorFactors()
@@ -111,7 +114,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         // model matrix rotate around Y axis
         polyProgram.matrices.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
-        normalsProgram.model = polyProgram.matrices.modelMatrix
 
         // Compute MVP Matrix
         polyProgram.matrices.mvpMatrix = polyProgram.stables.projMatrix * (polyProgram.stables.viewMatrix * polyProgram.matrices.modelMatrix)
@@ -161,7 +163,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         val ratio = width / height.toFloat()
         polyProgram.stables.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
-        normalsProgram.projection = polyProgram.stables.projMatrix
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
