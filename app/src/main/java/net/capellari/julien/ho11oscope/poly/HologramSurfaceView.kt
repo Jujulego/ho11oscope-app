@@ -4,9 +4,9 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 
-class PolySurfaceView : GLSurfaceView {
+class HologramSurfaceView : GLSurfaceView {
     // Attributs
-    var renderer: PolyRenderer
+    var renderer: HologramRenderer
         private set
 
     // Constructeurs
@@ -18,7 +18,7 @@ class PolySurfaceView : GLSurfaceView {
         setEGLContextClientVersion(3)
 
         // renderer
-        renderer = PolyRenderer(context)
+        renderer = HologramRenderer(context)
         setRenderer(renderer)
     }
 }

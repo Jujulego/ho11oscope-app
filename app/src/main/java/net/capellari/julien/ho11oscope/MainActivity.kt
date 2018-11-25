@@ -1,9 +1,9 @@
 package net.capellari.julien.ho11oscope
 
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
@@ -26,7 +26,8 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         )
 
         val PLAYER_FRAGMENTS = arrayOf(
-                R.id.youtubePlayerFragment
+                R.id.youtubePlayerFragment,
+                R.id.hologramPlayerFragment
         )
     }
 
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         super.onWindowFocusChanged(hasFocus)
 
         if (hasFocus && navController.currentDestination?.id in PLAYER_FRAGMENTS) {
-            hideSystemUI()
+            setPlayerMode()
         }
     }
 
@@ -128,8 +129,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
                     R.id.openglFragment,
                     R.id.polyFragment,
                     R.id.settingsFragment
-                ).setDrawerLayout(drawerLayout)
-                .build()
+                ).setDrawerLayout(drawerLayout).build()
 
         setupActionBarWithNavController(navController, appBarConfiguration)
 
@@ -147,9 +147,9 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
             // Manage SystemUI
             if (destination.id in PLAYER_FRAGMENTS) {
-                hideSystemUI()
+                setPlayerMode()
             } else {
-                showSystemUI()
+                removePlayerMode()
             }
 
             // Manage drawer
@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         }
     }
 
-    private fun hideSystemUI() {
+    private fun setPlayerMode() {
         // Max brightness
         if (preferenceBrightness) {
             window.attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
@@ -171,6 +171,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
         // Hide toolbar
         toolbar.visibility = View.GONE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
         // Immersive mode
         window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
@@ -183,7 +184,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
     }
-    private fun showSystemUI() {
+    private fun removePlayerMode() {
         // Default brightness
         if (preferenceBrightness) {
             window.attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
@@ -191,6 +192,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
         // Show toolbar
         toolbar.visibility = View.VISIBLE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
         // Normal mode
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE

@@ -33,7 +33,15 @@
         android:name="net.capellari.julien.ho11oscope.poly.PolyFragment"
         android:label="@string/nav_poly"
 
-        tools:layout="@layout/poly_fragment" />
+        tools:layout="@layout/poly_fragment" >
+
+        <action android:id="@+id/action_play_poly"
+            app:destination="@id/hologramPlayerFragment" />
+    </fragment>
+
+    <fragment android:id="@+id/hologramPlayerFragment"
+        android:name="net.capellari.julien.ho11oscope.poly.HologramPlayerFragment"
+        android:label="HologramPlayerFragment" />
 
     <fragment android:id="@+id/settingsFragment"
         android:name="net.capellari.julien.ho11oscope.SettingsFragment"

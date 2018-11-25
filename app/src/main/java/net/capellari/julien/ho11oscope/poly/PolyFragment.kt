@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.Navigation
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import kotlinx.android.synthetic.main.poly_fragment.*
@@ -29,6 +30,10 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewMod
     private lateinit var polies: PolyViewModel
     private lateinit var results: ResultsViewModel
 
+    // Propriétés
+    private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
+
+    // Méthodes
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -89,11 +94,22 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewMod
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         // Inflate menu
+        inflater.inflate(R.menu.poly_toolbar, menu)
         inflater.inflate(R.menu.toolbar_recherche, menu)
 
         // SearchItem
         searchMenuItem = menu.findItem(R.id.tool_search)
                 ?.setOnActionExpandListener(this)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.poly_play -> {
+                navController.navigate(R.id.action_play_poly)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onRefresh() {

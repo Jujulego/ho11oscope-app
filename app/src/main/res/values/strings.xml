@@ -22,8 +22,9 @@
     <string name="opengl_hexagone">Hexagone</string>
 
     <!-- Poly -->
-    <string name="poly_list">Liste</string>
+    <string name="poly_play">Lancer</string>
 
+    <string name="poly_list">Liste</string>
     <string name="poly_settings">Rendu</string>
 
     <string name="poly_settings_colors">Couleurs</string>

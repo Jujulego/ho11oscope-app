@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
 
     tools:context=".poly.PolyFragment"
-    tools:menu="toolbar_recherche">
+    tools:menu="poly_toolbar,toolbar_recherche">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/surface_guideline"
