@@ -8,9 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
-import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.youtube_video_fragment.view.*
-import net.capellari.julien.ho11oscope.PlayerFragment
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.RequestManager
 import org.jetbrains.anko.bundleOf
@@ -23,20 +21,6 @@ class YoutubeVideoFragment : Fragment() {
         const val ARGS_VIDEO_TITLE       = "title"
         const val ARGS_VIDEO_DESCRIPTION = "description"
         const val ARGS_VIDEO_IMAGE_URL   = "imageUrl"
-
-        // Méthodes
-        fun newInstance(video: SearchResult): YoutubeVideoFragment {
-            val bundle = Bundle()
-            bundle.apply {
-                putString(ARGS_VIDEO_ID,          video.id.videoId)
-                putString(ARGS_VIDEO_TITLE,       video.snippet.title)
-                putString(ARGS_VIDEO_DESCRIPTION, video.snippet.description)
-                putString(ARGS_VIDEO_IMAGE_URL,   video.snippet.thumbnails.high.url)
-            }
-
-            return YoutubeVideoFragment()
-                    .apply { arguments = bundle }
-        }
     }
 
     // Attributs
@@ -84,8 +68,7 @@ class YoutubeVideoFragment : Fragment() {
                 navController.navigate(
                     R.id.action_play_video,
                     bundleOf(
-                        PlayerFragment.ARGS_TYPE   to PlayerFragment.Type.YOUTUBE.name,
-                        PlayerFragment.ARGS_VALEUR to id
+                        YoutubePlayerFragment.ARG_VIDEO_ID to id
                     )
                 )
             }

@@ -24,6 +24,10 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         val PREFERENCE_FRAGMENTS = mapOf(
                 "net.capellari.julien.ho11oscope.poly.PolySettingsFragment" to R.id.action_to_rendering_settings
         )
+
+        val PLAYER_FRAGMENTS = arrayOf(
+                R.id.youtubePlayerFragment
+        )
     }
 
     // Attributs
@@ -57,7 +61,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
 
-        if (hasFocus && navController.currentDestination?.id == R.id.playerFragment) {
+        if (hasFocus && navController.currentDestination?.id in PLAYER_FRAGMENTS) {
             hideSystemUI()
         }
     }
@@ -131,15 +135,18 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
         // Events
         navController.addOnNavigatedListener { _, destination ->
+            // Manage drawer
             when (destination.id) {
-                R.id.youtubeFragment  -> navigationView.setCheckedItem(R.id.action_drawer_youtube)
+                R.id.youtubeFragment, R.id.youtubeVideoFragment,
+                R.id.youtubePlayerFragment -> navigationView.setCheckedItem(R.id.action_drawer_youtube)
+
                 R.id.openglFragment   -> navigationView.setCheckedItem(R.id.action_drawer_opengl)
                 R.id.polyFragment     -> navigationView.setCheckedItem(R.id.action_drawer_poly)
                 R.id.settingsFragment -> navigationView.setCheckedItem(R.id.action_drawer_settings)
             }
 
             // Manage SystemUI
-            if (destination.id == R.id.playerFragment) {
+            if (destination.id in PLAYER_FRAGMENTS) {
                 hideSystemUI()
             } else {
                 showSystemUI()

@@ -54,7 +54,7 @@
         tools:layout="@layout/youtube_video_fragment" >
 
         <action android:id="@+id/action_play_video"
-            app:destination="@id/playerFragment" />
+            app:destination="@+id/youtubePlayerFragment" />
 
         <argument android:name="id"          app:argType="string" />
         <argument android:name="title"       app:argType="string" />
@@ -62,14 +62,11 @@
         <argument android:name="imageUrl"    app:argType="string" />
     </fragment>
 
-    <fragment android:id="@+id/playerFragment"
-        android:name="net.capellari.julien.ho11oscope.PlayerFragment"
-        android:label="playerFragment"
+    <fragment android:id="@+id/youtubePlayerFragment"
+        android:name="net.capellari.julien.ho11oscope.youtube.YoutubePlayerFragment"
+        android:label="YoutubePlayerFragment">
 
-        tools:layout="@layout/player_fragment" >
-
-        <argument android:name="type"   app:argType="string" />
-        <argument android:name="valeur" app:argType="string" />
+        <argument android:name="video" app:argType="string" />
     </fragment>
 
     <!-- Actions globales -->

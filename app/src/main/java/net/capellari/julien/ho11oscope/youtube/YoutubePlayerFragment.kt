@@ -11,26 +11,12 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayerView
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerListener
 
-class YoutubePlayerFragment : androidx.fragment.app.Fragment(), YouTubePlayerListener {
+class YoutubePlayerFragment : Fragment(), YouTubePlayerListener {
     // Companion
     companion object {
         // Attributs
         const val TAG = "YoutubePlayerFragment"
-
-        const val ARG_VIDEO_ID = "id"
-
-        // Méthodes
-        fun newInstance(videoId: String) : YoutubePlayerFragment {
-            val bundle = Bundle()
-                    .apply {
-                        putString(ARG_VIDEO_ID, videoId)
-                    }
-
-            return YoutubePlayerFragment()
-                    .apply {
-                        arguments = bundle
-                    }
-        }
+        const val ARG_VIDEO_ID = "video"
     }
 
     // Attributs
@@ -41,11 +27,9 @@ class YoutubePlayerFragment : androidx.fragment.app.Fragment(), YouTubePlayerLis
 
     // Events
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(TAG, "onCreateView")
         return YouTubePlayerView(context)
                 .apply {
                     initialize( {
-                        Log.d(TAG, "initialized")
                         player = it
                         it.addListener(this@YoutubePlayerFragment)
                     }, true)
@@ -53,7 +37,6 @@ class YoutubePlayerFragment : androidx.fragment.app.Fragment(), YouTubePlayerLis
     }
 
     override fun onReady() {
-        Log.d(TAG, "onReady")
         player?.let { player ->
             videoId?.let {
                 Log.d(TAG, it)

@@ -179,6 +179,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     // Méthodes
     private fun setupTransparency() {
         Log.d(TAG, "transparency    : ${if (transparency) "activated" else "disactivated"}")
+
         if (transparency) activateTransparency() else disactivateTransparency()
     }
 
@@ -186,8 +187,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         Log.d(TAG, "light power     : $lightPower")
 
         polyProgram.parameters.lightPower = lightPower.toFloat()
-
-        //wireframeProgram.lightPower = lightPower.toFloat()
     }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
