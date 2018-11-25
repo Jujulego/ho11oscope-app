@@ -57,15 +57,15 @@ class OpenGLSurfaceView(context: Context, attributeSet: AttributeSet) : GLSurfac
     }
 
     fun setupTriangle() {
-        renderer.setupTriangle()
+        renderer.mesh = Triangle()
         requestRender()
     }
     fun setupCarre() {
-        renderer.setupCarre()
+        renderer.mesh = Carre()
         requestRender()
     }
     fun setupHexagone() {
-        renderer.setupHexagone()
+        renderer.mesh = Hexagone()
         requestRender()
     }
 }

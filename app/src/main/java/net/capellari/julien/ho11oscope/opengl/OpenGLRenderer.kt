@@ -4,8 +4,6 @@ import android.content.Context
 import android.opengl.GLES31
 import android.opengl.GLSurfaceView
 import net.capellari.julien.opengl.Mat4
-import net.capellari.julien.opengl.Material
-import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.opengl.base.BaseMesh
 import net.capellari.julien.utils.sharedPreference
 import javax.microedition.khronos.egl.EGLConfig
@@ -37,6 +35,10 @@ class OpenGLRenderer(val context: Context) : GLSurfaceView.Renderer {
 
     val program = OpenGLProgram.instance
     var mesh: BaseMesh = Triangle()
+        set(value) {
+            field = value
+            newMesh = true
+        }
     var newMesh = true
 
     // Propriétés
@@ -83,70 +85,5 @@ class OpenGLRenderer(val context: Context) : GLSurfaceView.Renderer {
 
         val ratio: Float = width.toFloat() / height.toFloat()
         vpMatrix = Mat4.frustum(-ratio, ratio, -1f, 1f, 3f, 7f) * viewMatrix
-    }
-
-    // Méthodes
-    fun setupTriangle() {
-        mesh = Triangle()
-        newMesh = true
-    }
-    fun setupCarre() {
-        mesh = Carre()
-        newMesh = true
-    }
-    fun setupHexagone() {
-        mesh = Hexagone()
-        newMesh = true
-    }
-
-    // Meshes
-    class Triangle : BaseMesh(false, false) {
-        override fun getMaterial(): Material {
-            return Material("")
-        }
-
-        override fun getVertices(): Any = arrayOf(
-                Vec3(  0f,  0.622008459f, 0f),
-                Vec3(-.5f, -0.311004243f, 0f),
-                Vec3( .5f, -0.311004243f, 0f)
-        )
-    }
-    class Carre    : BaseMesh(true,  false) {
-        override fun getMaterial(): Material {
-            return Material("")
-        }
-
-        override fun getIndices(): Any = arrayOf<Short>(0, 1, 2, 0, 2, 3)
-
-        override fun getVertices(): Any = arrayOf(
-                Vec3(-.5f,  .5f, 0f),
-                Vec3(-.5f, -.5f, 0f),
-                Vec3( .5f, -.5f, 0f),
-                Vec3( .5f,  .5f, 0f)
-        )
-    }
-    class Hexagone : BaseMesh(true,  false) {
-        override fun getMaterial(): Material {
-            return Material("")
-        }
-
-        override fun getIndices(): Any = arrayOf<Short>(
-                0, 1, 2,
-                0, 2, 3,
-                0, 3, 4,
-                0, 4, 5,
-                0, 5, 6,
-                0, 6, 1
-        )
-
-        override fun getVertices(): Any = arrayOf(
-                Vec3(   0f,    0f, 0f), // 0
-                Vec3(  .5f,    0f, 0f), // 1
-                Vec3( .25f,  .43f, 0f), // 2
-                Vec3(-.25f,  .43f, 0f), // 3
-                Vec3( -.5f,    0f, 0f), // 4
-                Vec3(-.25f, -.43f, 0f), // 5
-                Vec3( .25f, -.43f, 0f)  // 6
-        )
     }
 }

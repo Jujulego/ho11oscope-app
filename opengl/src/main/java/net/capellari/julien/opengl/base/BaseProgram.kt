@@ -24,12 +24,13 @@ abstract class BaseProgram {
     private var program: Int = -1
     private var isActive = false
     protected var reloadUniforms = false
-    protected var uniformBlocks = mutableMapOf<String,UniformBufferObject>()
 
     // Config
     var mode: Int = GLES31.GL_TRIANGLES
     var defaultMode: Int = GLES31.GL_TRIANGLES
         private set
+
+    protected var otherAttrs = arrayOf<String>()
 
     // Méthodes abstraites
     // - loading shaders
@@ -69,19 +70,6 @@ abstract class BaseProgram {
         reloadUniforms = true
     }
 
-    fun linkUBOs(program: BaseProgram) {
-        for (name in uniformBlocks.keys) {
-            if (program.uniformBlocks.containsKey(name)) {
-                uniformBlocks[name] = program.uniformBlocks[name]!!
-            }
-        }
-    }
-    fun linkUBO(program: BaseProgram, name: String) {
-        if (uniformBlocks.containsKey(name) && program.uniformBlocks.containsKey(name)) {
-            uniformBlocks[name] = program.uniformBlocks[name]!!
-        }
-    }
-
     fun prepare(mesh: BaseMesh) = prepare(arrayListOf(mesh))
     fun prepare(meshes: Collection<BaseMesh>) {
         usingProgram {
@@ -104,7 +92,7 @@ abstract class BaseProgram {
 
             for (mesh in meshes) {
                 // Préparations des buffers
-                mesh.loadBuffers()
+                mesh.loadBuffers(otherAttrs)
                 setMeshMaterial(mesh)
 
                 mesh.bindVAO {

@@ -32,11 +32,15 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
     var normalType: Int = GLES31.GL_FLOAT
         private set
 
+    val othersOff = mutableMapOf<String,Int>()
+    val othersType = mutableMapOf<String,Int>()
+
     // Méthodes à redéfinir
-    abstract fun getMaterial() : Material
+    open     fun getMaterial() = Material("")
     abstract fun getVertices() : Any
-    open fun getNormals() : Any = arrayOf<Vec3>()
-    open fun getIndices() : Any = ShortArray(0)
+    open     fun getNormals()  : Any = arrayOf<Vec3>()
+    open     fun getIndices()  : Any = ShortArray(0)
+    open fun getOther(name: String) : Any = ShortArray(0)
 
     fun draw(mode: Int) {
         bindVAO {
@@ -92,7 +96,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
             ibo.generate()
         }
     }
-    internal fun loadBuffers() {
+    internal fun loadBuffers(others: Array<String>) {
         // load IBO
         if (hasIndices && ibo.reload) {
             val indices = getIndices()
@@ -106,25 +110,47 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
 
         // load VBO
         if (vbo.reload) {
+            var size = 0
+
+            // Vertices data
             val vertices = getVertices()
             vertexCount = GLUtils.vertexCount(vertices)
             vertexSize = GLUtils.bufferSize(vertices)
             vertexType = GLUtils.bufferType(vertices)
+
+            size += vertexSize
+
+            // Normals data
             normalSize = 0
+            var normals: Any? = null
 
             if (hasNormals) {
-                val normals = getNormals()
+                normals = getNormals()
                 normalSize = GLUtils.bufferSize(normals)
                 normalType = GLUtils.bufferType(normals)
 
-                vbo.allocate(vertexSize + normalSize)
-
-                vbo.put(vertices)
-                vbo.put(normals)
-            } else {
-                vbo.allocate(vertexSize)
-                vbo.put(vertices)
+                size += normalSize
             }
+
+            // Others
+            val othersV = mutableListOf<Any>()
+
+            for (attr in others) {
+                val v = getOther(attr)
+                val s = GLUtils.bufferSize(v)
+
+                othersV.add(v)
+                othersOff[attr] = size
+                othersType[attr] = GLUtils.bufferType(v)
+
+                size += s
+            }
+
+            // Fill buffer
+            vbo.allocate(size)
+            vbo.put(vertices)
+            normals?.also { vbo.put(it) }
+            othersV.forEach { vbo.put(it) }
 
             vbo.reload = false
         }

@@ -109,8 +109,14 @@ internal class ProgramProcessor : AbstractProcessor() {
         var meshMaterialAttribute: UniformProperty? = null
 
         // Attributs
+        var others = ""
         program.attributs.forEach {
             attrs.add(AttributeProperty(it))
+
+            if (it.type == AttributeType.OTHER) {
+                if (others.isNotEmpty()) others += ", "
+                others += "\"${it.name}\""
+            }
         }
 
         // Liste des attributs
@@ -235,6 +241,11 @@ internal class ProgramProcessor : AbstractProcessor() {
                                     addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
                                 endControlFlow()
                             }
+                            AttributeType.OTHER -> {
+                                addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.othersType[%S]!!, %L, 0, mesh.othersOff[%S]!!)",
+                                        prop.handle, prop.annotation.name, prop.annotation.normalized, prop.annotation.name)
+                            }
                         }
                     }
                     endControlFlow()
@@ -262,14 +273,16 @@ internal class ProgramProcessor : AbstractProcessor() {
                 addProperties(ssbos.values)
 
                 // Contructeur
-                if (program.mode != 0) {
-                    addInitializerBlock(CodeBlock.builder()
-                        .apply {
-                                addStatement("mode = %L", program.mode)
-                                addStatement("defaultMode = %L", program.mode)
-                        }.build()
-                    )
-                }
+                addInitializerBlock(CodeBlock.builder()
+                    .apply {
+                        addStatement("otherAttrs = arrayOf($others)")
+
+                        if (program.mode != 0) {
+                            addStatement("mode = %L", program.mode)
+                            addStatement("defaultMode = %L", program.mode)
+                        }
+                    }.build()
+                )
 
                 // Méthodes
                 addFunction(loadShaders)

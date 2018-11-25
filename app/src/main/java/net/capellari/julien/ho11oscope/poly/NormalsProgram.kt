@@ -10,8 +10,8 @@ import net.capellari.julien.opengl.base.BaseProgram
         ShaderScript(ShaderType.GEOMETRY, file = "shaders/geometry_normals.glsl")
     ),
     attributs = [
-        Attribute(AttributeType.VERTICES, "aPos"),
-        Attribute(AttributeType.NORMALS,  "aNormal")
+        Attribute("aPos",    AttributeType.VERTICES),
+        Attribute("aNormal", AttributeType.NORMALS)
     ]
 )
 abstract class NormalsProgram : BaseProgram() {

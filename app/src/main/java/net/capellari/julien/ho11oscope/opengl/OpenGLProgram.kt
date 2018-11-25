@@ -7,26 +7,32 @@ import net.capellari.julien.opengl.base.BaseProgram
 @Program(
     shaders = Shaders(
         ShaderScript(ShaderType.VERTEX, "",
-            """
+            """ #version 100
                 uniform mat4 uMVPMatrix;
                 attribute vec4 vPosition;
+                attribute vec3 vColor;
+
+                varying vec3 color;
+
                 void main() {
                     gl_Position = uMVPMatrix * vPosition;
+                    color = vColor;
                 }
             """
         ),
         ShaderScript(ShaderType.FRAGMENT, "",
-            """
+            """ #version 100
                 precision mediump float;
-                uniform vec4 vColor;
+                varying vec3 color;
                 void main() {
-                    gl_FragColor = vColor;
+                    gl_FragColor = vec4(color, 0);
                 }
             """
         )
     ),
     attributs = [
-        Attribute(AttributeType.VERTICES, "vPosition")
+        Attribute("vPosition", AttributeType.VERTICES),
+        Attribute("vColor")
     ]
 )
 abstract class OpenGLProgram : BaseProgram() {
@@ -37,5 +43,4 @@ abstract class OpenGLProgram : BaseProgram() {
 
     // Attributs
     @Uniform("uMVPMatrix") open var mvpMatrix = Mat4()
-    @Uniform("vColor")     open var color     = Vec4(0.63671875f, 0.76953125f, 0.22265625f, 1.0f)
 }

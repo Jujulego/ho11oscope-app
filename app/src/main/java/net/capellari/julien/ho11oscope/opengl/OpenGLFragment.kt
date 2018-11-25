@@ -11,7 +11,7 @@ class OpenGLFragment : Fragment() {
     // Events
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.opengl_fragment, container, false)
-        view.hologram.renderer.setupTriangle()
+        view.hologram.setupTriangle()
 
         // Events
         view.tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {

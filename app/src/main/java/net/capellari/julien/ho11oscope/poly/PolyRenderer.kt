@@ -78,8 +78,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
         normalsProgram.compile(context)
-
-        wireframeProgram.linkUBOs(polyProgram)
         wireframeProgram.compile(context)
 
         // Setup

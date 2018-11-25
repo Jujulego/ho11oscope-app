@@ -11,8 +11,8 @@ import net.capellari.julien.opengl.base.BaseProgram
         ShaderScript(ShaderType.GEOMETRY, file = "shaders/geometry.glsl")
     ),
     attributs = [
-        Attribute(AttributeType.VERTICES, "aPosition"),
-        Attribute(AttributeType.NORMALS,  "aNormal")
+        Attribute("aPosition", AttributeType.VERTICES),
+        Attribute("aNormal",   AttributeType.NORMALS)
     ]
 )
 abstract class PolyProgram : BaseProgram() {
