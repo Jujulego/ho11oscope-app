@@ -2,6 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
 import net.capellari.julien.opengl.Material
+import net.capellari.julien.opengl.base.BaseProgram
 
 @Program(
     shaders = Shaders(
@@ -24,15 +25,7 @@ abstract class PolyProgram : BaseProgram() {
     @Uniform("magnitude") open var magnitude = .5f
     @Uniform("material", true) var material  = Material("")
 
-    @UniformBlock("Matrices") open var mvpMatrix   = Mat4()
-    @UniformBlock("Matrices") open var modelMatrix = Mat4()
-
-    @UniformBlock("Stables") open var viewMatrix    = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
-    @UniformBlock("Stables") open var projMatrix    = Mat4()
-    @UniformBlock("Stables") open var lightPosition = Vec3(10f, 0f, 0f)
-
-    @UniformBlock("Parameters") open var lightPower     = 50f
-    @UniformBlock("Parameters") open var ambientFactor  = .1f
-    @UniformBlock("Parameters") open var diffuseFactor  = .7f
-    @UniformBlock("Parameters") open var specularFactor = .5f
+    @UniformBlock("Matrices")   val matrices   = MatricesBlock.instance
+    @UniformBlock("Stables")    val stables    = StablesBlock.instance
+    @UniformBlock("Parameters") val parameters = ParametersBlock.instance
 }

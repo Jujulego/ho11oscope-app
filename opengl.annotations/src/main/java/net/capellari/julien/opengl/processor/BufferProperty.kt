@@ -8,27 +8,7 @@ import javax.lang.model.element.VariableElement
 internal abstract class BufferProperty(name: String) : BaseProperty() {
     // Attributs
     abstract val log: String
-    abstract val bufferType: String
-
     val properties = ArrayList<PropertySpec>()
-
-    val id = PropertySpec.builder("id$name", Int::class, KModifier.PRIVATE)
-            .apply {
-                mutable()
-                initializer("GLES31.GL_INVALID_INDEX")
-            }.build()
-
-    val reload = PropertySpec.builder("reload$name", Boolean::class, KModifier.PRIVATE)
-            .apply {
-                mutable()
-                initializer("true")
-            }.build()
-
-    val binding = PropertySpec.builder("binding$name", Int::class, KModifier.PRIVATE)
-            .apply {
-                mutable()
-                initializer("GLES31.GL_INVALID_INDEX")
-            }.build()
 
     lateinit var bo: PropertySpec
         protected set
@@ -56,24 +36,24 @@ internal abstract class BufferProperty(name: String) : BaseProperty() {
                         addParameter(param)
 
                         addStatement("field = %N", param)
-                        addStatement("%N = true", reload)
+                        addStatement("%N.reload = true", bo)
                     }.build())
                 }.build())
     }
 
     fun genBufferFunc(func: FunSpec.Builder) {
-        func.addStatement("%N = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]", id)
+        func.addStatement("%N.generate()", bo)
     }
 
     fun loadBufferFunc(func: FunSpec.Builder) {
-        func.beginControlFlow("if (%N)", reload)
+        func.beginControlFlow("if (%N.reload)", bo)
             // Compute ssbo size
             func.addStatement("var size = 0")
             for (p in properties) {
                 func.addStatement("size += GLUtils.bufferSize(%N)", p)
             }
 
-            // Allocate SSBO
+            // Allocate BO
             func.addStatement("%N.allocate(size)", bo)
             func.addStatement("%N.position = 0", bo)
 
@@ -83,19 +63,15 @@ internal abstract class BufferProperty(name: String) : BaseProperty() {
             }
 
             // Bind SSBO
-            func.addStatement("%N.bind(%N)", bo, id)
-            func.addStatement("GLES31.glBindBufferBase($bufferType, %N, %N)", binding, id)
+            func.addStatement("%N.toGPU()", bo)
             func.addStatement("GLUtils.checkGlError(%S)", "Loading $log")
 
-            func.addStatement("%N = false", reload)
+            func.addStatement("%N.reload = false", bo)
         func.endControlFlow()
     }
 
     override fun addProperties(type: TypeSpec.Builder) {
         type.addProperties(properties)
-        type.addProperty(id)
-        type.addProperty(reload)
-        type.addProperty(binding)
         type.addProperty(bo)
     }
 }

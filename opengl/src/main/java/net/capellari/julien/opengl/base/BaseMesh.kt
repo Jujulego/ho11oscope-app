@@ -11,27 +11,22 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
                         var hasNormals: Boolean = false) {
     // Attributs
     private var ibo = ElementBufferObject()
-    private var iboId = GLES31.GL_INVALID_INDEX
     private var indiceBT: Int = GLES31.GL_UNSIGNED_INT
-    @Volatile private var reloadIbo = false
-
-    private var vbo = VertexBufferObject()
-    private var vboId = GLES31.GL_INVALID_INDEX
-    @Volatile private var reloadVbo = false
 
     private var vaoId = GLES31.GL_INVALID_INDEX
     private var vaoBound = false
 
+    private var vbo = VertexBufferObject()
     var vertexCount: Int = 0
         private set
 
     var vertexSize: Int = 0
         private set
 
-    var normalSize: Int = 0
+    var vertexType: Int = GLES31.GL_FLOAT
         private set
 
-    var vertexType: Int = GLES31.GL_FLOAT
+    var normalSize: Int = 0
         private set
 
     var normalType: Int = GLES31.GL_FLOAT
@@ -79,36 +74,38 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
             }
         }
     }
+    fun bindVBO(lambda: () -> Unit) {
+        vbo.bind(lambda)
+    }
 
-    fun reloadIndices()  { reloadIbo = true }
-    fun reloadVertices() { reloadVbo = true }
+    fun reloadIndices()  { ibo.reload = true }
+    fun reloadVertices() { vbo.reload = true }
 
     // Méthodes internes
     internal fun genBuffers() {
         // Vertex buffer
         vaoId = IntArray(1).also { GLES31.glGenVertexArrays(1, it, 0) }[0]
-        vboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
-        reloadVbo = true
+
+        vbo.generate()
 
         if (hasIndices) {
-            iboId = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
-            reloadIbo = true
+            ibo.generate()
         }
     }
     internal fun loadBuffers() {
         // load IBO
-        if (hasIndices && reloadIbo && iboId != GLES31.GL_INVALID_INDEX) {
+        if (hasIndices && ibo.reload) {
             val indices = getIndices()
             indiceBT = GLUtils.bufferType(indices, true)
 
             ibo.allocate(GLUtils.bufferSize(indices))
             ibo.put(indices)
 
-            reloadIbo = false
+            ibo.reload = false
         }
 
         // load VBO
-        if (reloadVbo && vboId != GLES31.GL_INVALID_INDEX) {
+        if (vbo.reload) {
             val vertices = getVertices()
             vertexCount = GLUtils.vertexCount(vertices)
             vertexSize = GLUtils.bufferSize(vertices)
@@ -129,15 +126,15 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
                 vbo.put(vertices)
             }
 
-            reloadVbo = false
+            vbo.reload = false
         }
     }
     internal fun bindBuffers() {
         bindVAO {
-            vbo.bind(vboId)
+            vbo.toGPU()
 
             if (hasIndices) {
-                ibo.bind(iboId)
+                ibo.toGPU()
             }
         }
     }

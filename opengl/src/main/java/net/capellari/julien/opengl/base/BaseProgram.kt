@@ -1,14 +1,10 @@
-package net.capellari.julien.opengl
+package net.capellari.julien.opengl.base
 
 import android.content.Context
 import android.opengl.GLES31
-import android.opengl.GLES31Ext
 import android.util.Log
-import net.capellari.julien.opengl.base.BaseMat
-import net.capellari.julien.opengl.base.BaseMesh
-import net.capellari.julien.opengl.base.BaseVec
-import net.capellari.julien.opengl.buffers.ElementBufferObject
-import net.capellari.julien.opengl.buffers.VertexBufferObject
+import net.capellari.julien.opengl.*
+import net.capellari.julien.opengl.buffers.UniformBufferObject
 import java.nio.*
 import kotlin.reflect.full.createInstance
 
@@ -28,6 +24,7 @@ abstract class BaseProgram {
     private var program: Int = -1
     private var isActive = false
     protected var reloadUniforms = false
+    protected var uniformBlocks = mutableMapOf<String,UniformBufferObject>()
 
     // Config
     var mode: Int = GLES31.GL_TRIANGLES
@@ -44,7 +41,6 @@ abstract class BaseProgram {
     protected abstract fun loadUniforms()
     protected abstract fun loadBuffers()
     protected abstract fun enableVBO(mesh: BaseMesh)
-
     protected abstract fun setMeshMaterial(mesh: BaseMesh)
 
     // Méthodes
@@ -73,6 +69,19 @@ abstract class BaseProgram {
         reloadUniforms = true
     }
 
+    fun linkUBOs(program: BaseProgram) {
+        for (name in uniformBlocks.keys) {
+            if (program.uniformBlocks.containsKey(name)) {
+                uniformBlocks[name] = program.uniformBlocks[name]!!
+            }
+        }
+    }
+    fun linkUBO(program: BaseProgram, name: String) {
+        if (uniformBlocks.containsKey(name) && program.uniformBlocks.containsKey(name)) {
+            uniformBlocks[name] = program.uniformBlocks[name]!!
+        }
+    }
+
     fun prepare(mesh: BaseMesh) = prepare(arrayListOf(mesh))
     fun prepare(meshes: Collection<BaseMesh>) {
         usingProgram {
@@ -98,12 +107,11 @@ abstract class BaseProgram {
                 mesh.loadBuffers()
                 setMeshMaterial(mesh)
 
-                // Attributs
                 mesh.bindVAO {
+                    // Draw
                     mesh.bindBuffers()
                     enableVBO(mesh)
 
-                    // Draw
                     mesh.draw(mode)
                 }
             }
@@ -242,7 +250,7 @@ abstract class BaseProgram {
             // Composed
             is BaseVec<*>   -> v.size
             is BaseMat<*,*> -> v.size * v.size
-            is BaseStructure       -> v.getBufferSize()
+            is BaseStructure -> v.getBufferSize()
 
             else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
         }
@@ -288,13 +296,13 @@ abstract class BaseProgram {
                 is Int   -> GLES31.glUniform1i(getUniformLocation(nom), v)
                 is Float -> GLES31.glUniform1f(getUniformLocation(nom), v)
 
-                is Vec2  -> GLES31.glUniform2f(getUniformLocation(nom), v.x, v.y)
-                is Vec3  -> GLES31.glUniform3f(getUniformLocation(nom), v.x, v.y, v.z)
-                is Vec4  -> GLES31.glUniform4f(getUniformLocation(nom), v.x, v.y, v.z, v.a)
+                is Vec2 -> GLES31.glUniform2f(getUniformLocation(nom), v.x, v.y)
+                is Vec3 -> GLES31.glUniform3f(getUniformLocation(nom), v.x, v.y, v.z)
+                is Vec4 -> GLES31.glUniform4f(getUniformLocation(nom), v.x, v.y, v.z, v.a)
 
-                is Mat2  -> GLES31.glUniformMatrix2fv(getUniformLocation(nom), 1, false, v.data, 0)
-                is Mat3  -> GLES31.glUniformMatrix3fv(getUniformLocation(nom), 1, false, v.data, 0)
-                is Mat4  -> GLES31.glUniformMatrix4fv(getUniformLocation(nom), 1, false, v.data, 0)
+                is Mat2 -> GLES31.glUniformMatrix2fv(getUniformLocation(nom), 1, false, v.data, 0)
+                is Mat3 -> GLES31.glUniformMatrix3fv(getUniformLocation(nom), 1, false, v.data, 0)
+                is Mat4 -> GLES31.glUniformMatrix4fv(getUniformLocation(nom), 1, false, v.data, 0)
 
                 is BaseStructure -> v.toUniform(nom, this)
 

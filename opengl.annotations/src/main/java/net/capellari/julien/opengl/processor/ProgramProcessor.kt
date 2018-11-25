@@ -19,7 +19,8 @@ internal class ProgramProcessor : AbstractProcessor() {
     // Méthodes
     override fun getSupportedAnnotationTypes(): Set<String> {
         return setOf(
-                Program::class.java.canonicalName
+                Program::class.java.canonicalName,
+                UniformBlock::class.java.canonicalName
         )
     }
     override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -28,6 +29,13 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .forEach {
                     if (it is TypeElement && programCheck(it)) {
                         createProgramImpl(it)
+                    }
+                }
+
+        roundEnv.getElementsAnnotatedWith(UniformBlock::class.java)
+                .forEach {
+                    if (it is TypeElement  && uniformBlockCheck(it)) {
+                        createUniformBlockImpl(it)
                     }
                 }
 
@@ -42,7 +50,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         var hasVertex = false
 
         // should inherit from BaseProgram
-        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.BaseProgram")) {
+        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.base.BaseProgram")) {
             processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${type.simpleName} should inherit from BaseProgram")
             return false
         }
@@ -72,6 +80,17 @@ internal class ProgramProcessor : AbstractProcessor() {
 
         return true
     }
+    private fun uniformBlockCheck(type: TypeElement) : Boolean {
+        // should inherit from BaseUniformBlock
+        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.base.BaseUniformBlock")) {
+            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${type.simpleName} should inherit from BaseUniformBlock")
+            return false
+        }
+
+        return true
+    }
+
+    // - implementations
     private fun createProgramImpl(element: TypeElement) {
         // Get infos
         val pkgProgram = processingEnv.elementUtils.getPackageOf(element).toString()
@@ -84,7 +103,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         // Attributes
         val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
-        val unifBlocks = mutableMapOf<String, UniformBlockProperty>()
+        val unifBlocks = mutableListOf<UniformBlockProperty>()
         val ssbos = mutableMapOf<String, ShaderStorageProperty>()
 
         var meshMaterialAttribute: UniformProperty? = null
@@ -101,38 +120,37 @@ internal class ProgramProcessor : AbstractProcessor() {
         }
 
         // Analyse des annotations attributs
-        element.enclosedElements
-                .forEach {
-                    val name = it.simpleName.split("$").first()
+        element.enclosedElements.forEach {
+            val name = it.simpleName.split("$").first()
 
-                    // Annotations
-                    val unif = it.getAnnotation(Uniform::class.java)
-                    val unifBlock = it.getAnnotation(UniformBlock::class.java)
-                    val ssbo = it.getAnnotation(ShaderStorage::class.java)
+            // Annotations
+            val unif = it.getAnnotation(Uniform::class.java)
+            val ssbo = it.getAnnotation(ShaderStorage::class.java)
+            val unifBlock = it.getAnnotation(UniformBlock::class.java)
 
-                    // Attributs & Uniforms
-                    if (unif != null) {
-                        val prop = UniformProperty(fields[name]!!, unif)
+            // Attributs & Uniforms
+            if (unif != null) {
+                val prop = UniformProperty(fields[name]!!, unif)
 
-                        if (unif.meshMaterial) {
-                            meshMaterialAttribute = prop
-                        } else {
-                            unifs.add(prop)
-                        }
-                    } else if (unifBlock != null) {
-                        if (!unifBlocks.containsKey(unifBlock.name)) {
-                            unifBlocks[unifBlock.name] = UniformBlockProperty(unifBlock)
-                        }
-
-                        unifBlocks[unifBlock.name]!!.add(fields[name]!!)
-                    } else if (ssbo != null) {
-                        if (!ssbos.containsKey(ssbo.name)) {
-                            ssbos[ssbo.name] = ShaderStorageProperty(ssbo)
-                        }
-
-                        ssbos[ssbo.name]!!.add(fields[name]!!)
-                    }
+                if (unif.meshMaterial) {
+                    meshMaterialAttribute = prop
+                } else {
+                    unifs.add(prop)
                 }
+            } else if (unifBlock != null) {
+                if (unifBlock.name == "") {
+                    processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "UniformBlock name is required for attributes")
+                }
+
+                unifBlocks.add(UniformBlockProperty(fields[name]!!, unifBlock))
+            } else if (ssbo != null) {
+                if (!ssbos.containsKey(ssbo.name)) {
+                    ssbos[ssbo.name] = ShaderStorageProperty(ssbo)
+                }
+
+                ssbos[ssbo.name]!!.add(fields[name]!!)
+            }
+        }
 
         // Méthodes
         val loadShaders = FunSpec.builder("loadShaders")
@@ -165,11 +183,8 @@ internal class ProgramProcessor : AbstractProcessor() {
                     for (prop in attrs) prop.getLocationFunc(this)
 
                     if (!unifBlocks.isEmpty()) {
-                        addStatement("var binding = 0")
-                        for (prop in unifBlocks.values) {
-                            beginControlFlow("if (bindUniformBlock(%S, binding))", prop.annotation.name)
-                                addStatement("%N = binding++", prop.binding)
-                            endControlFlow()
+                        for (prop in unifBlocks) {
+                            addStatement("bindUniformBlock(%S, ${prop.name}.binding)", prop.annotation.name)
                         }
                     }
 
@@ -180,8 +195,8 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in unifBlocks.values) prop.genBufferFunc(this)
-                    for (prop in ssbos.values)      prop.genBufferFunc(this)
+                    for (prop in unifBlocks)   addStatement("${prop.name}.generate()")
+                    for (prop in ssbos.values) prop.genBufferFunc(this)
                 }.build()
 
         val loadUniforms = FunSpec.builder("loadUniforms")
@@ -197,8 +212,8 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in unifBlocks.values) prop.loadBufferFunc(this)
-                    for (prop in ssbos.values)      prop.loadBufferFunc(this)
+                    for (prop in unifBlocks)   addStatement("${prop.name}.load()")
+                    for (prop in ssbos.values) prop.loadBufferFunc(this)
                 }.build()
 
         val enableVBO = FunSpec.builder("enableVBO")
@@ -207,6 +222,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                     addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
 
                     // Link to arrays
+                    beginControlFlow("mesh.bindVBO")
                     for (prop in attrs) {
                         when (prop.annotation.type) {
                             AttributeType.VERTICES -> {
@@ -221,6 +237,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                             }
                         }
                     }
+                    endControlFlow()
                 }.build()
 
         val setMeshMaterial = FunSpec.builder("setMeshMaterial")
@@ -242,16 +259,15 @@ internal class ProgramProcessor : AbstractProcessor() {
                 // Attributs
                 addProperties(attrs)
                 addProperties(unifs)
-                addProperties(unifBlocks.values)
                 addProperties(ssbos.values)
 
                 // Contructeur
                 if (program.mode != 0) {
                     addInitializerBlock(CodeBlock.builder()
-                            .apply {
+                        .apply {
                                 addStatement("mode = %L", program.mode)
                                 addStatement("defaultMode = %L", program.mode)
-                            }.build()
+                        }.build()
                     )
                 }
 
@@ -271,6 +287,102 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addImport("android.opengl", "GLES31")
                     addImport("android.util", "Log")
+                    addImport("net.capellari.julien.opengl", "GLUtils")
+
+                    addType(cls)
+                }.build()
+
+        // Create file
+        Utils.writeTo(sourceRoot, code)
+    }
+    private fun createUniformBlockImpl(element: TypeElement) {
+        // Get infos
+        val pkgProgram = processingEnv.elementUtils.getPackageOf(element).toString()
+
+        // Classes
+        val baseCls = ClassName(pkgProgram, element.simpleName.toString())
+        val implCls = ClassName(pkgProgram, "${element.simpleName}_Impl")
+
+        // Liste des attributs
+        val fields = mutableMapOf<String,VariableElement>()
+        element.enclosedElements.forEach {
+            if (it.kind == ElementKind.FIELD) fields[it.simpleName.toString()] = it as VariableElement
+        }
+
+        // Champs
+        val champs = mutableListOf<VariableElement>()
+        element.enclosedElements.forEach {
+            val name = it.simpleName.split("$").first()
+
+            // Annotations
+            val field = it.getAnnotation(Field::class.java)
+
+            if (field != null) {
+                champs.add(fields[name]!!)
+            }
+        }
+
+        // Implémentation de la classe
+        val cls = TypeSpec.classBuilder(implCls)
+            .apply {
+                superclass(baseCls)
+
+                // Propriétés
+                champs.forEach {
+                    val name = it.simpleName.toString()
+                    val type = it.asType().asTypeName()
+
+                    val param = ParameterSpec.builder("value", type).build()
+
+                    addProperty(PropertySpec.builder(name, type, KModifier.OVERRIDE)
+                        .apply {
+                            mutable()
+                            initializer("super.$name")
+
+                            setter(FunSpec.builder("set()").apply {
+                                addParameter(param)
+
+                                addStatement("field = %N", param)
+                                addStatement("ubo.reload = true")
+                            }.build())
+                        }.build()
+                    )
+                }
+
+                // Méthodes
+                addFunction(FunSpec.builder("load")
+                    .apply {
+                        addModifiers(KModifier.OVERRIDE)
+
+                        beginControlFlow("if (ubo.reload)")
+                            // Compute ssbo size
+                            addStatement("var size = 0")
+                            champs.forEach {
+                                addStatement("size += GLUtils.bufferSize(${it.simpleName.toString()})")
+                            }
+
+                            // Allocate UBO
+                            addStatement("ubo.allocate(size)")
+                            addStatement("ubo.position = 0")
+
+                            // Put data
+                            champs.forEach {
+                                addStatement("ubo.put(${it.simpleName.toString()})")
+                            }
+
+                            // Bind UBO
+                            addStatement("ubo.toGPU()")
+                            addStatement("GLUtils.checkGlError(%S)", "Loading uniform block ${baseCls.simpleName}")
+
+                            addStatement("ubo.reload = false")
+                        endControlFlow()
+                    }.build()
+                )
+            }.build()
+
+        // Ecriture
+        val code = FileSpec.builder(pkgProgram, implCls.simpleName)
+                .apply {
                     addImport("net.capellari.julien.opengl", "GLUtils")
 
                     addType(cls)

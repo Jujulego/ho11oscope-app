@@ -1,14 +1,13 @@
-package net.capellari.julien.opengl.buffers
+package net.capellari.julien.opengl.base
 
 import android.opengl.GLES31
-import net.capellari.julien.opengl.BaseStructure
-import net.capellari.julien.opengl.base.BaseMat
-import net.capellari.julien.opengl.base.BaseVec
 import java.lang.RuntimeException
 import java.nio.*
 
-abstract class BufferObject(protected val target: Int) {
+abstract class BaseBufferObject(protected val target: Int) {
     // Attributs
+    private var bound = false
+    protected var id = GLES31.GL_INVALID_INDEX
     protected var buffer: ByteBuffer? = null
         private set
 
@@ -16,13 +15,22 @@ abstract class BufferObject(protected val target: Int) {
     var size: Int = 0
         private set
 
+    val generated get() = (id != GLES31.GL_INVALID_INDEX)
     var position: Int
         get()  = buffer?.position() ?: 0
         set(p) {
             buffer?.position(p)
         }
 
+    var reload = false
+        get() = field && generated
+
     // Méthodes
+    fun generate() {
+        id = IntArray(1).also { GLES31.glGenBuffers(1, it, 0) }[0]
+        reload = true
+    }
+
     fun allocate(size: Int) {
         // Set position and size
         position = 0
@@ -48,11 +56,36 @@ abstract class BufferObject(protected val target: Int) {
         buffer = nbuf
     }
 
-    open fun bind(id: Int, usage: Int = GLES31.GL_STATIC_DRAW) {
-        buffer?.also {
-            position = 0
-            GLES31.glBindBuffer(target, id)
-            GLES31.glBufferData(target, size, it, usage)
+    fun bind(lambda: () -> Unit) {
+        var wasBounded: Boolean? = null
+
+        try {
+            synchronized(this) {
+                wasBounded = bound
+
+                if (!bound) {
+                    GLES31.glBindBuffer(target, id)
+                    bound = true
+                }
+            }
+
+            lambda()
+
+        } finally {
+            if (wasBounded == false) {
+                synchronized(this) {
+                    GLES31.glBindVertexArray(0)
+                    bound = false
+                }
+            }
+        }
+    }
+
+    open fun toGPU(usage: Int = GLES31.GL_STATIC_DRAW) {
+        position = 0
+
+        bind {
+            buffer?.also { GLES31.glBufferData(target, size, it, usage) }
         }
     }
 
@@ -99,7 +132,4 @@ abstract class BufferObject(protected val target: Int) {
             else -> throw RuntimeException("Unsupported type ${value.javaClass.canonicalName}")
         }
     }
-
-    inline fun<reified T : Any> put(array: Array<T>)      = array.forEach { put(it) }
-    inline fun<reified T : Any> put(array: Collection<T>) = array.forEach { put(it) }
 }

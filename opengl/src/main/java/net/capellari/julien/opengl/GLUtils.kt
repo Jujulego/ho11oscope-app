@@ -3,9 +3,9 @@ package net.capellari.julien.opengl
 import android.content.Context
 import android.opengl.GLES31
 import android.opengl.GLES31Ext
-import android.opengl.GLES32
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
+import net.capellari.julien.opengl.base.BaseStructure
 import net.capellari.julien.opengl.base.BaseVec
 import java.io.BufferedReader
 import java.io.InputStreamReader

@@ -1,5 +1,5 @@
 package net.capellari.julien.opengl
 
-@Target(AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.PROPERTY, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class UniformBlock(val name: String)
+annotation class UniformBlock(val name: String = "")

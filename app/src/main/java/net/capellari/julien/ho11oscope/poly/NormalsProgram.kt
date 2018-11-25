@@ -1,6 +1,7 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
+import net.capellari.julien.opengl.base.BaseProgram
 
 @Program(
     shaders = Shaders(

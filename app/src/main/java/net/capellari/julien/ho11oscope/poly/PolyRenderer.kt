@@ -78,6 +78,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
         normalsProgram.compile(context)
+
+        wireframeProgram.linkUBOs(polyProgram)
         wireframeProgram.compile(context)
 
         // Setup
@@ -110,13 +112,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
 
         // model matrix rotate around Y axis
-        polyProgram.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
-        normalsProgram.model = polyProgram.modelMatrix
-        wireframeProgram.modelMatrix = polyProgram.modelMatrix
+        polyProgram.matrices.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
+        normalsProgram.model = polyProgram.matrices.modelMatrix
 
         // Compute MVP Matrix
-        polyProgram.mvpMatrix = polyProgram.projMatrix * (polyProgram.viewMatrix * polyProgram.modelMatrix)
-        wireframeProgram.mvpMatrix = polyProgram.mvpMatrix
+        polyProgram.matrices.mvpMatrix = polyProgram.stables.projMatrix * (polyProgram.stables.viewMatrix * polyProgram.matrices.modelMatrix)
 
         val m = magnitude / 20f
         if (polyProgram.magnitude != m) {
@@ -162,9 +162,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         GLES31.glViewport(0, 0, width, height)
 
         val ratio = width / height.toFloat()
-        polyProgram.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
-        normalsProgram.projection = polyProgram.projMatrix
-        wireframeProgram.projMatrix = polyProgram.projMatrix
+        polyProgram.stables.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
+        normalsProgram.projection = polyProgram.stables.projMatrix
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
@@ -188,9 +187,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private fun setupLightPower() {
         Log.d(TAG, "light power     : $lightPower")
 
-        polyProgram.lightPower = lightPower.toFloat()
+        polyProgram.parameters.lightPower = lightPower.toFloat()
 
-        wireframeProgram.lightPower = lightPower.toFloat()
+        //wireframeProgram.lightPower = lightPower.toFloat()
     }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
@@ -198,13 +197,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.ambientFactor  = ambientFactor  / 100f
-        polyProgram.diffuseFactor  = diffuseFactor  / 100f
-        polyProgram.specularFactor = specularFactor / 100f
-
-        wireframeProgram.ambientFactor  = ambientFactor  / 100f
-        wireframeProgram.diffuseFactor  = diffuseFactor  / 100f
-        wireframeProgram.specularFactor = specularFactor / 100f
+        polyProgram.parameters.ambientFactor  = ambientFactor  / 100f
+        polyProgram.parameters.diffuseFactor  = diffuseFactor  / 100f
+        polyProgram.parameters.specularFactor = specularFactor / 100f
     }
 
     private fun activateTransparency() {

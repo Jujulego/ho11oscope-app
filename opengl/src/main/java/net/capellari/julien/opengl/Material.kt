@@ -1,8 +1,9 @@
 package net.capellari.julien.opengl
 
-import android.opengl.GLES31
 import android.util.Log
-import net.capellari.julien.opengl.buffers.BufferObject
+import net.capellari.julien.opengl.base.BaseBufferObject
+import net.capellari.julien.opengl.base.BaseProgram
+import net.capellari.julien.opengl.base.BaseStructure
 
 class Material(val name: String) : BaseStructure {
     // Attributs
@@ -14,7 +15,7 @@ class Material(val name: String) : BaseStructure {
     var opacity = 1f
 
     // Méthodes
-    override fun toBuffer(buffer: BufferObject) {
+    override fun toBuffer(buffer: BaseBufferObject) {
         buffer.put(ambientColor)
         buffer.put(diffuseColor)
         buffer.put(specularColor)

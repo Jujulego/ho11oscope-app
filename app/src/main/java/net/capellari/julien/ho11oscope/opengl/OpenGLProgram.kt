@@ -1,6 +1,7 @@
 package net.capellari.julien.ho11oscope.opengl
 
 import net.capellari.julien.opengl.*
+import net.capellari.julien.opengl.base.BaseProgram
 
 // Valeurs
 @Program(
