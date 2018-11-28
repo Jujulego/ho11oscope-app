@@ -1,6 +1,7 @@
 package net.capellari.julien.ho11oscope.poly
 
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import com.github.kittinunf.fuel.android.extension.responseJson
 import com.github.kittinunf.fuel.httpGet
 
@@ -11,18 +12,14 @@ object PolyAPI {
     const val API_KEY = "AIzaSyBtAtm2vpdYXrHxhoS3i8zc0N9VJuO2GxI"
     const val BASE_URL = "https://poly.googleapis.com/v1"
 
-    // Classes
-    data class AssetData(val id: String, val name: String, val description: String?, val imageUrl: String?)
+    val isloading = MutableLiveData<Boolean>()
 
     // Méthodes
-    fun assets(handler : (AssetData) -> Unit) {
+    fun assets(vararg args : Pair<String,Any?>, handler : (PolyObject) -> Unit) {
         val listURL = "$BASE_URL/assets"
 
-        listURL.httpGet(listOf(
-                "key" to API_KEY,
-                "category" to "animals",
-                "format" to "OBJ"
-        )).responseJson { _, _, result ->
+        isloading.postValue(true)
+        listURL.httpGet(listOf("key" to API_KEY, *args)).responseJson { _, _, result ->
             result.fold({
                 // Assets
                 val assets = it.obj().getJSONArray("assets")
@@ -32,15 +29,51 @@ object PolyAPI {
                     val obj = assets.getJSONObject(i)
 
                     Log.d(TAG, "(ID: ${obj.getString("name")} -- ${obj.getString("displayName")}")
-                    handler(AssetData(
+                    handler(PolyObject(
                             id          = obj.getString("name"),
                             name        = obj.getString("displayName"),
                             description = if (obj.has("descricption")) obj.getString("description") else null,
                             imageUrl    = if (obj.has("thumbnail")) obj.getJSONObject("thumbnail").getString("url") else null
                     ))
                 }
+                isloading.postValue(false)
             }, {
                 Log.e(TAG, "Error while parsing JSON", it)
+                isloading.postValue(false)
+            })
+        }
+    }
+    fun assets(vararg args : Pair<String,Any?>, handler : (List<PolyObject>, String) -> Unit) {
+        val listURL = "$BASE_URL/assets"
+
+        isloading.postValue(true)
+        listURL.httpGet(listOf("key" to API_KEY, *args)).responseJson { req, _, result ->
+            Log.d(TAG, "Response for GET request on : ${req.url}")
+
+            result.fold({
+                // Assets
+                val json = it.obj()
+                val assets = it.obj().getJSONArray("assets")
+                val liste = mutableListOf<PolyObject>()
+
+                for (i in 0 until assets.length()) {
+                    // Get infos
+                    val obj = assets.getJSONObject(i)
+
+                    Log.d(TAG, "(ID: ${obj.getString("name")} -- ${obj.getString("displayName")}")
+                    liste.add(PolyObject(
+                            id          = obj.getString("name"),
+                            name        = obj.getString("displayName"),
+                            description = if (obj.has("descricption")) obj.getString("description") else null,
+                            imageUrl    = if (obj.has("thumbnail")) obj.getJSONObject("thumbnail").getString("url") else null
+                    ))
+                }
+
+                handler(liste, json.getString("nextPageToken"))
+                isloading.postValue(false)
+            }, {
+                Log.e(TAG, "Error while parsing JSON", it)
+                isloading.postValue(false)
             })
         }
     }

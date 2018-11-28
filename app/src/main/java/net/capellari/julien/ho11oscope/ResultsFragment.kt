@@ -18,7 +18,7 @@ class ResultsFragment : Fragment() {
     // Companion
     companion object {
         // Builder
-        class Builder() {
+        class Builder {
             // Attributs
             private val bundle = Bundle()
 

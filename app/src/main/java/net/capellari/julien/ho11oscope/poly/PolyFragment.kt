@@ -9,15 +9,22 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.viewpager.widget.ViewPager
-import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import kotlinx.android.synthetic.main.poly_fragment.*
 import kotlinx.android.synthetic.main.poly_fragment.view.*
+import kotlinx.android.synthetic.main.result_item.view.*
+import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
-import net.capellari.julien.ho11oscope.ResultsFragment
-import net.capellari.julien.ho11oscope.ResultsViewModel
+import net.capellari.julien.ho11oscope.inflate
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
-class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewModel.OnResultsListener {
+class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
     // Companion
     companion object {
         // Constantes
@@ -27,31 +34,44 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewMod
     // Attributs
     private var searchMenuItem: MenuItem? = null
 
-    private lateinit var polies: PolyViewModel
-    private lateinit var results: ResultsViewModel
+    private lateinit var polyModel: PolyViewModel
 
     // Propriétés
     private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
 
     // Méthodes
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        // ViewModels
+        polyModel = ViewModelProviders.of(activity!!)[PolyViewModel::class.java]
+        polyModel.getAsset().observe(this, Observer<Asset> {
+            progress.visibility = View.VISIBLE
+
+            doAsync {
+                // Add listener : it will be called even if is already ready
+                it.addOnReadyListener(object : Asset.OnAssetReadyListener {
+                    override fun onReady() {
+                        poly_surface.renderer.asset = it
+
+                        this@doAsync.uiThread {
+                            progress.visibility = View.GONE
+                        }
+                    }
+                })
+
+                // Lance le téléchargement
+                if (!it.ready) {
+                    it.download(context)
+                }
+            }
+        })
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setHasOptionsMenu(true)
-    }
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-
-        // ViewModels
-        polies = ViewModelProviders.of(activity!!)[PolyViewModel::class.java]
-        polies.getAsset().observe(this, Observer<Asset> {
-            progress.visibility = View.GONE
-            poly_surface.renderer.asset = it
-        })
-
-        results = ViewModelProviders.of(activity!!)[ResultsViewModel::class.java]
-        results.addOnResultsListener(this)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -85,17 +105,10 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewMod
         })
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-
-        // Download list
-        refresh()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         // Inflate menu
-        inflater.inflate(R.menu.poly_toolbar, menu)
         inflater.inflate(R.menu.toolbar_recherche, menu)
+        inflater.inflate(R.menu.poly_toolbar, menu)
 
         // SearchItem
         searchMenuItem = menu.findItem(R.id.tool_search)
@@ -112,60 +125,99 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewMod
         }
     }
 
-    override fun onRefresh() {
-        refresh()
-    }
-
     override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-        return false
+        return true
     }
 
     override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
         return true
     }
 
-    override fun onItemClick(res: ResultsViewModel.Result) {
-        (res.obj as? PolyAPI.AssetData)?.let {
-            progress.visibility = View.VISIBLE
-            polies.setAsset(Asset(it.id))
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-
-        // Results
-        results.clear()
-        results.removeOnResultsListener(this)
-    }
-
-    // Méthodes
-    private fun refresh() {
-        results.setRefreshing(true)
-
-        PolyAPI.assets {
-            results.add(ResultsViewModel.Result(
-                    it.name, it.description,
-                    imageUrl = it.imageUrl,
-                    obj = it
-            ))
-            results.setRefreshing(false)
-        }
-    }
-
-    // Classe
-    inner class Pager(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+    // Classes
+    class Pager(fm: FragmentManager) : FragmentPagerAdapter(fm) {
         override fun getCount(): Int = 2
 
         override fun getItem(position: Int): Fragment? {
             return when (position) {
-                0 -> ResultsFragment.Companion.Builder()
-                        .apply {
-                            setColumnNumber(1)
-                        }.build()
-
+                0    -> PolyResultsFragment()
                 1    -> PolySettingsFragment()
                 else -> null
+            }
+        }
+    }
+
+    class PolyResultsFragment : RefreshListFragment() {
+        // Attributs
+        private lateinit var polyModel: PolyViewModel
+        private lateinit var adapter: PolyAdapter
+
+        // Méthodes
+        override fun onAttach(context: Context?) {
+            super.onAttach(context)
+
+            // ViewModel
+            polyModel = ViewModelProviders.of(activity!!)[PolyViewModel::class.java]
+
+            adapter = PolyAdapter()
+            polyModel.assets.observe(this, Observer(adapter::submitList))
+        }
+
+        override fun onSwipeRefreshLayoutCreated(layout: SwipeRefreshLayout) {
+            super.onSwipeRefreshLayoutCreated(layout)
+
+            layout.setColorSchemeResources(R.color.colorPrimary)
+            PolyAPI.isloading.observe(this, Observer {
+                layout.isRefreshing = it
+            })
+        }
+
+        override fun onRecyclerViewCreated(view: RecyclerView) {
+            view.adapter = adapter
+            view.itemAnimator = DefaultItemAnimator()
+            view.layoutManager = LinearLayoutManager(context)
+        }
+
+        override fun onRefresh() {
+            swipeRefreshLayout?.isRefreshing = true
+            polyModel.invalidate()
+        }
+
+        // Classes
+        inner class PolyAdapter: PagedListAdapter<PolyObject, PolyHolder>(PolyObject.DIFF_CALLBACK) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PolyHolder {
+                return PolyHolder(parent.inflate(R.layout.result_item, false))
+            }
+
+            override fun onBindViewHolder(holder: PolyHolder, position: Int) {
+                holder.bind(getItem(position))
+            }
+        }
+
+        inner class PolyHolder(val view : View) : RecyclerView.ViewHolder(view), View.OnClickListener {
+            // Attributs
+            var polyObject: PolyObject? = null
+
+            // Initialisation
+            init {
+                view.setOnClickListener(this)
+            }
+
+            // Méthodes
+            fun bind(obj : PolyObject?) {
+                polyObject = obj
+
+                view.name.text        = obj?.name ?: "Loading ..."
+                view.description.text = obj?.description ?: ""
+
+                obj?.imageUrl?.let {
+                    view.image.setImageUrl(it, polyModel.requestManager.imageLoader)
+                }
+            }
+
+            override fun onClick(v: View?) {
+                polyObject?.let {
+                    polyModel.setAsset(Asset(it.id))
+                }
             }
         }
     }

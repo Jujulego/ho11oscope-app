@@ -30,7 +30,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         const val FAR_CLIP:  Float = 1000f
 
         // Model spin speed (deg / s)
-        const val MODEL_ROTATION_SPEED: Float = 5f
+        const val MODEL_ROTATION_SPEED: Float = 45f
 
         // Camera positions and orientation
         val EYE =    Vec3(0f, 0f, -3f)

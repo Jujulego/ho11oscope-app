@@ -51,8 +51,7 @@ class ResultsViewModel(app: Application) : AndroidViewModel(app) {
         fun onItemClick(res: Result)
     }
 
-    data class Result(
-            val name: String,
+    data class Result(val name: String,
             val description: String? = null,
             val date: String? = null,
             val imageUrl: String? = null,

@@ -1,15 +1,20 @@
 package net.capellari.julien.ho11oscope.poly
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.paging.LivePagedListBuilder
+import androidx.paging.PagedList
+import net.capellari.julien.ho11oscope.RequestManager
 
 class PolyViewModel(app: Application) : AndroidViewModel(app) {
     // Attributs
+    private val dataSourceFactory = PolyDataSource.Factory()
+    val requestManager = RequestManager.getInstance(app)
+
     private val liveAsset = MutableLiveData<Asset>()
+    val assets: LiveData<PagedList<PolyObject>> = LivePagedListBuilder(dataSourceFactory, 20).build()
 
     // Méthodes
     fun getAsset(): LiveData<Asset> = liveAsset
@@ -19,14 +24,10 @@ class PolyViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
 
-        // Add listener : it will be called even if is already ready
-        asset.addOnReadyListener(object : Asset.OnAssetReadyListener {
-            override fun onReady() = liveAsset.postValue(asset)
-        })
+        liveAsset.postValue(asset)
+    }
 
-        // Lance le téléchargement
-        if (!asset.ready) {
-            asset.download(getApplication() as Context)
-        }
+    fun invalidate() {
+        assets.value?.dataSource?.invalidate()
     }
 }
