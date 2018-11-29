@@ -134,6 +134,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         if (readyToRender) {
             for (i in 0 until 4) {
                 // Compute MVP Matrix
+                polyProgram.matrices.lightMatrix = positions[i]
                 polyProgram.matrices.modelMatrix = positions[i] * Mat4.rotate(angle, 0f, 1f, 0f) * scale
                 polyProgram.stables.viewMatrix = Mat4.lookAt(eyes[i], targets[i], HologramRenderer.UP)
                 polyProgram.matrices.mvpMatrix = polyProgram.stables.projMatrix * (polyProgram.stables.viewMatrix * polyProgram.matrices.modelMatrix)

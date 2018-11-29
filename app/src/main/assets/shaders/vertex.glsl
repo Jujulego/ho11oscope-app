@@ -4,13 +4,14 @@
 layout (std140) uniform Matrices {
     mat4 mvpMatrix;
     mat4 modelMatrix;
+    mat4 lightMatrix;
 };
 
 layout (std140) uniform Stables {
     mat4 viewMatrix;
     mat4 projMatrix;
 
-    vec3 lightPosition; // in world space
+    vec3 lightPosition; // in light space
 };
 
 // Entrées
@@ -48,6 +49,6 @@ void main() {
     vecs.eyeDirection = vec3(0, 0, 0) - vertexCamera;
 
     // Vector from vertex to light
-    vec3 lightCamera = (viewMatrix * vec4(lightPosition, 1)).xyz;
+    vec3 lightCamera = (viewMatrix * lightMatrix * vec4(lightPosition, 1)).xyz;
     vecs.lightDirection = lightCamera + vecs.eyeDirection;
 }
