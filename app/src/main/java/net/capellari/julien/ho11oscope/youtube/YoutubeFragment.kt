@@ -8,7 +8,6 @@ import android.provider.SearchRecentSuggestions
 import androidx.appcompat.widget.*
 import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import net.capellari.julien.ho11oscope.R
 
 class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
@@ -28,8 +27,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
 
     private val searchView: SearchView?
         get() = searchMenuItem?.actionView as? SearchView
-
-    private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
 
     // Events
     override fun onAttach(context: Context) {

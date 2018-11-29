@@ -36,7 +36,7 @@ class YoutubeResultsFragment : RefreshListFragment() {
     }
 
     // Attributs
-    private var ytModel: YoutubeViewModel? = null
+    private lateinit var ytModel: YoutubeViewModel
     private var adapter = Adapter()
 
     private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
@@ -47,7 +47,7 @@ class YoutubeResultsFragment : RefreshListFragment() {
 
         // ViewModel
         ytModel = ViewModelProviders.of(activity!!)[YoutubeViewModel::class.java]
-        ytModel!!.videos.observe(this, Observer(adapter::submitList))
+        ytModel.videos.observe(this, Observer(adapter::submitList))
     }
 
     override fun onSwipeRefreshLayoutCreated(layout: SwipeRefreshLayout) {
@@ -55,7 +55,7 @@ class YoutubeResultsFragment : RefreshListFragment() {
 
         layout.setColorSchemeResources(R.color.colorPrimary)
 
-        ytModel!!.isLoading.observe(this, Observer {
+        ytModel.isLoading.observe(this, Observer {
             swipeRefreshLayout?.isRefreshing = it
         })
     }
@@ -68,7 +68,7 @@ class YoutubeResultsFragment : RefreshListFragment() {
 
     override fun onRefresh() {
         swipeRefreshLayout!!.isRefreshing = true
-        ytModel!!.invalidate()
+        ytModel.invalidate()
     }
 
     // Classes
