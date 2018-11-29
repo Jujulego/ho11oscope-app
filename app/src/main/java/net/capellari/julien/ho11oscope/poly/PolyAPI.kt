@@ -43,7 +43,7 @@ object PolyAPI {
             })
         }
     }
-    fun assets(vararg args : Pair<String,Any?>, handler : (List<PolyObject>, String) -> Unit) {
+    fun assets(vararg args : Pair<String,Any?>, handler : (List<PolyObject>, String?) -> Unit) {
         val listURL = "$BASE_URL/assets"
 
         isloading.postValue(true)
@@ -69,7 +69,7 @@ object PolyAPI {
                     ))
                 }
 
-                handler(liste, json.getString("nextPageToken"))
+                handler(liste, if (json.has("nextPageToken")) json.getString("nextPageToken") else null)
                 isloading.postValue(false)
             }, {
                 Log.e(TAG, "Error while parsing JSON", it)

@@ -10,11 +10,13 @@ import net.capellari.julien.ho11oscope.RequestManager
 
 class PolyViewModel(app: Application) : AndroidViewModel(app) {
     // Attributs
-    private val dataSourceFactory = PolyDataSource.Factory()
+    private val dataSourceFactory = PolyDataSource.Factory(this)
     val requestManager = RequestManager.getInstance(app)
 
     private val liveAsset = MutableLiveData<Asset>()
     val assets: LiveData<PagedList<PolyObject>> = LivePagedListBuilder(dataSourceFactory, 20).build()
+
+    var query: String? = null
 
     // Méthodes
     fun getAsset(): LiveData<Asset> = liveAsset

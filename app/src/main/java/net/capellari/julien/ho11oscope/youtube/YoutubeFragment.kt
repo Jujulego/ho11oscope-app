@@ -128,8 +128,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
     }
 
     override fun onItemClick(res: ResultsViewModel.Result) {
-        Log.d(TAG, "itemclick !")
-
         (res.obj as? SearchResult)?.also { video ->
             navController.navigate(
                     R.id.action_video_details,

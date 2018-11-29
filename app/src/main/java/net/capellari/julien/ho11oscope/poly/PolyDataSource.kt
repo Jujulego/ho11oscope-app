@@ -1,30 +1,30 @@
 package net.capellari.julien.ho11oscope.poly
 
-import androidx.lifecycle.MutableLiveData
 import androidx.paging.DataSource
 import androidx.paging.PageKeyedDataSource
-import org.jetbrains.anko.doAsync
 
-class PolyDataSource : PageKeyedDataSource<String,PolyObject>() {
+class PolyDataSource(val polyModel: PolyViewModel) : PageKeyedDataSource<String,PolyObject>() {
     // Classes
-    class Factory : DataSource.Factory<String,PolyObject>() {
-        // Attributs
-        val sourceLiveData = MutableLiveData<PolyDataSource>()
-
+    class Factory(val polyModel: PolyViewModel) : DataSource.Factory<String,PolyObject>() {
         // Méthodes
         override fun create(): DataSource<String, PolyObject> {
-            val source = PolyDataSource()
-            sourceLiveData.postValue(source)
-            return source
+            return PolyDataSource(polyModel)
         }
     }
 
     // Méthodes
     override fun loadInitial(params: LoadInitialParams<String>, callback: LoadInitialCallback<String, PolyObject>) {
-        doAsync {
+        if (polyModel.query != null) {
+            PolyAPI.assets(
+                    "keywords" to polyModel.query,
+                    "format" to "OBJ",
+                    "pageSize" to params.requestedLoadSize) { liste, token ->
+                callback.onResult(liste, null, token)
+            }
+        } else {
             PolyAPI.assets(
                     "category" to "animals",
-                    "format"   to "OBJ",
+                    "format" to "OBJ",
                     "pageSize" to params.requestedLoadSize) { liste, token ->
                 callback.onResult(liste, null, token)
             }
@@ -32,22 +32,18 @@ class PolyDataSource : PageKeyedDataSource<String,PolyObject>() {
     }
 
     override fun loadAfter(params: LoadParams<String>, callback: LoadCallback<String, PolyObject>) {
-        doAsync {
-            PolyAPI.assets(
-                    "pageToken" to params.key,
-                    "pageSize"  to params.requestedLoadSize) { liste, token ->
-                callback.onResult(liste, token)
-            }
+        PolyAPI.assets(
+                "pageToken" to params.key,
+                "pageSize"  to params.requestedLoadSize) { liste, token ->
+            callback.onResult(liste, token)
         }
     }
 
     override fun loadBefore(params: LoadParams<String>, callback: LoadCallback<String, PolyObject>) {
-        doAsync {
-            PolyAPI.assets(
-                    "pageToken" to params.key,
-                    "pageSize"  to params.requestedLoadSize) { liste, token ->
-                callback.onResult(liste, token)
-            }
+        PolyAPI.assets(
+                "pageToken" to params.key,
+                "pageSize"  to params.requestedLoadSize) { liste, token ->
+            callback.onResult(liste, token)
         }
     }
 }

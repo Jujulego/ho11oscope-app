@@ -1,8 +1,11 @@
 package net.capellari.julien.ho11oscope.poly
 
+import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
+import android.provider.SearchRecentSuggestions
 import android.view.*
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -21,10 +24,11 @@ import kotlinx.android.synthetic.main.result_item.view.*
 import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.inflate
+import net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 
-class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
+class PolyFragment : Fragment() {
     // Companion
     companion object {
         // Constantes
@@ -38,6 +42,12 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
 
     // Propriétés
     private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
+
+    private val searchRecentSuggestions
+        get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
+
+    private val searchView: SearchView?
+        get() = searchMenuItem?.actionView as? SearchView
 
     // Méthodes
     override fun onAttach(context: Context) {
@@ -112,7 +122,7 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
 
         // SearchItem
         searchMenuItem = menu.findItem(R.id.tool_search)
-                ?.setOnActionExpandListener(this)
+        setupSearchView()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -125,12 +135,65 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
         }
     }
 
-    override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-        return true
+    // Méthodes
+    fun search(query: String?) {
+        // Sauvegarde
+        searchRecentSuggestions.saveRecentQuery(query, null)
+
+        // Start searching
+        query?.let {
+            polyModel.query = query
+            polyModel.invalidate()
+        }
     }
 
-    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-        return true
+    fun setupSearchView() {
+        // Check activity and searchView
+        activity?.also { activity ->
+            searchView?.apply {
+                // Setup
+                val searchManager = activity.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+                setSearchableInfo(searchManager.getSearchableInfo(activity.componentName))
+                setIconifiedByDefault(true)
+
+                // Restore state
+                polyModel.query?.also { query ->
+                    searchMenuItem?.expandActionView()
+                    setQuery(query, false)
+                    clearFocus() // with no focus
+                }
+
+                // Listeners
+                setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                    override fun onQueryTextChange(newText: String?): Boolean = false
+                    override fun onQueryTextSubmit(query: String?): Boolean {
+                        search(query)
+
+                        return true
+                    }
+                })
+
+                setOnSuggestionListener(object : SearchView.OnSuggestionListener {
+                    override fun onSuggestionSelect(position: Int): Boolean = false
+                    override fun onSuggestionClick(position: Int): Boolean {
+                        val cursor = suggestionsAdapter.cursor
+
+                        // Get suggestion selected
+                        if (cursor.moveToPosition(position)) {
+                            val query = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1))
+
+                            // Start searching + update UI
+                            search(query)
+                            this@apply.setQuery(query, false)
+
+                            return true
+                        }
+
+                        return false
+                    }
+                })
+            }
+        }
     }
 
     // Classes
