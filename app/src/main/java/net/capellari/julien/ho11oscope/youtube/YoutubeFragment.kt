@@ -5,23 +5,13 @@ import androidx.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
-import android.util.Log
 import androidx.appcompat.widget.*
-import android.util.Pair as UtilPair
 import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
-import com.google.api.services.youtube.model.SearchListResponse
-import com.google.api.services.youtube.model.SearchResult
 import net.capellari.julien.ho11oscope.R
-import net.capellari.julien.ho11oscope.RequestManager
-import net.capellari.julien.ho11oscope.ResultsViewModel
-import org.jetbrains.anko.bundleOf
-import java.text.SimpleDateFormat
-import java.util.*
 
-class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsViewModel.OnResultsListener {
+class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
     // Companion (equiv to static)
     companion object {
         const val TAG = "YoutubeFragment"
@@ -30,9 +20,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
     // Attributs
     private var searchMenuItem: MenuItem? = null
 
-    private lateinit var videos: YoutubeViewModel
-    private lateinit var results: ResultsViewModel
-    private lateinit var requestManager: RequestManager
+    private lateinit var ytModel: YoutubeViewModel
 
     // Propriétés
     private val searchRecentSuggestions
@@ -47,8 +35,8 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        // Get requestManager
-        requestManager = RequestManager.getInstance(context)
+        // Get ViewModels
+        ytModel = ViewModelProviders.of(activity!!)[YoutubeViewModel::class.java]
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,29 +44,6 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
 
         // Setup
         setHasOptionsMenu(true)
-
-        // Get ViewModels
-        results = ViewModelProviders.of(activity!!)[ResultsViewModel::class.java]
-        results.addOnResultsListener(this)
-
-        videos  = ViewModelProviders.of(activity!!)[YoutubeViewModel::class.java]
-        videos.searchResults.observe(this@YoutubeFragment,
-                Observer<SearchListResponse> { results ->
-                    for (video in results.items) {
-                        this@YoutubeFragment.results.add(ResultsViewModel.Result(
-                                video.snippet.title,
-                                video.snippet.description,
-                                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
-                                        Date(video.snippet.publishedAt.value)
-                                ),
-                                video.snippet.thumbnails.high.url,
-                                video
-                        ))
-                    }
-
-                    this@YoutubeFragment.results.setRefreshing(false)
-                }
-        )
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -90,8 +55,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
         inflater.inflate(R.menu.toolbar_recherche, menu)
 
         // SearchItem
-        searchMenuItem = menu.findItem(R.id.tool_search)
-                ?.setOnActionExpandListener(this)
+        searchMenuItem = menu.findItem(R.id.tool_search)?.setOnActionExpandListener(this)
 
         setupSearchView()
     }
@@ -108,7 +72,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
 
     override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
         // Searching ...
-        videos.apply {
+        ytModel.apply {
             query = query ?: ""
         }
 
@@ -117,34 +81,10 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
 
     override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
         // Stop searching ...
-        videos.query = null
-        results.clear()
+        ytModel.query = null
+        ytModel.invalidate()
 
         return true
-    }
-
-    override fun onRefresh() {
-        search()
-    }
-
-    override fun onItemClick(res: ResultsViewModel.Result) {
-        (res.obj as? SearchResult)?.also { video ->
-            navController.navigate(
-                    R.id.action_video_details,
-                    bundleOf(
-                            YoutubeVideoFragment.ARGS_VIDEO_ID          to video.id.videoId,
-                            YoutubeVideoFragment.ARGS_VIDEO_TITLE       to video.snippet.title,
-                            YoutubeVideoFragment.ARGS_VIDEO_DESCRIPTION to video.snippet.description,
-                            YoutubeVideoFragment.ARGS_VIDEO_IMAGE_URL   to video.snippet.thumbnails.high.url
-                    )
-            )
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        results.removeOnResultsListener(this)
     }
 
     // Methods
@@ -153,12 +93,8 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
         searchRecentSuggestions.saveRecentQuery(query, null)
 
         // Start searching
-        videos.run {
-            this.search(query)
-
-            results.clear()
-            results.setRefreshing(true)
-        }
+        query?.let { ytModel.query = it }
+        ytModel.invalidate()
     }
 
     private fun setupSearchView() {
@@ -171,7 +107,7 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener, ResultsView
                 setIconifiedByDefault(true)
 
                 // Restore state
-                videos.query?.also { query ->
+                ytModel.query?.also { query ->
                     searchMenuItem?.expandActionView()
                     setQuery(query, false)
                     clearFocus() // with no focus

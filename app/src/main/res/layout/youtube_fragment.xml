@@ -12,9 +12,9 @@
     tools:menu="toolbar_recherche">
 
     <fragment android:id="@+id/resultsFragment"
-        android:name="net.capellari.julien.ho11oscope.ResultsFragment"
+        android:name="net.capellari.julien.ho11oscope.youtube.YoutubeResultsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 
-        tools:layout="@layout/results_fragment" />
+        tools:layout="@layout/refresh_list_fragment" />
 </androidx.constraintlayout.widget.ConstraintLayout>
