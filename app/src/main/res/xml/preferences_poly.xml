@@ -9,7 +9,8 @@
 
             android:key="lightPower"
             android:defaultValue="50"
-            android:max="200"
+            android:max="400"
+            app:min="100"
 
             app:iconSpaceReserved="false" />
 

@@ -15,14 +15,14 @@ class PolyDataSource(val polyModel: PolyViewModel) : PageKeyedDataSource<String,
     // Méthodes
     override fun loadInitial(params: LoadInitialParams<String>, callback: LoadInitialCallback<String, PolyObject>) {
         if (polyModel.query != null) {
-            PolyAPI.assets(
+            PolyAPI.assets(polyModel.getApplication(),
                     "keywords" to polyModel.query,
                     "format" to "OBJ",
                     "pageSize" to params.requestedLoadSize) { liste, token ->
                 callback.onResult(liste, null, token)
             }
         } else {
-            PolyAPI.assets(
+            PolyAPI.assets(polyModel.getApplication(),
                     "category" to "animals",
                     "format" to "OBJ",
                     "pageSize" to params.requestedLoadSize) { liste, token ->
@@ -32,7 +32,7 @@ class PolyDataSource(val polyModel: PolyViewModel) : PageKeyedDataSource<String,
     }
 
     override fun loadAfter(params: LoadParams<String>, callback: LoadCallback<String, PolyObject>) {
-        PolyAPI.assets(
+        PolyAPI.assets(polyModel.getApplication(),
                 "pageToken" to params.key,
                 "pageSize"  to params.requestedLoadSize) { liste, token ->
             callback.onResult(liste, token)
@@ -40,7 +40,7 @@ class PolyDataSource(val polyModel: PolyViewModel) : PageKeyedDataSource<String,
     }
 
     override fun loadBefore(params: LoadParams<String>, callback: LoadCallback<String, PolyObject>) {
-        PolyAPI.assets(
+        PolyAPI.assets(polyModel.getApplication(),
                 "pageToken" to params.key,
                 "pageSize"  to params.requestedLoadSize) { liste, token ->
             callback.onResult(liste, token)

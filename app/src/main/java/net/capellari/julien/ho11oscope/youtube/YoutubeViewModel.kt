@@ -10,15 +10,14 @@ import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
-import com.google.api.services.youtube.model.SearchListResponse
 import com.google.api.services.youtube.model.SearchResult
 import net.capellari.julien.ho11oscope.RequestManager
-import org.jetbrains.anko.doAsync
+import net.capellari.julien.utils.getSHA1Cert
 
 class YoutubeViewModel(app: Application): AndroidViewModel(app) {
     // Companion
     companion object {
-        const val YOUTUBE_API_KEY = "AIzaSyByzfP9EwXQj4heQc2xu8iw_mAnnw6yFQk"
+        const val YOUTUBE_API_KEY = "AIzaSyBtAtm2vpdYXrHxhoS3i8zc0N9VJuO2GxI"
     }
 
     // Attributs
@@ -35,7 +34,10 @@ class YoutubeViewModel(app: Application): AndroidViewModel(app) {
         YouTube.Builder(
                 AndroidHttp.newCompatibleTransport(),
                 JacksonFactory.getDefaultInstance(),
-                HttpRequestInitializer { }
+                HttpRequestInitializer {
+                    it.headers.set("X-Android-Package", getApplication<Application>().packageName)
+                    it.headers.set("X-Android-Cert",    getApplication<Application>().getSHA1Cert())
+                }
         ).setApplicationName("Ho11oscope").build()
     }
 

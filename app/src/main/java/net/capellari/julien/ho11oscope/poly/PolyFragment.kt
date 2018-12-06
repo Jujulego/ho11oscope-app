@@ -23,8 +23,8 @@ import kotlinx.android.synthetic.main.poly_fragment.view.*
 import kotlinx.android.synthetic.main.result_item.view.*
 import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
-import net.capellari.julien.ho11oscope.inflate
 import net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider
+import net.capellari.julien.utils.inflate
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 

@@ -16,7 +16,7 @@ import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.result_item.view.*
 import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
-import net.capellari.julien.ho11oscope.inflate
+import net.capellari.julien.utils.inflate
 import org.jetbrains.anko.bundleOf
 
 class YoutubeResultsFragment : RefreshListFragment() {

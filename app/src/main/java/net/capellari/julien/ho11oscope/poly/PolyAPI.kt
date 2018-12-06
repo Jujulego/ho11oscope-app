@@ -1,9 +1,11 @@
 package net.capellari.julien.ho11oscope.poly
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.github.kittinunf.fuel.android.extension.responseJson
 import com.github.kittinunf.fuel.httpGet
+import net.capellari.julien.utils.getSHA1Cert
 
 object PolyAPI {
     // Constantes
@@ -15,11 +17,16 @@ object PolyAPI {
     val isloading = MutableLiveData<Boolean>()
 
     // Méthodes
-    fun assets(vararg args : Pair<String,Any?>, handler : (PolyObject) -> Unit) {
+    fun assets(context: Context, vararg args : Pair<String,Any?>, handler : (PolyObject) -> Unit) {
         val listURL = "$BASE_URL/assets"
 
         isloading.postValue(true)
-        listURL.httpGet(listOf("key" to API_KEY, *args)).responseJson { _, _, result ->
+        listURL.httpGet(listOf("key" to API_KEY, *args))
+                .header(
+                        "X-Android-Package" to context.packageName,
+                        "X-Android-Cert" to context.getSHA1Cert()!!
+                )
+                .responseJson { _, _, result ->
             result.fold({
                 // Assets
                 val assets = it.obj().getJSONArray("assets")
@@ -43,77 +50,85 @@ object PolyAPI {
             })
         }
     }
-    fun assets(vararg args : Pair<String,Any?>, handler : (List<PolyObject>, String?) -> Unit) {
+    fun assets(context: Context, vararg args : Pair<String,Any?>, handler : (List<PolyObject>, String?) -> Unit) {
         val listURL = "$BASE_URL/assets"
 
         isloading.postValue(true)
-        listURL.httpGet(listOf("key" to API_KEY, *args)).responseJson { req, _, result ->
-            Log.d(TAG, "Response for GET request on : ${req.url}")
+        listURL.httpGet(listOf("key" to API_KEY, *args))
+                .header(
+                        "X-Android-Package" to context.packageName,
+                        "X-Android-Cert" to context.getSHA1Cert()!!
+                )
+                .responseJson { req, _, result ->
+                    Log.d(TAG, "Response for GET request on : ${req.url}")
 
-            result.fold({
-                // Assets
-                val json = it.obj()
-                val assets = it.obj().getJSONArray("assets")
-                val liste = mutableListOf<PolyObject>()
+                    result.fold({
+                        // Assets
+                        val json = it.obj()
+                        val assets = it.obj().getJSONArray("assets")
+                        val liste = mutableListOf<PolyObject>()
 
-                for (i in 0 until assets.length()) {
-                    // Get infos
-                    val obj = assets.getJSONObject(i)
+                        for (i in 0 until assets.length()) {
+                            // Get infos
+                            val obj = assets.getJSONObject(i)
 
-                    Log.d(TAG, "(ID: ${obj.getString("name")} -- ${obj.getString("displayName")}")
-                    liste.add(PolyObject(
-                            id          = obj.getString("name"),
-                            name        = obj.getString("displayName"),
-                            description = if (obj.has("descricption")) obj.getString("description") else null,
-                            imageUrl    = if (obj.has("thumbnail")) obj.getJSONObject("thumbnail").getString("url") else null
-                    ))
+                            Log.d(TAG, "(ID: ${obj.getString("name")} -- ${obj.getString("displayName")}")
+                            liste.add(PolyObject(
+                                    id          = obj.getString("name"),
+                                    name        = obj.getString("displayName"),
+                                    description = if (obj.has("descricption")) obj.getString("description") else null,
+                                    imageUrl    = if (obj.has("thumbnail")) obj.getJSONObject("thumbnail").getString("url") else null
+                            ))
+                        }
+
+                        handler(liste, if (json.has("nextPageToken")) json.getString("nextPageToken") else null)
+                        isloading.postValue(false)
+                    }, {
+                        Log.e(TAG, "Error while parsing JSON", it)
+                        isloading.postValue(false)
+                    })
                 }
-
-                handler(liste, if (json.has("nextPageToken")) json.getString("nextPageToken") else null)
-                isloading.postValue(false)
-            }, {
-                Log.e(TAG, "Error while parsing JSON", it)
-                isloading.postValue(false)
-            })
-        }
     }
 
-    fun asset(id: String, handler: (Asset.Files) -> Unit) {
+    fun asset(context: Context, id: String, handler: (Asset.Files) -> Unit) {
         val assetURL = "$BASE_URL/$id"
 
-        assetURL.httpGet(listOf(
-                "key" to API_KEY
-        )).responseJson { _, _, result ->
-            result.fold({
-                // Assets
-                val formats = it.obj().getJSONArray("formats")
+        assetURL.httpGet(listOf("key" to API_KEY))
+                .header(
+                        "X-Android-Package" to context.packageName,
+                        "X-Android-Cert" to context.getSHA1Cert()!!
+                )
+                .responseJson { _, _, result ->
+                    result.fold({
+                        // Assets
+                        val formats = it.obj().getJSONArray("formats")
 
-                for (i in 0 until formats.length()) {
-                    val format = formats.getJSONObject(i)
+                        for (i in 0 until formats.length()) {
+                            val format = formats.getJSONObject(i)
 
-                    // Obj format
-                    if (format.getString("formatType") == "OBJ") {
-                        val files = Asset.Files
+                            // Obj format
+                            if (format.getString("formatType") == "OBJ") {
+                                val files = Asset.Files
 
-                        // .obj file
-                        files.objFileURL = format.getJSONObject("root")
-                                                .getString("url")
+                                // .obj file
+                                files.objFileURL = format.getJSONObject("root")
+                                                        .getString("url")
 
-                        // .mtl file
-                        format.getJSONArray("resources").getJSONObject(0)
-                                .apply {
-                                    files.mtlFileURL = getString("url")
-                                    files.mtlFileName = getString("relativePath")
-                                }
+                                // .mtl file
+                                format.getJSONArray("resources").getJSONObject(0)
+                                        .apply {
+                                            files.mtlFileURL = getString("url")
+                                            files.mtlFileName = getString("relativePath")
+                                        }
 
-                        // fini !
-                        handler(files)
-                        break
-                    }
+                                // fini !
+                                handler(files)
+                                break
+                            }
+                        }
+                    }, {
+                        Log.e(TAG, "Error while parsing JSON", it)
+                    })
                 }
-            }, {
-                Log.e(TAG, "Error while parsing JSON", it)
-            })
-        }
     }
 }

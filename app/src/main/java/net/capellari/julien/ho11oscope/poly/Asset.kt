@@ -55,7 +55,7 @@ class Asset(val id: String) {
 
     fun download(context: Context) {
         // Recup infos
-        PolyAPI.asset(id) { files ->
+        PolyAPI.asset(context, id) { files ->
             // Download files
             // .obj file
             Log.d(PolyFragment.TAG, "Downloading .obj file ...")
