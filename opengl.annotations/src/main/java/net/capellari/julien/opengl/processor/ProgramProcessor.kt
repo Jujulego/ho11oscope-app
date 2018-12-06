@@ -241,6 +241,12 @@ internal class ProgramProcessor : AbstractProcessor() {
                                     addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
                                 endControlFlow()
                             }
+                            AttributeType.TEXCOORDS -> {
+                                beginControlFlow("if (mesh.hasTexCoords)")
+                                    addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
+                                    addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.texCoordType, %L, 0, mesh.vertexSize + mesh.normalSize)", prop.handle, prop.annotation.normalized)
+                                endControlFlow()
+                            }
                             AttributeType.OTHER -> {
                                 addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
                                 addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.othersType[%S]!!, %L, 0, mesh.othersOff[%S]!!)",

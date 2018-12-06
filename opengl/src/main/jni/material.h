@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <list>
 #include <string>
 
 #include <assimp/material.h>
@@ -12,6 +13,18 @@
 
 class Material : public jnitools::JNIConvert {
 public:
+    // Structure
+    enum TextureType {
+        DIFFUSE = aiTextureType_DIFFUSE,
+        SPECULAR = aiTextureType_SPECULAR
+    };
+
+    struct Texture {
+        int uv_chanel;
+        std::string file;
+        TextureType type;
+    };
+
     // Constructeur
     Material() = default;
     Material(aiMaterial* material);
@@ -31,4 +44,7 @@ private:
     Vec3 m_ambientColor;
     Vec3 m_diffuseColor;
     Vec3 m_specularColor;
+
+    // - textures
+    std::list<Texture> m_textures;
 };

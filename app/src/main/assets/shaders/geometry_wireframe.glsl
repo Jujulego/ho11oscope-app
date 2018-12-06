@@ -14,6 +14,9 @@ in Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } gs_in[];
 
 out Vectors {
@@ -24,6 +27,9 @@ out Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } gs_out;
 
 // Fonctions

@@ -18,6 +18,8 @@ import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.utils.inflate
 import org.jetbrains.anko.bundleOf
+import java.text.SimpleDateFormat
+import java.util.*
 
 class YoutubeResultsFragment : RefreshListFragment() {
     // Companion
@@ -29,6 +31,7 @@ class YoutubeResultsFragment : RefreshListFragment() {
 
             override fun areContentsTheSame(oldItem: SearchResult, newItem: SearchResult): Boolean {
                 return oldItem.snippet.title == newItem.snippet.title
+
                     && oldItem.snippet.description == newItem.snippet.description
                     && oldItem.snippet.thumbnails.high.url == newItem.snippet.thumbnails.high.url
             }
@@ -96,12 +99,14 @@ class YoutubeResultsFragment : RefreshListFragment() {
             searchResult = result
 
             result?.snippet?.also {
-                view.name.text        = it.title
+                view.name.text = it.title
+                view.date.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it.publishedAt.value))
                 view.description.text = it.description
-                view.image.setImageUrl(it.thumbnails.high.url, ytModel!!.requestManager.imageLoader)
+                view.image.setImageUrl(it.thumbnails.high.url, ytModel.requestManager.imageLoader)
             } ?: {
                 view.name.text = "Loading ..."
                 view.description.text = ""
+                view.date.text = ""
             }()
         }
 

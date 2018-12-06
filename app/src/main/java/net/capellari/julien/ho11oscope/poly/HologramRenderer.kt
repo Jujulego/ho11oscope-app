@@ -158,7 +158,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
                     meshes.add(AssimpMesh(mesh))
                 }
 
-                polyProgram.prepare(meshes)
+                polyProgram.prepare(context, meshes)
 
                 readyToRender = true
             }

@@ -73,7 +73,7 @@ class OpenGLRenderer(val context: Context) : GLSurfaceView.Renderer {
         program.mvpMatrix = vpMatrix * Mat4.rotate(angle, 0f, 0f, -1f)
 
         if (newMesh) {
-            program.prepare(mesh)
+            program.prepare(context, mesh)
             newMesh = false
         }
 

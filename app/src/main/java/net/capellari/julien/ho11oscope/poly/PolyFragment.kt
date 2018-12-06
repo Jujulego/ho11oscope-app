@@ -28,7 +28,7 @@ import net.capellari.julien.utils.inflate
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 
-class PolyFragment : Fragment() {
+class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
     // Companion
     companion object {
         // Constantes
@@ -41,7 +41,7 @@ class PolyFragment : Fragment() {
     private lateinit var polyModel: PolyViewModel
 
     // Propriétés
-    private val navController by lazy { Navigation.findNavController(this.requireActivity(), R.id.navHostFragment) }
+    private val navController by lazy { Navigation.findNavController(requireActivity(), R.id.navHostFragment) }
 
     private val searchRecentSuggestions
         get() = SearchRecentSuggestions(context, YoutubeSearchProvider.AUTHORITY, YoutubeSearchProvider.MODE)
@@ -65,7 +65,7 @@ class PolyFragment : Fragment() {
                         poly_surface.renderer.asset = it
 
                         this@doAsync.uiThread {
-                            progress.visibility = View.GONE
+                            progress?.visibility = View.GONE
                         }
                     }
                 })
@@ -122,6 +122,8 @@ class PolyFragment : Fragment() {
 
         // SearchItem
         searchMenuItem = menu.findItem(R.id.tool_search)
+                ?.setOnActionExpandListener(this)
+
         setupSearchView()
     }
 
@@ -133,6 +135,13 @@ class PolyFragment : Fragment() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onMenuItemActionExpand(item: MenuItem?): Boolean = true
+    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+        polyModel.query = null
+
+        return true
     }
 
     // Méthodes

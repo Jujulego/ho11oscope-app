@@ -24,7 +24,6 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         val PREFERENCE_FRAGMENTS = mapOf(
                 "net.capellari.julien.ho11oscope.poly.PolySettingsFragment" to R.id.action_to_rendering_settings
         )
-
         val PLAYER_FRAGMENTS = arrayOf(
                 R.id.youtubePlayerFragment,
                 R.id.hologramPlayerFragment

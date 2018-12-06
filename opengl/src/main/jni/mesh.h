@@ -39,6 +39,7 @@ public:
 
     jobjectArray jvertices(JNIEnv* env) const;
     jobjectArray jnormals(JNIEnv* env) const;
+    jobjectArray jtexcoords(JNIEnv* env) const;
     jintArray jindices(JNIEnv* env) const;
 
 private:

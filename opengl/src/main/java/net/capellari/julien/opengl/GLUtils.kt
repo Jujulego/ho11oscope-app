@@ -1,6 +1,8 @@
 package net.capellari.julien.opengl
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.opengl.GLES31
 import android.opengl.GLES31Ext
 import android.util.Log
@@ -8,6 +10,7 @@ import net.capellari.julien.opengl.base.BaseMat
 import net.capellari.julien.opengl.base.BaseStructure
 import net.capellari.julien.opengl.base.BaseVec
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
 import java.nio.Buffer
 import java.nio.FloatBuffer
@@ -19,6 +22,8 @@ object GLUtils {
     const val INT_SIZE   = 4 // sizeof(int)   = 4
     const val SHORT_SIZE = 2 // sizeof(short) = 2
     const val FLOAT_SIZE = 4 // sizeof(float) = 4
+
+    private val textures = mutableMapOf<String,Bitmap>()
 
     // Fonctions
     fun bufferSize(v: Any) : Int {
@@ -121,5 +126,15 @@ object GLUtils {
         } while (s != null)
 
         return shaderCode.toString()
+    }
+
+    fun loadTexture(file: File) : Bitmap {
+        synchronized(this) {
+            if (!textures.containsKey(file.absolutePath)) {
+                textures[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
+            }
+
+            return textures[file.absolutePath]!!
+        }
     }
 }

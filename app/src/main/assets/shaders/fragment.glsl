@@ -8,6 +8,7 @@ struct Material {
     vec3 specularColor;
     float specularExp;
     float opacity;
+    int hasTexture;
 };
 
 // Uniformes
@@ -19,6 +20,7 @@ layout (std140) uniform Parameters {
 };
 
 uniform Material material;
+uniform sampler2D matTexture;
 
 // Entrées
 in Vectors {
@@ -29,6 +31,9 @@ in Vectors {
     vec3 eyeDirection;
     vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } vecs;
 
 // Sortie
@@ -45,6 +50,12 @@ void main() {
     float lightFactor = lightPower / (distance * distance);
 
     // Prepare diffuse color
+    vec3 color = material.diffuseColor;
+
+    if (material.hasTexture != 0) {
+        color = texture(matTexture, vecs.uv).xyz;
+    }
+
     float df = dot(n, l);
     if (df < float(0)) df = float(0);
 
@@ -67,7 +78,7 @@ void main() {
         // Ambient color
         (material.ambientColor * ambientFactor) +
         // Diffuse color
-        (material.diffuseColor * diffuseFactor * lightFactor * df) +
+        (color * diffuseFactor * lightFactor * df) +
         // Specular color
         (material.specularColor * specularFactor * lightFactor * sf),
         // Transparence

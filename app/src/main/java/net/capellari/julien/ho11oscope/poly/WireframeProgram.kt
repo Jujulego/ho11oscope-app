@@ -12,7 +12,8 @@ import net.capellari.julien.opengl.base.BaseProgram
     ),
     attributs = [
         Attribute("aPosition", AttributeType.VERTICES),
-        Attribute("aNormal",   AttributeType.NORMALS)
+        Attribute("aNormal",   AttributeType.NORMALS),
+        Attribute("aTexCoord", AttributeType.TEXCOORDS)
     ]
 )
 abstract class WireframeProgram : BaseProgram() {
