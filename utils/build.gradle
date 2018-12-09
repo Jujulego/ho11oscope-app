@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 
-apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 28
@@ -35,17 +35,17 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     // AndroidX support
-    implementation "androidx.appcompat:appcompat:$androidx_version"
-    implementation "androidx.cardview:cardview:$androidx_version"
-    implementation "androidx.preference:preference:$androidx_version"
-    implementation "androidx.legacy:legacy-preference-v14:$androidx_version"
-    implementation "androidx.legacy:legacy-support-v4:$androidx_version"
+    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation "androidx.cardview:cardview:1.0.0"
+    implementation "androidx.preference:preference:1.0.0"
+    implementation "androidx.legacy:legacy-preference-v14:1.0.0"
+    implementation "androidx.legacy:legacy-support-v4:1.0.0"
 
-    implementation "com.google.android.material:material:$androidx_version"
+    implementation "com.google.android.material:material:1.0.0"
 
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
 
-    implementation "com.google.guava:guava:20.0"
+    implementation "com.google.guava:guava:27.0.1-android"
 
     // Tests
     testImplementation 'junit:junit:4.12'

@@ -12,14 +12,16 @@ Model::Model(std::string const& file) {
     importer.SetPropertyBool(AI_CONFIG_PP_PTV_NORMALIZE, true);
 
     const aiScene* scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices
+            //| aiProcess_MakeLeftHanded
+            | aiProcess_Triangulate
             | aiProcess_GenSmoothNormals
             | aiProcess_PreTransformVertices
-            | aiProcess_Triangulate
             | aiProcess_FlipUVs
             | aiProcess_GenUVCoords
             | aiProcess_TransformUVCoords
             | aiProcess_RemoveRedundantMaterials
-            | aiProcess_OptimizeMeshes);
+            | aiProcess_OptimizeMeshes
+    );
 
     // Check errors
     if (!scene) {

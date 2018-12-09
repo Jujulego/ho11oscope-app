@@ -6,9 +6,12 @@ struct Material {
     vec3 ambientColor;
     vec3 diffuseColor;
     vec3 specularColor;
+
     float specularExp;
     float opacity;
+
     int hasTexture;
+    sampler2D texture;
 };
 
 // Uniformes
@@ -50,12 +53,6 @@ void main() {
     float lightFactor = lightPower / (distance * distance);
 
     // Prepare diffuse color
-    vec3 color = material.diffuseColor;
-
-    if (material.hasTexture != 0) {
-        color = texture(matTexture, vecs.uv).xyz;
-    }
-
     float df = dot(n, l);
     if (df < float(0)) df = float(0);
 
@@ -73,15 +70,22 @@ void main() {
         }
     }
 
-    // Compute colors
-    FragColor = vec4(
-        // Ambient color
-        (material.ambientColor * ambientFactor) +
-        // Diffuse color
-        (color * diffuseFactor * lightFactor * df) +
-        // Specular color
-        (material.specularColor * specularFactor * lightFactor * sf),
-        // Transparence
-        material.opacity
-    );
+    // Texture
+    vec3 tex = material.diffuseColor;
+
+    if (material.hasTexture != 0) {
+        FragColor = texture(material.texture, vecs.uv);
+    } else {
+        // Compute color
+        FragColor = vec4(
+            // Ambient color
+            (material.ambientColor * ambientFactor) +
+            // Diffuse color
+            (tex * diffuseFactor * lightFactor * df) +
+            // Specular color
+            (material.specularColor * specularFactor * lightFactor * sf),
+            // Transparence
+            material.opacity
+        );
+    }
 }

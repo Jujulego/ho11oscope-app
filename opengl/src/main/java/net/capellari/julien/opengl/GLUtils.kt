@@ -23,8 +23,6 @@ object GLUtils {
     const val SHORT_SIZE = 2 // sizeof(short) = 2
     const val FLOAT_SIZE = 4 // sizeof(float) = 4
 
-    private val textures = mutableMapOf<String,Bitmap>()
-
     // Fonctions
     fun bufferSize(v: Any) : Int {
         return when (v) {
@@ -126,15 +124,5 @@ object GLUtils {
         } while (s != null)
 
         return shaderCode.toString()
-    }
-
-    fun loadTexture(file: File) : Bitmap {
-        synchronized(this) {
-            if (!textures.containsKey(file.absolutePath)) {
-                textures[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
-            }
-
-            return textures[file.absolutePath]!!
-        }
     }
 }

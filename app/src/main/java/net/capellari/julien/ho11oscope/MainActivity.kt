@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         // Events
-        navController.addOnNavigatedListener { _, destination ->
+        navController.addOnDestinationChangedListener { _, destination, _ ->
             // Manage drawer
             when (destination.id) {
                 R.id.youtubeFragment, R.id.youtubeVideoFragment,
