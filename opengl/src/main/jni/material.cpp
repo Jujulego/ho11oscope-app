@@ -5,7 +5,7 @@
 
 #include <android/log.h>
 
-Material::Material(aiMaterial* material) {
+Material::Material(aiMaterial* material, std::string const& dossier) {
     // nom
     aiString str;
     material->Get(AI_MATKEY_NAME, str);
@@ -38,7 +38,7 @@ Material::Material(aiMaterial* material) {
             if (ret == aiReturn_FAILURE) {
                 break;
             }
-            tex.file = str.C_Str();
+            tex.file = dossier + std::string(str.C_Str());
 
             material->Get(AI_MATKEY_UVWSRC(type, i), tex.uv_chanel);
 
@@ -63,8 +63,6 @@ jobject Material::toJava(JNIEnv* env) const {
     jnitools::set<jfloat>(env, jobj, "opacity",     "F", m_opacity);
 
     if (!m_textures.empty()) {
-        /*jnitools::set<std::string>(env, jobj, "texture", "java/lang/String", "");
-    } else {*/
         jnitools::set<std::string>(env, jobj, "texture", "java/lang/String", m_textures.front().file);
     }
 

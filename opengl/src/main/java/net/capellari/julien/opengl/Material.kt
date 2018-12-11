@@ -1,6 +1,5 @@
 package net.capellari.julien.opengl
 
-import android.content.Context
 import android.graphics.BitmapFactory
 import android.opengl.GLES31
 import android.util.Log
@@ -62,11 +61,10 @@ class Material(val name: String) : BaseStructure {
         GLES31.glActiveTexture(GLES31.GL_TEXTURE0)
         GLES31.glBindTexture(GLES31.GL_TEXTURE_2D, texHandler)
     }
-    internal fun loadTexture(context: Context) {
+    internal fun loadTexture() {
         texture?.let { tex ->
             // Load file
-            val bitmap = BitmapFactory.decodeFile(
-                    File(context.filesDir, tex).absolutePath,
+            val bitmap = BitmapFactory.decodeFile(tex,
                     BitmapFactory.Options().apply {
                         inScaled = false
                     }

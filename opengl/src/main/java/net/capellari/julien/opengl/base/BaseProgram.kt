@@ -70,12 +70,12 @@ abstract class BaseProgram {
         reloadUniforms = true
     }
 
-    fun prepare(context: Context, mesh: BaseMesh) = prepare(context, arrayListOf(mesh))
-    fun prepare(context: Context, meshes: Collection<BaseMesh>) {
+    fun prepare(mesh: BaseMesh) = prepare(arrayListOf(mesh))
+    fun prepare(meshes: Collection<BaseMesh>) {
         usingProgram {
             for (mesh in meshes) {
                 mesh.genBuffers()
-                mesh.loadTexture(context)
+                mesh.loadTexture()
             }
         }
     }

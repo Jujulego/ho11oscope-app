@@ -151,7 +151,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
                     meshes.add(AssimpMesh(mesh))
                 }
 
-                polyProgram.prepare(context, meshes)
+                polyProgram.prepare(meshes)
 
                 readyToRender = true
             }

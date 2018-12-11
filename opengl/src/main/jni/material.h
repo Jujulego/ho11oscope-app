@@ -27,7 +27,7 @@ public:
 
     // Constructeur
     Material() = default;
-    Material(aiMaterial* material);
+    Material(aiMaterial* material, std::string const& dossier);
 
     // Méthodes
     std::string const& name() const;

@@ -114,8 +114,8 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
             ibo.generate()
         }
     }
-    internal fun loadTexture(context: Context) {
-        getMaterial().loadTexture(context)
+    internal fun loadTexture() {
+        getMaterial().loadTexture()
     }
     internal fun loadBuffers(others: Array<String>) {
         // load IBO
