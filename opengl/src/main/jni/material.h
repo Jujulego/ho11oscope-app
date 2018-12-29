@@ -14,15 +14,15 @@
 class Material : public jnitools::JNIConvert {
 public:
     // Structure
-    enum TextureType {
-        DIFFUSE = aiTextureType_DIFFUSE,
-        SPECULAR = aiTextureType_SPECULAR
-    };
-
     struct Texture {
-        int uv_chanel;
+        // - general
+        aiTextureType type;
         std::string file;
-        TextureType type;
+        int uv_chanel;
+
+        // - blend
+        aiTextureOp blend_op;
+        float blend_factor;
     };
 
     // Constructeur

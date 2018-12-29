@@ -13,9 +13,11 @@ Model::Model(std::string const& file) {
     Assimp::Importer importer;
     importer.SetPropertyBool(AI_CONFIG_PP_PTV_NORMALIZE, true);
 
-    const aiScene* scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices
+    const aiScene* scene = importer.ReadFile(file, aiProcess_FindInvalidData
+            | aiProcess_JoinIdenticalVertices
             | aiProcess_Triangulate
             | aiProcess_GenSmoothNormals
+            | aiProcess_FixInfacingNormals
             | aiProcess_PreTransformVertices
             | aiProcess_FlipUVs
             | aiProcess_GenUVCoords

@@ -6,7 +6,6 @@ import android.util.Log
 import net.capellari.julien.opengl.base.BaseBufferObject
 import net.capellari.julien.opengl.base.BaseProgram
 import net.capellari.julien.opengl.base.BaseStructure
-import java.io.File
 
 class Material(val name: String) : BaseStructure {
     // Attributs

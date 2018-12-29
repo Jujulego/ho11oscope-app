@@ -27,22 +27,26 @@ Material::Material(aiMaterial* material, std::string const& dossier) {
     m_specularColor = buf;
 
     // textures
-    for (TextureType const& type : {DIFFUSE, SPECULAR}) {
+    for (aiTextureType const& type : {aiTextureType_DIFFUSE}) {
         unsigned int i = 0;
 
         while (true) {
             Texture tex = Texture();
+
+            // General parameters
             tex.type = type;
 
-            aiReturn ret = material->Get(AI_MATKEY_TEXTURE(type, i), str);
-            if (ret == aiReturn_FAILURE) {
-                break;
-            }
+            if (material->Get(AI_MATKEY_TEXTURE(type, i), str) == aiReturn_FAILURE) break;
             tex.file = dossier + std::string(str.C_Str());
 
             material->Get(AI_MATKEY_UVWSRC(type, i), tex.uv_chanel);
 
-            __android_log_print(ANDROID_LOG_DEBUG, "Material", "Texture n°%u : %s (channel %d)", i, tex.file.data(), tex.uv_chanel);
+            // Blend parameters
+            material->Get(AI_MATKEY_TEXOP(type, i), tex.blend_op);
+            material->Get(AI_MATKEY_TEXBLEND(type, i), tex.blend_factor);
+
+            // Debug !
+            __android_log_print(ANDROID_LOG_DEBUG, "Material", "Texture n°%u : %s (channel %d, blend %d %f)", i, tex.file.data(), tex.uv_chanel, tex.blend_op, tex.blend_factor);
             m_textures.push_back(tex);
 
             i++;
@@ -55,15 +59,15 @@ jobject Material::toJava(JNIEnv* env) const {
     jobject jobj = jnitools::construct(env, "net/capellari/julien/opengl/Material", "(Ljava/lang/String;)V", jstr);
     env->DeleteLocalRef(jstr);
 
-    jnitools::set<Vec3>(env, jobj, "ambientColor",  "net/capellari/julien/opengl/Vec3", m_ambientColor);
-    jnitools::set<Vec3>(env, jobj, "diffuseColor",  "net/capellari/julien/opengl/Vec3", m_diffuseColor);
-    jnitools::set<Vec3>(env, jobj, "specularColor", "net/capellari/julien/opengl/Vec3", m_specularColor);
+    jnitools::set<Vec3>(env, jobj, "ambientColor",  "Lnet/capellari/julien/opengl/Vec3;", m_ambientColor);
+    jnitools::set<Vec3>(env, jobj, "diffuseColor",  "Lnet/capellari/julien/opengl/Vec3;", m_diffuseColor);
+    jnitools::set<Vec3>(env, jobj, "specularColor", "Lnet/capellari/julien/opengl/Vec3;", m_specularColor);
 
     jnitools::set<jfloat>(env, jobj, "specularExp", "F", m_specularExp);
     jnitools::set<jfloat>(env, jobj, "opacity",     "F", m_opacity);
 
     if (!m_textures.empty()) {
-        jnitools::set<std::string>(env, jobj, "texture", "java/lang/String", m_textures.front().file);
+        jnitools::set<std::string>(env, jobj, "texture", "Ljava/lang/String;", m_textures.front().file);
     }
 
     return jobj;

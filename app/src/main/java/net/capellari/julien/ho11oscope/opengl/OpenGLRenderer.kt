@@ -14,8 +14,8 @@ class OpenGLRenderer(val context: Context) : GLSurfaceView.Renderer {
     // Companion
     companion object {
         // Constantes
-        val VITESSE_MIN = 45f
-        val INERTIE = .99f
+        const val VITESSE_MIN = 45f
+        const val INERTIE = .99f
     }
 
     // Attributs

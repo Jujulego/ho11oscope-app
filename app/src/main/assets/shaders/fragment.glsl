@@ -70,22 +70,22 @@ void main() {
         }
     }
 
-    // Texture
-    vec3 tex = material.diffuseColor;
+    // Apply diffuse texture on diffuse color base
+    vec3 diffuseColor = material.diffuseColor;
 
     if (material.hasTexture != 0) {
-        FragColor = texture(material.texture, vecs.uv);
-    } else {
-        // Compute color
-        FragColor = vec4(
-            // Ambient color
-            (material.ambientColor * ambientFactor) +
-            // Diffuse color
-            (tex * diffuseFactor * lightFactor * df) +
-            // Specular color
-            (material.specularColor * specularFactor * lightFactor * sf),
-            // Transparence
-            material.opacity
-        );
+        diffuseColor = texture(material.texture, vecs.uv).xyz;
     }
+
+    // Compute color
+    FragColor = vec4(
+        // Ambient color
+        (material.ambientColor * ambientFactor) +
+        // Diffuse color
+        (diffuseColor * diffuseFactor * lightFactor * df) +
+        // Specular color
+        (material.specularColor * specularFactor * lightFactor * sf),
+        // Transparence
+        material.opacity
+    );
 }
