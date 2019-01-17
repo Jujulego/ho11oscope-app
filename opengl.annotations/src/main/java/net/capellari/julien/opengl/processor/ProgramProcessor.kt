@@ -168,13 +168,13 @@ internal class ProgramProcessor : AbstractProcessor() {
                     for (shader in program.shaders.scripts) {
                         if (shader.file != "") {
                             addStatement(
-                                    "GLES31.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
+                                    "GLES32.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
                                     shader.file,
                                     ShaderType::class, shader.type.name
                             )
                         } else if (shader.script != "") {
                             addStatement(
-                                    "GLES31.glAttachShader(program, loadShader(%S, %T.%L))",
+                                    "GLES32.glAttachShader(program, loadShader(%S, %T.%L))",
                                     shader.script,
                                     ShaderType::class, shader.type.name
                             )
@@ -232,24 +232,24 @@ internal class ProgramProcessor : AbstractProcessor() {
                     for (prop in attrs) {
                         when (prop.annotation.type) {
                             AttributeType.VERTICES -> {
-                                addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.vertexType, %L, 0, 0)", prop.handle, prop.annotation.normalized)
+                                addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES32.glVertexAttribPointer(%N, 3, mesh.vertexType, %L, 0, 0)", prop.handle, prop.annotation.normalized)
                             }
                             AttributeType.NORMALS -> {
                                 beginControlFlow("if (mesh.hasNormals)")
-                                    addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                    addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
+                                    addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                    addStatement("GLES32.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
                                 endControlFlow()
                             }
                             AttributeType.TEXCOORDS -> {
                                 beginControlFlow("if (mesh.hasTexCoords)")
-                                    addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                    addStatement("GLES31.glVertexAttribPointer(%N, 2, mesh.texCoordType, %L, 0, mesh.vertexSize + mesh.normalSize)", prop.handle, prop.annotation.normalized)
+                                    addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                    addStatement("GLES32.glVertexAttribPointer(%N, 2, mesh.texCoordType, %L, 0, mesh.vertexSize + mesh.normalSize)", prop.handle, prop.annotation.normalized)
                                 endControlFlow()
                             }
                             AttributeType.OTHER -> {
-                                addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.othersType[%S]!!, %L, 0, mesh.othersOff[%S]!!)",
+                                addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES32.glVertexAttribPointer(%N, 3, mesh.othersType[%S]!!, %L, 0, mesh.othersOff[%S]!!)",
                                         prop.handle, prop.annotation.name, prop.annotation.normalized, prop.annotation.name)
                             }
                         }
@@ -304,7 +304,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         // Ecriture
         val code = FileSpec.builder(pkgProgram, implCls.simpleName)
                 .apply {
-                    addImport("android.opengl", "GLES31")
+                    addImport("android.opengl", "GLES32")
                     addImport("android.util", "Log")
                     addImport("net.capellari.julien.opengl", "GLUtils")
 

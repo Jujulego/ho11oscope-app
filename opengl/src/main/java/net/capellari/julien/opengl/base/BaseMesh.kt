@@ -2,7 +2,7 @@ package net.capellari.julien.opengl.base
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.opengl.GLES31
+import android.opengl.GLES32
 import android.util.Log
 import net.capellari.julien.opengl.GLUtils
 import net.capellari.julien.opengl.Material
@@ -17,9 +17,9 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
                         var hasTexCoords: Boolean = false) {
     // Attributs
     private var ibo = ElementBufferObject()
-    private var indiceBT: Int = GLES31.GL_UNSIGNED_INT
+    private var indiceBT: Int = GLES32.GL_UNSIGNED_INT
 
-    private var vaoId = GLES31.GL_INVALID_INDEX
+    private var vaoId = GLES32.GL_INVALID_INDEX
     private var vaoBound = false
 
     private var vbo = VertexBufferObject()
@@ -29,19 +29,19 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
     var vertexSize: Int = 0
         private set
 
-    var vertexType: Int = GLES31.GL_FLOAT
+    var vertexType: Int = GLES32.GL_FLOAT
         private set
 
     var normalSize: Int = 0
         private set
 
-    var normalType: Int = GLES31.GL_FLOAT
+    var normalType: Int = GLES32.GL_FLOAT
         private set
 
     var texCoordSize: Int = 0
         private set
 
-    var texCoordType: Int = GLES31.GL_FLOAT
+    var texCoordType: Int = GLES32.GL_FLOAT
         private set
 
     val othersOff = mutableMapOf<String,Int>()
@@ -62,10 +62,10 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
         // Draw !
         bindVAO {
             if (hasIndices) {
-                GLES31.glDrawElements(mode, ibo.size, indiceBT, 0)
+                GLES32.glDrawElements(mode, ibo.size, indiceBT, 0)
                 GLUtils.checkGlError("glDrawElements")
             } else {
-                GLES31.glDrawArrays(mode, 0, vertexCount)
+                GLES32.glDrawArrays(mode, 0, vertexCount)
                 GLUtils.checkGlError("glDrawArrays")
             }
         }
@@ -79,7 +79,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
                 wasBounded = vaoBound
 
                 if (!vaoBound) {
-                    GLES31.glBindVertexArray(vaoId)
+                    GLES32.glBindVertexArray(vaoId)
                     vaoBound = true
                 }
             }
@@ -89,7 +89,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
         } finally {
             if (wasBounded == false) {
                 synchronized(this) {
-                    GLES31.glBindVertexArray(0)
+                    GLES32.glBindVertexArray(0)
                     vaoBound = false
                 }
             }
@@ -105,7 +105,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
     // Méthodes internes
     internal fun genBuffers() {
         // Vertex buffer
-        vaoId = IntArray(1).also { GLES31.glGenVertexArrays(1, it, 0) }[0]
+        vaoId = IntArray(1).also { GLES32.glGenVertexArrays(1, it, 0) }[0]
 
         vbo.generate()
 

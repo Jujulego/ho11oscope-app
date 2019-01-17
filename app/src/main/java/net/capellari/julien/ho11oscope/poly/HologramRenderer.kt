@@ -2,7 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.opengl.GLES31
+import android.opengl.GLES32
 import android.opengl.GLSurfaceView
 import android.util.Log
 import androidx.preference.PreferenceManager
@@ -91,7 +91,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
     // Méthodes
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
-        GLES31.glClearColor(0f, 0f, 0f, 1f)
+        GLES32.glClearColor(0f, 0f, 0f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
@@ -115,7 +115,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         if (angle >= 360) angle -= 360
 
         // Draw background
-        GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
+        GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
 
         val m = magnitude / 20f
         if (polyProgram.magnitude != m) {
@@ -166,7 +166,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
-        GLES31.glViewport(0, 0, width, height)
+        GLES32.glViewport(0, 0, width, height)
 
         val ratio = width / height.toFloat()
         polyProgram.stables.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
@@ -196,17 +196,17 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     private fun activateTransparency() {
-        GLES31.glDisable(GLES31.GL_DEPTH_TEST)
-        GLES31.glDepthMask(false)
+        GLES32.glDisable(GLES32.GL_DEPTH_TEST)
+        GLES32.glDepthMask(false)
 
-        GLES31.glEnable(GLES31.GL_BLEND)
-        GLES31.glBlendFunc(GLES31.GL_ONE, GLES31.GL_ONE_MINUS_SRC_ALPHA)
+        GLES32.glEnable(GLES32.GL_BLEND)
+        GLES32.glBlendFunc(GLES32.GL_ONE, GLES32.GL_ONE_MINUS_SRC_ALPHA)
     }
 
     private fun disactivateTransparency() {
-        GLES31.glEnable(GLES31.GL_DEPTH_TEST)
-        GLES31.glDepthMask(true)
+        GLES32.glEnable(GLES32.GL_DEPTH_TEST)
+        GLES32.glDepthMask(true)
 
-        GLES31.glDisable(GLES31.GL_BLEND)
+        GLES32.glDisable(GLES32.GL_BLEND)
     }
 }

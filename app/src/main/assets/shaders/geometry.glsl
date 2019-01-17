@@ -1,4 +1,6 @@
-#version 310 es
+#version 320 es
+#extension GL_EXT_shader_io_blocks : enable
+
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
