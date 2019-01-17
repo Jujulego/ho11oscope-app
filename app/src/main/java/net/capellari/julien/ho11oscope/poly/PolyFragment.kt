@@ -132,6 +132,7 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
     override fun onMenuItemActionExpand(item: MenuItem?): Boolean = true
     override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
         polyModel.query = null
+        polyModel.invalidate()
 
         return true
     }

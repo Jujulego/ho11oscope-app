@@ -34,9 +34,19 @@ object PolyAPI {
                     Log.d(TAG, "Response for GET request on : ${req.url}")
 
                     result.fold({
-                        // Assets
+                        // Gardien
                         val json = it.obj()
-                        val assets = it.obj().getJSONArray("assets")
+                        if (!json.has("assets")) {
+                            Log.d(TAG, "No results !")
+
+                            handler(listOf(), null)
+                            isloading.postValue(false)
+
+                            return@fold
+                        }
+
+                        // Assets
+                        val assets = json.getJSONArray("assets")
                         val liste = mutableListOf<PolyObject>()
 
                         for (i in 0 until assets.length()) {
@@ -47,12 +57,12 @@ object PolyAPI {
                             liste.add(PolyObject(
                                     id          = obj.getString("name"),
                                     name        = obj.getString("displayName"),
-                                    description = if (obj.has("descricption")) obj.getString("description") else null,
-                                    imageUrl    = if (obj.has("thumbnail")) obj.getJSONObject("thumbnail").getString("url") else null
+                                    description = obj.optString("description", null),
+                                    imageUrl    = obj.getJSONObject("thumbnail").optString("url", null)
                             ))
                         }
 
-                        handler(liste, if (json.has("nextPageToken")) json.getString("nextPageToken") else null)
+                        handler(liste, json.optString("nextPageToken", null))
                         isloading.postValue(false)
                     }, {
                         Log.e(TAG, "Error while parsing JSON", it)
