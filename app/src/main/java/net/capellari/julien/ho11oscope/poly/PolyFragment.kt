@@ -68,6 +68,9 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
                 }
             }
         })
+        polyModel.lights.observe(this, Observer<ArrayList<Light>> {
+            poly_surface.renderer.lights = it
+        })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,7 +91,8 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
         view.bottomNav.setOnNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.poly_liste    -> { view.pager.currentItem = 0; true }
-                R.id.poly_settings -> { view.pager.currentItem = 1; true }
+                R.id.poly_lights   -> { view.pager.currentItem = 1; true }
+                R.id.poly_settings -> { view.pager.currentItem = 2; true }
                 else -> false
             }
         }
@@ -100,7 +104,8 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
             override fun onPageSelected(position: Int) {
                 view.bottomNav.selectedItemId = when (position) {
                     0    -> R.id.poly_liste
-                    1    -> R.id.poly_settings
+                    1    -> R.id.poly_lights
+                    2    -> R.id.poly_settings
                     else -> R.id.poly_liste
                 }
             }
@@ -200,12 +205,13 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
 
     // Classes
     class Pager(fm: FragmentManager) : FragmentPagerAdapter(fm) {
-        override fun getCount(): Int = 2
+        override fun getCount(): Int = 3
 
         override fun getItem(position: Int): Fragment? {
             return when (position) {
                 0    -> PolyResultsFragment()
-                1    -> PolySettingsFragment()
+                1    -> LightsFragment()
+                2    -> PolySettingsFragment()
                 else -> null
             }
         }

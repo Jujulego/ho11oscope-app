@@ -15,6 +15,7 @@ class PolyViewModel(app: Application) : AndroidViewModel(app) {
 
     val requestManager = RequestManager.getInstance(app)
     val assets: LiveData<PagedList<PolyObject>> = LivePagedListBuilder(dataSourceFactory, 20).build()
+    val lights = MutableLiveData<ArrayList<Light>>()
 
     var query: String? = null
 

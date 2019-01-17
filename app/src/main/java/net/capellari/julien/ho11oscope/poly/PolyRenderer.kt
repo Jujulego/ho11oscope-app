@@ -59,6 +59,13 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         }
     private var meshes = arrayListOf<AssimpMesh>()
 
+    @Volatile
+    var lights: ArrayList<Light>? = null
+        set(lights) {
+            field = lights
+            Log.d(TAG, "Recieved new lights")
+        }
+
     // Propriétés
     private var transparency       by sharedPreference("transparency",        context, false)
     private var wireframeRendering by sharedPreference("wireframe_rendering", context, false)
@@ -111,6 +118,15 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         // Draw background
         GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
+
+        // Update lights
+        lights?.let {
+            val light = it[0].position(1f)
+
+            if (light != polyProgram.stables.lightPosition) {
+                polyProgram.stables.lightPosition = light
+            }
+        }
 
         // model matrix rotate around Y axis
         polyProgram.matrices.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
