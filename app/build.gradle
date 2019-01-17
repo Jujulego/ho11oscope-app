@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "net.capellari.julien.ho11oscope"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -65,7 +65,7 @@ dependencies {
 
     implementation "com.google.android.material:material:1.0.0"
 
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
 
     // Lifecyle
     def lifecycle_version = "2.0.0"
@@ -76,7 +76,7 @@ dependencies {
     testImplementation "androidx.arch.core:core-testing:$lifecycle_version"
 
     // Navigation
-    def nav_version = "1.0.0-alpha08"
+    def nav_version = "1.0.0-alpha09"
 
     implementation "android.arch.navigation:navigation-fragment-ktx:$nav_version"
     implementation "android.arch.navigation:navigation-ui-ktx:$nav_version"
@@ -87,9 +87,7 @@ dependencies {
     implementation "androidx.paging:paging-runtime-ktx:$paging_version"
 
     // Volley
-    implementation('com.android.volley:volley:1.1.1') {
-        exclude group: 'org.apache.httpcomponents'
-    }
+    implementation('com.android.volley:volley:1.1.1')
 
     // Fuel
     implementation('com.github.kittinunf.fuel:fuel-android:1.15.1') {
@@ -109,6 +107,6 @@ dependencies {
 
     // Tests
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
 }
