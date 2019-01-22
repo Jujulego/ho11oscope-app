@@ -1,9 +1,7 @@
 package net.capellari.julien.ho11oscope.poly
 
-import net.capellari.julien.opengl.Field
-import net.capellari.julien.opengl.Mat4
-import net.capellari.julien.opengl.UniformBlock
-import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.opengl.*
+import net.capellari.julien.opengl.base.BaseSharedStorageBlock
 import net.capellari.julien.opengl.base.BaseUniformBlock
 
 @UniformBlock
@@ -44,4 +42,15 @@ abstract class ParametersBlock : BaseUniformBlock() {
     @Field open var ambientFactor  = .1f
     @Field open var diffuseFactor  = .7f
     @Field open var specularFactor = .5f
+}
+
+@ShaderStorage
+abstract class LightsBlock : BaseSharedStorageBlock() {
+    // Companion
+    companion object {
+        val instance by lazy(this) { BaseSharedStorageBlock.getImplementation<LightsBlock>() }
+    }
+
+    // Attributs
+    @Field open var lights = arrayListOf<Light>()
 }

@@ -5,7 +5,7 @@ import net.capellari.julien.opengl.base.BaseBufferObject
 
 abstract class BindedBufferObject(target: Int): BaseBufferObject(target) {
     // Attributs
-    var binding: Int = GLES32.GL_INVALID_INDEX
+    open var binding: Int = GLES32.GL_INVALID_INDEX
         protected set
 
     // Méthodes

@@ -16,6 +16,11 @@ struct Material {
     sampler2D texture;
 };
 
+struct Light {
+    vec3 position;
+    float power;
+};
+
 // Uniformes
 layout (std140) uniform Parameters {
     float lightPower;
@@ -26,6 +31,11 @@ layout (std140) uniform Parameters {
 
 uniform Material material;
 uniform sampler2D matTexture;
+
+// SSBO
+layout (std430) buffer Lights {
+    Light lights[];
+};
 
 // Entrées
 in Vectors {

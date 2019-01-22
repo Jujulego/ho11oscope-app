@@ -44,6 +44,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var wireframeProgram: WireframeProgram = WireframeProgram.instance
 
     private var readyToRender = false
+    private var new_lights = false
 
     @Volatile private var setupChange = true
 
@@ -63,6 +64,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     var lights: ArrayList<Light>? = null
         set(lights) {
             field = lights
+            new_lights = true
             Log.d(TAG, "Recieved new lights")
         }
 
@@ -125,6 +127,10 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
             if (light != polyProgram.stables.lightPosition) {
                 polyProgram.stables.lightPosition = light
+            }
+
+            if (new_lights) {
+                polyProgram.lights.lights = it
             }
         }
 

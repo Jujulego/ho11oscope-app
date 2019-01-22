@@ -29,4 +29,6 @@ abstract class PolyProgram : BaseProgram() {
     @UniformBlock("Matrices")   val matrices   = MatricesBlock.instance
     @UniformBlock("Stables")    val stables    = StablesBlock.instance
     @UniformBlock("Parameters") val parameters = ParametersBlock.instance
+
+    @ShaderStorage("Lights") open var lights = LightsBlock.instance
 }
