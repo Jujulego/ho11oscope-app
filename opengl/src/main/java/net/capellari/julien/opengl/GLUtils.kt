@@ -1,6 +1,7 @@
 package net.capellari.julien.opengl
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.opengl.GLES32
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
@@ -121,4 +122,17 @@ object GLUtils {
 
         return shaderCode.toString()
     }
+
+    // Functions from android.opengl.GLUtils
+    fun getInternalFormat(bitmap: Bitmap): Int = android.opengl.GLUtils.getInternalFormat(bitmap)
+    fun getType(bitmap: Bitmap): Int = android.opengl.GLUtils.getType(bitmap)
+
+    fun texImage2D(target: Int, level: Int, bitmap: Bitmap, border: Int) = android.opengl.GLUtils.texImage2D(target, level, bitmap, border)
+    fun texImage2D(target: Int, level: Int, internalformat: Int, bitmap: Bitmap, border: Int) = android.opengl.GLUtils.texImage2D(target, level, internalformat, bitmap, border)
+    fun texImage2D(target: Int, level: Int, internalformat: Int, bitmap: Bitmap, type: Int, border: Int) = android.opengl.GLUtils.texImage2D(target, level, internalformat, bitmap, type, border)
+
+    fun texSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, bitmap: Bitmap) = android.opengl.GLUtils.texSubImage2D(target, level, xoffset, yoffset, bitmap)
+    fun texSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, bitmap: Bitmap, format: Int, type: Int) = android.opengl.GLUtils.texSubImage2D(target, level, xoffset, yoffset, bitmap, format, type)
+
+    fun getEGLErrorString(error: Int): String = android.opengl.GLUtils.getEGLErrorString(error)
 }

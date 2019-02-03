@@ -1,14 +1,14 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
-import net.capellari.julien.opengl.base.SharedStorageBlock
-import net.capellari.julien.opengl.base.UniformBlock
+import net.capellari.julien.opengl.base.BaseSharedStorage
+import net.capellari.julien.opengl.base.BaseUniformBlock
 
 @UniformBlock
-abstract class MatricesBlock : UniformBlock() {
+abstract class MatricesBlock : BaseUniformBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { UniformBlock.getImplementation<MatricesBlock>() }
+        val instance by lazy(this) { BaseUniformBlock.getImplementation<MatricesBlock>() }
     }
 
     // Attributs
@@ -18,10 +18,10 @@ abstract class MatricesBlock : UniformBlock() {
 }
 
 @UniformBlock
-abstract class StablesBlock : UniformBlock() {
+abstract class StablesBlock : BaseUniformBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { UniformBlock.getImplementation<StablesBlock>() }
+        val instance by lazy(this) { BaseUniformBlock.getImplementation<StablesBlock>() }
     }
 
     // Attributs
@@ -31,10 +31,10 @@ abstract class StablesBlock : UniformBlock() {
 }
 
 @UniformBlock
-abstract class ParametersBlock : UniformBlock() {
+abstract class ParametersBlock : BaseUniformBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { UniformBlock.getImplementation<ParametersBlock>() }
+        val instance by lazy(this) { BaseUniformBlock.getImplementation<ParametersBlock>() }
     }
 
     // Attributs
@@ -44,11 +44,11 @@ abstract class ParametersBlock : UniformBlock() {
     @Field open var specularFactor = .5f
 }
 
-@ShaderStorage
-abstract class LightsBlock : SharedStorageBlock() {
+@SharedStorage
+abstract class LightsBlock : BaseSharedStorage() {
     // Companion
     companion object {
-        val instance by lazy(this) { SharedStorageBlock.getImplementation<LightsBlock>() }
+        val instance by lazy(this) { BaseSharedStorage.getImplementation<LightsBlock>() }
     }
 
     // Attributs

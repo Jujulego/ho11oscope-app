@@ -7,15 +7,15 @@ import net.capellari.julien.opengl.*
 import java.nio.*
 import kotlin.reflect.full.createInstance
 
-abstract class Program {
+abstract class BaseProgram {
     // Companion
     companion object {
         // Attributs
-        const val TAG = "Program"
+        const val TAG = "BaseProgram"
 
         // Méthodes
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T : Program> getImplementation() : T =
+        inline fun <reified T : BaseProgram> getImplementation() : T =
                 Class.forName("${T::class.qualifiedName}_Impl").kotlin.createInstance() as T
     }
 
@@ -53,7 +53,7 @@ abstract class Program {
         GLES32.glLinkProgram(program)
 
         GLUtils.checkGlError("Linking program")
-        Log.d(TAG, "Program linked")
+        Log.d(TAG, "BaseProgram linked")
 
         // Initialisation
         usingProgram {
@@ -192,13 +192,13 @@ abstract class Program {
 
         // Print
         if (index == GLES32.GL_INVALID_INDEX) {
-            Log.w(TAG, "UniformBlock $name not found")
+            Log.w(TAG, "BaseUniformBlock $name not found")
             return false
         }
 
-        Log.d(TAG, "UniformBlock $name : $index => $binding")
+        Log.d(TAG, "BaseUniformBlock $name : $index => $binding")
         GLES32.glUniformBlockBinding(program, index, binding)
-        GLUtils.checkGlError("Getting UniformBlock $name")
+        GLUtils.checkGlError("Getting BaseUniformBlock $name")
         return true
     }
     protected fun bindSharedStorage(name: String) : Int {
@@ -206,7 +206,7 @@ abstract class Program {
 
         // Print
         if (index == GLES32.GL_INVALID_INDEX) {
-            Log.w(TAG, "ShaderStorage $name not found")
+            Log.w(TAG, "SharedStorage $name not found")
             return GLES32.GL_INVALID_INDEX
         }
 
@@ -217,8 +217,8 @@ abstract class Program {
                         1, IntArray(1) { 1 }, 0, it, 0)
             }[0]
 
-        Log.d(TAG, "ShaderStorage $name : $index => $binding")
-        GLUtils.checkGlError("Getting ShaderStorage $name")
+        Log.d(TAG, "SharedStorage $name : $index => $binding")
+        GLUtils.checkGlError("Getting SharedStorage $name")
 
         return binding
     }

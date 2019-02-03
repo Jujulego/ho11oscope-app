@@ -21,7 +21,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         return setOf(
                 Program::class.java.canonicalName,
                 UniformBlock::class.java.canonicalName,
-                ShaderStorage::class.java.canonicalName
+                SharedStorage::class.java.canonicalName
         )
     }
     override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -40,7 +40,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                     }
                 }
 
-        roundEnv.getElementsAnnotatedWith(ShaderStorage::class.java)
+        roundEnv.getElementsAnnotatedWith(SharedStorage::class.java)
                 .forEach {
                     if (it is TypeElement  && sharedStorageBlockCheck(it)) {
                         createSharedStorageBlockImpl(it)
@@ -148,7 +148,7 @@ internal class ProgramProcessor : AbstractProcessor() {
 
             // Annotations
             val unif = it.getAnnotation(Uniform::class.java)
-            val ssbo = it.getAnnotation(ShaderStorage::class.java)
+            val ssbo = it.getAnnotation(SharedStorage::class.java)
             val unifBlock = it.getAnnotation(UniformBlock::class.java)
 
             // Attributs & Uniforms

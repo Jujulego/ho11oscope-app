@@ -2,7 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
 import net.capellari.julien.opengl.Material
-import net.capellari.julien.opengl.base.Program
+import net.capellari.julien.opengl.base.BaseProgram
 
 @Program(
     shaders = Shaders(
@@ -16,10 +16,10 @@ import net.capellari.julien.opengl.base.Program
         Attribute("aTexCoord", AttributeType.TEXCOORDS)
     ]
 )
-abstract class PolyProgram : Program() {
+abstract class PolyProgram : BaseProgram() {
     // Companion
     companion object {
-        val instance by lazy(this) { Program.getImplementation<PolyProgram>() }
+        val instance by lazy(this) { BaseProgram.getImplementation<PolyProgram>() }
     }
 
     // Attributs
@@ -30,5 +30,5 @@ abstract class PolyProgram : Program() {
     @UniformBlock("Stables")    val stables    = StablesBlock.instance
     @UniformBlock("Parameters") val parameters = ParametersBlock.instance
 
-    @ShaderStorage("Lights") open var lights = LightsBlock.instance
+    @SharedStorage("Lights") open var lights = LightsBlock.instance
 }
