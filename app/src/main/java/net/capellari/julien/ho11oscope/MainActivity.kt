@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
     private var preferenceBrightness by sharedPreference("player_brightness", true)
 
     private val navController get() = findNavController(R.id.navHostFragment)
-    private val isAtTopLevel get()  = navController.currentDestination?.run {isTopLevelDestination(id) } ?: false
+    private val isAtTopLevel get()  = navController.currentDestination?.run { isTopLevelDestination(id) } ?: false
 
     // Events
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return item.onNavDestinationSelected(navController)
-                || (if (isAtTopLevel) drawerToggle.onOptionsItemSelected(item) else false)
+                || (isAtTopLevel && drawerToggle.onOptionsItemSelected(item))
                 || super.onOptionsItemSelected(item)
     }
 

@@ -27,6 +27,7 @@ class LightsFragment : ListFragment() {
         polyModel = ViewModelProviders.of(activity!!)[PolyViewModel::class.java]
 
         adapter = LightsAdapter()
+        updateLights()
     }
 
     override fun onRecyclerViewCreated(view: RecyclerView) {
