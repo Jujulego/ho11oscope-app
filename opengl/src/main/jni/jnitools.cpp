@@ -59,13 +59,13 @@ jlong JNIClass::handle() const {
     return reinterpret_cast<jlong>(this);
 }
 
-template<> std::string jnitools::fromJava<std::string>(JNIEnv* env, jobject jstr) {
-    if (!jstr) return "";
+template<> std::string jnitools::fromJava<std::string>(JNIEnv* env, jobject jobj) {
+    if (!jobj) return "";
 
-    char const* str = env->GetStringUTFChars((jstring) jstr, nullptr);
+    char const* str = env->GetStringUTFChars((jstring) jobj, nullptr);
     std::string ret(str);
 
-    env->ReleaseStringUTFChars((jstring) jstr, str);
+    env->ReleaseStringUTFChars((jstring) jobj, str);
 
     return ret;
 }

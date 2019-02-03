@@ -31,7 +31,6 @@ add_library(opengl SHARED
         src/main/jni/material.cpp
         src/main/jni/mesh.cpp
         src/main/jni/model.cpp
-        src/main/jni/test.cpp
         src/main/jni/vec.cpp
 )
 

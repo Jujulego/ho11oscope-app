@@ -1,6 +1,7 @@
-//
-// Created by julien on 17/11/2018.
-//
+/**
+ * Define tools to interact with Java code
+ * @author: Julien Capellari
+ */
 #pragma once
 
 #include <jni.h>
@@ -8,6 +9,7 @@
 #include <type_traits>
 
 // Tools
+class Args;
 namespace jnitools {
     // Classe
     class JNIConvert {
@@ -35,8 +37,10 @@ namespace jnitools {
     template<class O> struct is_jniconvert : std::enable_if<std::is_base_of<JNIConvert,O>::value> {
         using arg = O;
     };
+    template<class O> struct noop { using arg = O; };
 
     // Tools
+    // - convertions
     template<class R> R fromJava(JNIEnv* env, jobject jobj);
 
     template<class R,class=void> struct jnitojava {
@@ -44,7 +48,7 @@ namespace jnitools {
         JNIEnv* m_env;
 
         // Constructeur
-        jnitojava(JNIEnv* env) : m_env(env) {}
+        explicit jnitojava(JNIEnv* env) : m_env(env) {}
 
         // Opérateurs
         jobject operator() (R const& obj);
@@ -54,7 +58,7 @@ namespace jnitools {
         JNIEnv* m_env;
 
         // Constructeur
-        jnitojava(JNIEnv* env) : m_env(env) {}
+        explicit jnitojava(JNIEnv* env) : m_env(env) {}
 
         // Opérateurs
         jobject operator() (R const& obj) {
@@ -66,7 +70,7 @@ namespace jnitools {
         JNIEnv* m_env;
 
         // Constructeur
-        jnitojava(JNIEnv* env) : m_env(env) {}
+        explicit jnitojava(JNIEnv* env) : m_env(env) {}
 
         // Opérateurs
         jobject operator() (std::string const& obj) {
@@ -141,150 +145,31 @@ namespace jnitools {
             return (R) m_env->CallObjectMethod(m_jobj, m_jmethod, args...);
         }
     };
-    template<> struct jnimethod<void>{
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
 
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        void operator() (Args const&... args) {
-            m_env->CallVoidMethod(m_jobj, m_jmethod, args...);
+    #define JNIMETHOD(type, jname)                                          \
+        template<> struct jnimethod<type>{                                  \
+            JNIEnv* m_env;                                                  \
+            jobject m_jobj;                                                 \
+            jmethodID m_jmethod;                                            \
+                                                                            \
+            jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)         \
+                    : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}       \
+                                                                            \
+            template<class... Args>                                         \
+            typename noop<type>::arg operator() (Args const&... args) {     \
+                m_env->Call##jname##Method(m_jobj, m_jmethod, args...);     \
+            }                                                               \
         }
-    };
-    template<> struct jnimethod<jboolean> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
 
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jboolean operator() (Args const&... args) {
-            return m_env->CallBooleanMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jchar> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jchar operator() (Args const&... args) {
-            return m_env->CallCharMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jbyte> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jbyte operator() (Args const&... args) {
-            return m_env->CallByteMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jshort> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jshort operator() (Args const&... args) {
-            return m_env->CallShortMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jint> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jint operator() (Args const&... args) {
-            return m_env->CallIntMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jlong> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jlong operator() (Args const&... args) {
-            return m_env->CallLongMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jfloat> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jfloat operator() (Args const&... args) {
-            return m_env->CallFloatMethod(m_jobj, m_jmethod, args...);
-        }
-    };
-    template<> struct jnimethod<jdouble> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jmethodID m_jmethod;
-
-        // Constructeur
-        jnimethod(JNIEnv *env, jmethodID jmethod, jobject jobj)
-                : m_env(env), m_jobj(jobj), m_jmethod(jmethod) {}
-
-        // Opérateurs
-        template<class... Args>
-        jdouble operator() (Args const&... args) {
-            return m_env->CallDoubleMethod(m_jobj, m_jmethod, args...);
-        }
-    };
+    JNIMETHOD(void,     Void);
+    JNIMETHOD(jboolean, Boolean);
+    JNIMETHOD(jchar,    Char);
+    JNIMETHOD(jbyte,    Byte);
+    JNIMETHOD(jshort,   Short);
+    JNIMETHOD(jint,     Int);
+    JNIMETHOD(jlong,    Long);
+    JNIMETHOD(jfloat,   Float);
+    JNIMETHOD(jdouble,  Double);
 
     template<class R, class... Args> inline R call(JNIEnv* env, jobject jobj, jmethodID jmth, Args const&... args) {
         return jnimethod<R>(env, jmth, jobj)(args...);
@@ -335,150 +220,33 @@ namespace jnitools {
             m_env->SetObjectField(m_jobj, m_jfld, (jobject) val);
         }
     };
-    template<> struct jnifield<jboolean> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
 
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jboolean get() const {
-            return m_env->GetBooleanField(m_jobj, m_jfld);
+    #define JNIFIELD(type, jname)                                           \
+        template<> struct jnifield<type> {                                  \
+            JNIEnv* m_env;                                                  \
+            jobject m_jobj;                                                 \
+            jfieldID m_jfld;                                                \
+                                                                            \
+            jnifield(JNIEnv* env, jfieldID jfld, jobject jobj)              \
+                    : m_env(env), m_jobj(jobj), m_jfld(jfld) {}             \
+                                                                            \
+            typename noop<type>::arg get() const {                          \
+                return m_env->Get##jname##Field(m_jobj, m_jfld);            \
+            }                                                               \
+                                                                            \
+            void set(typename noop<type>::arg val) {                        \
+                m_env->Set##jname##Field(m_jobj, m_jfld, val);              \
+            }                                                               \
         }
 
-        void set(jboolean val) {
-            m_env->SetBooleanField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jchar> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jchar get() const {
-            return m_env->GetCharField(m_jobj, m_jfld);
-        }
-
-        void set(jchar val) {
-            m_env->SetCharField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jbyte> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jbyte get() const {
-            return m_env->GetByteField(m_jobj, m_jfld);
-        }
-
-        void set(jbyte val) {
-            m_env->SetByteField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jshort> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jshort get() const {
-            return m_env->GetShortField(m_jobj, m_jfld);
-        }
-
-        void set(jshort val) {
-            m_env->SetShortField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jint> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jint get() const {
-            return m_env->GetIntField(m_jobj, m_jfld);
-        }
-
-        void set(jint val) {
-            m_env->SetIntField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jlong> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jlong get() const {
-            return m_env->GetLongField(m_jobj, m_jfld);
-        }
-
-        void set(jlong val) {
-            m_env->SetLongField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jfloat> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jfloat get() const {
-            return m_env->GetFloatField(m_jobj, m_jfld);
-        }
-
-        void set(jfloat val) {
-            m_env->SetFloatField(m_jobj, m_jfld, val);
-        }
-    };
-    template<> struct jnifield<jdouble> {
-        // Attributs
-        JNIEnv* m_env;
-        jobject m_jobj;
-        jfieldID m_jfld;
-
-        // Constructeur
-        jnifield(JNIEnv* env, jfieldID jfld, jobject jobj) : m_env(env), m_jobj(jobj), m_jfld(jfld) {}
-
-        // Méthodes
-        jdouble get() const {
-            return m_env->GetDoubleField(m_jobj, m_jfld);
-        }
-
-        void set(jboolean val) {
-            m_env->SetDoubleField(m_jobj, m_jfld, val);
-        }
-    };
+    JNIFIELD(jboolean, Boolean);
+    JNIFIELD(jchar,    Char);
+    JNIFIELD(jbyte,    Byte);
+    JNIFIELD(jshort,   Short);
+    JNIFIELD(jint,     Int);
+    JNIFIELD(jlong,    Long);
+    JNIFIELD(jfloat,   Float);
+    JNIFIELD(jdouble,  Double);
 
     template<class R> inline R get(JNIEnv* env, jobject jobj, jfieldID jfld) {
         return jnifield<R>(env, jfld, jobj).get();
