@@ -9,9 +9,9 @@ import net.capellari.julien.opengl.base.Structure
 
 class Material(val name: String) : Structure {
     // Attributs
-    var ambientColor = Color(1f, 1f, 1f)
-    var diffuseColor = Color(1f, 1f, 1f)
-    var specularColor = Color(1f, 1f, 1f)
+    var ambientColor  = Color.WHITE
+    var diffuseColor  = Color.WHITE
+    var specularColor = Color.WHITE
 
     var specularExp = 1f
     var opacity = 1f

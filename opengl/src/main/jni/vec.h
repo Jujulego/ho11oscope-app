@@ -7,6 +7,7 @@
 #include <array>
 #include <jni.h>
 #include <ostream>
+#include <assimp/vector2.h>
 #include <assimp/vector3.h>
 
 #include "jnitools.h"
@@ -37,7 +38,7 @@ class Vec {
         }
 
         template<size_t S2, class... Args>
-        Vec(Vec<S2> const& o, Args... v) {
+        explicit Vec(Vec<S2> const& o, Args... v) {
             static_assert((S2 + sizeof...(Args)) == SIZE, "Too many args !");
 
             for (size_t i = 0; i < S2; ++i) {
@@ -51,7 +52,7 @@ class Vec {
         }
 
         template<class... Args>
-        Vec(Args... v) : m_data({v...}) {
+        explicit Vec(Args... v) : m_data({v...}) {
             static_assert(sizeof...(Args) == SIZE, "Too many args !");
         }
 
@@ -216,12 +217,12 @@ std::ostream& operator << (std::ostream& stream, Vec<size> const& v) {
 class Vec2 : public Vec<2>, public jnitools::JNIConvert {
     public:
         // Constructeur
-        Vec2() = default;
-        Vec2(aiVector3D vec);
+        Vec2() : Vec() {}
+        explicit Vec2(aiVector2D vec);
 
         template<size_t S2> Vec2(Vec<S2> const& o) : Vec(o) {}
-        template<class... Args> Vec2(Args const&... args) : Vec(args...) {}
-        template<size_t S2, class... Args> Vec2(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
+        template<class... Args> explicit Vec2(Args const&... args) : Vec(args...) {}
+        template<size_t S2, class... Args> explicit Vec2(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
 
         // Méthodes
         float& x() { return this->operator[](0); }
@@ -236,12 +237,12 @@ class Vec2 : public Vec<2>, public jnitools::JNIConvert {
 class Vec3 : public Vec<3>, public jnitools::JNIConvert {
     public:
         // Constructeurs
-        Vec3() = default;
-        Vec3(aiVector3D vec);
+        Vec3() : Vec() {}
+        explicit Vec3(aiVector3D vec);
 
         template<size_t S2> Vec3(Vec<S2> const& o) : Vec(o) {}
-        template<class... Args> Vec3(Args const&... args) : Vec(args...) {}
-        template<size_t S2, class... Args> Vec3(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
+        template<class... Args> explicit Vec3(Args const&... args) : Vec(args...) {}
+        template<size_t S2, class... Args> explicit Vec3(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
 
         // Méthodes
         float& x() { return this->operator[](0); }
@@ -257,6 +258,13 @@ class Vec3 : public Vec<3>, public jnitools::JNIConvert {
 
 class Vec4 : public Vec<4>, public jnitools::JNIConvert {
     public:
+        // Constructeurs
+        Vec4() : Vec() {}
+
+        template<size_t S2> Vec4(Vec<S2> const& o) : Vec(o) {}
+        template<class... Args> explicit Vec4(Args const&... args) : Vec(args...) {}
+        template<size_t S2, class... Args> explicit Vec4(Vec<S2> const& o, Args const&... args) : Vec(o, args...) {}
+
         // Méthodes
         float& x() { return this->operator[](0); }
         float& y() { return this->operator[](1); }

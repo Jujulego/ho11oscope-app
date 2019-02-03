@@ -4,7 +4,7 @@
 
 #include "vec.h"
 
-Vec2::Vec2(aiVector3D vec) {
+Vec2::Vec2(aiVector2D vec) : Vec() {
     x() = vec.x;
     y() = vec.y;
 }
@@ -22,7 +22,7 @@ template<> Vec2 jnitools::fromJava<Vec2>(JNIEnv* env, jobject jobj) {
     return r;
 }
 
-Vec3::Vec3(aiVector3D vec) {
+Vec3::Vec3(aiVector3D vec) : Vec() {
     x() = vec.x;
     y() = vec.y;
     z() = vec.z;

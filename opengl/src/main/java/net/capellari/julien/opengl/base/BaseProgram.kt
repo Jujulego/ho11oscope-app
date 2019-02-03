@@ -294,7 +294,8 @@ abstract class BaseProgram {
 
                 is Structure -> v.toUniform(nom, this)
 
-                is Color -> GLES32.glUniform3f(getUniformLocation(nom), v.r, v.g, v.b)
+                is Color      -> GLES32.glUniform3f(getUniformLocation(nom), v.r, v.g, v.b)
+                is ColorAlpha -> GLES32.glUniform4f(getUniformLocation(nom), v.r, v.g, v.b, v.a)
 
                 is Boolean -> GLES32.glUniform1i(getUniformLocation(nom), if (v) 1 else 0)
 
