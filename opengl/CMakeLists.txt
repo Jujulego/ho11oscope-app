@@ -27,6 +27,7 @@ include_directories(src/main/jni)
 include_directories(libs/include)
 
 add_library(opengl SHARED
+        src/main/jni/color.cpp
         src/main/jni/jnitools.cpp
         src/main/jni/material.cpp
         src/main/jni/mesh.cpp

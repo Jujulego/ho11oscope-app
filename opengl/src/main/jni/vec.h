@@ -8,7 +8,6 @@
 #include <jni.h>
 #include <ostream>
 #include <assimp/vector3.h>
-#include <assimp/types.h>
 
 #include "jnitools.h"
 
@@ -239,7 +238,6 @@ class Vec3 : public Vec<3>, public jnitools::JNIConvert {
         // Constructeurs
         Vec3() = default;
         Vec3(aiVector3D vec);
-        Vec3(aiColor3D color);
 
         template<size_t S2> Vec3(Vec<S2> const& o) : Vec(o) {}
         template<class... Args> Vec3(Args const&... args) : Vec(args...) {}

@@ -8,6 +8,7 @@
 
 #include <assimp/material.h>
 
+#include "color.h"
 #include "jnitools.h"
 #include "vec.h"
 
@@ -41,9 +42,9 @@ private:
     float m_opacity;
 
     // - couleurs
-    Vec3 m_ambientColor;
-    Vec3 m_diffuseColor;
-    Vec3 m_specularColor;
+    Color m_ambientColor;
+    Color m_diffuseColor;
+    Color m_specularColor;
 
     // - textures
     std::list<Texture> m_textures;

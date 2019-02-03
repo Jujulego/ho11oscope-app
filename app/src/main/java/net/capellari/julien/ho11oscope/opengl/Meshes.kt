@@ -1,5 +1,6 @@
 package net.capellari.julien.ho11oscope.opengl
 
+import net.capellari.julien.opengl.Color
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.opengl.base.Mesh
 
@@ -13,9 +14,9 @@ class Triangle : Mesh(false, false) {
 
     override fun getOther(name: String): Any = when(name) {
         "vColor" -> arrayOf(
-                Vec3(0f, 0f, 1f),
-                Vec3(0f, 1f, 0f),
-                Vec3(1f, 0f, 0f)
+                Color.RED,
+                Color.GREEN,
+                Color.BLUE
         )
         else -> super.getOther(name)
     }
@@ -33,10 +34,10 @@ class Carre : Mesh(true,  false) {
 
     override fun getOther(name: String): Any = when(name) {
         "vColor" -> arrayOf(
-                Vec3(0f, 0f, 1f),
-                Vec3(1f, 0f, 1f),
-                Vec3(1f, 0f, 0f),
-                Vec3(1f, 0f, 1f)
+                Color.BLUE,
+                Color.MAGENTA,
+                Color.RED,
+                Color.MAGENTA
         )
         else -> super.getOther(name)
     }
@@ -65,13 +66,13 @@ class Hexagone : Mesh(true,  false) {
 
     override fun getOther(name: String): Any = when(name) {
         "vColor" -> arrayOf(
-                Vec3(1f, 1f, 1f),
-                Vec3(0f, 0f, 1f),
-                Vec3(0f, 1f, 1f),
-                Vec3(0f, 1f, 0f),
-                Vec3(1f, 1f, 0f),
-                Vec3(1f, 0f, 0f),
-                Vec3(1f, 0f, 1f)
+                Color.WHITE,
+                Color.BLUE,
+                Color.CYAN,
+                Color.GREEN,
+                Color.YELLOW,
+                Color.RED,
+                Color.MAGENTA
         )
         else -> super.getOther(name)
     }

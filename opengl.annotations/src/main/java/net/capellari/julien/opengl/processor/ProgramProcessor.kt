@@ -99,8 +99,8 @@ internal class ProgramProcessor : AbstractProcessor() {
     }
     private fun sharedStorageBlockCheck(type: TypeElement) : Boolean {
         // should inherit from BaseUniformBlock
-        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.base.BaseSharedStorageBlock")) {
-            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${type.simpleName} should inherit from BaseSharedStorageBlock")
+        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.base.BaseSharedStorage")) {
+            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${type.simpleName} should inherit from BaseSharedStorage")
             return false
         }
 
@@ -242,7 +242,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         val enableVBO = FunSpec.builder("enableVBO")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
-                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
+                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "Mesh"))
 
                     // Link to arrays
                     beginControlFlow("mesh.bindVBO")
@@ -277,7 +277,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         val setMeshMaterial = FunSpec.builder("setMeshMaterial")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
-                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
+                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "Mesh"))
 
                     meshMaterialAttribute?.also {
                         // Chargement du material

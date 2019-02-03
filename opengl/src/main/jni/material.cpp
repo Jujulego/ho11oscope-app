@@ -59,9 +59,9 @@ jobject Material::toJava(JNIEnv* env) const {
     jobject jobj = jnitools::construct(env, "net/capellari/julien/opengl/Material", "(Ljava/lang/String;)V", jstr);
     env->DeleteLocalRef(jstr);
 
-    jnitools::set<Vec3>(env, jobj, "ambientColor",  "Lnet/capellari/julien/opengl/Vec3;", m_ambientColor);
-    jnitools::set<Vec3>(env, jobj, "diffuseColor",  "Lnet/capellari/julien/opengl/Vec3;", m_diffuseColor);
-    jnitools::set<Vec3>(env, jobj, "specularColor", "Lnet/capellari/julien/opengl/Vec3;", m_specularColor);
+    jnitools::set<Color>(env, jobj, "ambientColor",  "Lnet/capellari/julien/opengl/Color;", m_ambientColor);
+    jnitools::set<Color>(env, jobj, "diffuseColor",  "Lnet/capellari/julien/opengl/Color;", m_diffuseColor);
+    jnitools::set<Color>(env, jobj, "specularColor", "Lnet/capellari/julien/opengl/Color;", m_specularColor);
 
     jnitools::set<jfloat>(env, jobj, "specularExp", "F", m_specularExp);
     jnitools::set<jfloat>(env, jobj, "opacity",     "F", m_opacity);

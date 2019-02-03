@@ -15,7 +15,7 @@ class Vec3() : BaseVec<Vec3>(3, Vec3::class) {
 
     val xy get() = Vec2(x, y)
 
-    // Constructeur
+    // Constructeurs
     constructor(o: Vec3) : this(o.x, o.y, o.z)
     constructor(o: Vec2, z: Float) : this(o.x, o.y, z)
     constructor(x: Float, y: Float, z: Float): this() {

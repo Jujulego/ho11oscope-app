@@ -294,6 +294,8 @@ abstract class BaseProgram {
 
                 is Structure -> v.toUniform(nom, this)
 
+                is Color -> GLES32.glUniform3f(getUniformLocation(nom), v.r, v.g, v.b)
+
                 is Boolean -> GLES32.glUniform1i(getUniformLocation(nom), if (v) 1 else 0)
 
                 else -> throw RuntimeException("Unsupported value type : ${v::class.qualifiedName}")

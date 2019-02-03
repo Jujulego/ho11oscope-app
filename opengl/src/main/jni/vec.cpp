@@ -28,12 +28,6 @@ Vec3::Vec3(aiVector3D vec) {
     z() = vec.z;
 }
 
-Vec3::Vec3(aiColor3D color) {
-    x() = color.r;
-    y() = color.g;
-    z() = color.b;
-}
-
 jobject Vec3::toJava(JNIEnv *env) const {
     return jnitools::construct(env, "net/capellari/julien/opengl/Vec3", "(FFF)V", x(), y(), z());
 }

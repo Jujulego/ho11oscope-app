@@ -31,7 +31,7 @@ object GLUtils {
             // Composed
             is BaseVec<*>    -> v.size * GLUtils.FLOAT_SIZE
             is BaseMat<*, *> -> v.size * v.size * GLUtils.FLOAT_SIZE
-            is Structure -> v.getBufferSize()
+            is Structure     -> v.getBufferSize()
 
             // Buffers
             is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
@@ -57,9 +57,9 @@ object GLUtils {
             is Float -> GLES32.GL_FLOAT
 
             // Composed
-            is BaseVec<*>    -> GLES32.GL_FLOAT
-            is BaseMat<*,*>  -> GLES32.GL_FLOAT
-            is Structure -> GLES32.GL_BYTE
+            is BaseVec<*>   -> GLES32.GL_FLOAT
+            is BaseMat<*,*> -> GLES32.GL_FLOAT
+            is Structure    -> GLES32.GL_BYTE
 
             // Buffers
             is ShortBuffer -> if (unsigned) GLES32.GL_UNSIGNED_SHORT else GLES32.GL_SHORT
