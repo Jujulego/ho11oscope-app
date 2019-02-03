@@ -3,11 +3,11 @@ package net.capellari.julien.opengl
 import android.graphics.BitmapFactory
 import android.opengl.GLES32
 import android.util.Log
-import net.capellari.julien.opengl.base.BaseBufferObject
-import net.capellari.julien.opengl.base.BaseProgram
-import net.capellari.julien.opengl.base.BaseStructure
+import net.capellari.julien.opengl.base.BufferObject
+import net.capellari.julien.opengl.base.Program
+import net.capellari.julien.opengl.base.Structure
 
-class Material(val name: String) : BaseStructure {
+class Material(val name: String) : Structure {
     // Attributs
     var ambientColor = Vec3(1f, 1f, 1f)
     var diffuseColor = Vec3(1f, 1f, 1f)
@@ -20,7 +20,7 @@ class Material(val name: String) : BaseStructure {
     var texHandler: Int = GLES32.GL_INVALID_INDEX
 
     // Méthodes
-    override fun toBuffer(buffer: BaseBufferObject) {
+    override fun toBuffer(buffer: BufferObject) {
         buffer.put(ambientColor)
         buffer.put(diffuseColor)
         buffer.put(specularColor)
@@ -34,7 +34,7 @@ class Material(val name: String) : BaseStructure {
         return (3 + 3 + 3 + 1 + 1) * GLUtils.FLOAT_SIZE + 1 * GLUtils.INT_SIZE
     }
 
-    override fun toUniform(nom: String, program: BaseProgram) {
+    override fun toUniform(nom: String, program: Program) {
         program.usingProgram {
             program.setUniformValue("$nom.ambientColor",  ambientColor)
             program.setUniformValue("$nom.diffuseColor",  diffuseColor)

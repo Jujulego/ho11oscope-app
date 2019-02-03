@@ -4,7 +4,7 @@ import android.opengl.GLES32
 import java.lang.RuntimeException
 import java.nio.*
 
-abstract class BaseBufferObject(protected val target: Int) {
+abstract class BufferObject(protected val target: Int) {
     // Attributs
     private var bound = false
     protected var id = GLES32.GL_INVALID_INDEX
@@ -120,7 +120,7 @@ abstract class BaseBufferObject(protected val target: Int) {
 
             is BaseVec<*>    -> put(value.data)
             is BaseMat<*,*>  -> put(value.data)
-            is BaseStructure -> value.toBuffer(this)
+            is Structure -> value.toBuffer(this)
 
             is ShortArray -> value.forEach { put(it) }
             is IntArray   -> value.forEach { put(it) }

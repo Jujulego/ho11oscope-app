@@ -8,6 +8,8 @@
 #include <string>
 #include <type_traits>
 
+#include "utils.h"
+
 // Tools
 class Args;
 namespace jnitools {
@@ -37,7 +39,6 @@ namespace jnitools {
     template<class O> struct is_jniconvert : std::enable_if<std::is_base_of<JNIConvert,O>::value> {
         using arg = O;
     };
-    template<class O> struct noop { using arg = O; };
 
     // Tools
     // - convertions

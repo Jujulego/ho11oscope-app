@@ -1,7 +1,7 @@
 package net.capellari.julien.ho11oscope.opengl
 
 import net.capellari.julien.opengl.*
-import net.capellari.julien.opengl.base.BaseProgram
+import net.capellari.julien.opengl.base.Program
 
 // Valeurs
 @Program(
@@ -35,10 +35,10 @@ import net.capellari.julien.opengl.base.BaseProgram
         Attribute("vColor")
     ]
 )
-abstract class OpenGLProgram : BaseProgram() {
+abstract class OpenGLProgram : Program() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseProgram.getImplementation<OpenGLProgram>() }
+        val instance by lazy(this) { Program.getImplementation<OpenGLProgram>() }
     }
 
     // Attributs

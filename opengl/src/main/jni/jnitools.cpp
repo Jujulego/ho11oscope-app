@@ -51,14 +51,6 @@ jmethodID jnitools::findMethod(JNIEnv *env, std::string const& cls, std::string 
     return jmth;
 }
 
-jfieldID jnitools::handleField(JNIEnv* env, jobject jobj) {
-    return jnitools::findField(env, jobj, "nativeHandle", "J");
-}
-
-jlong JNIClass::handle() const {
-    return reinterpret_cast<jlong>(this);
-}
-
 template<> std::string jnitools::fromJava<std::string>(JNIEnv* env, jobject jobj) {
     if (!jobj) return "";
 
@@ -68,6 +60,15 @@ template<> std::string jnitools::fromJava<std::string>(JNIEnv* env, jobject jobj
     env->ReleaseStringUTFChars((jstring) jobj, str);
 
     return ret;
+}
+
+// - JNIClass
+jfieldID jnitools::handleField(JNIEnv* env, jobject jobj) {
+    return jnitools::findField(env, jobj, "nativeHandle", "J");
+}
+
+jlong JNIClass::handle() const {
+    return reinterpret_cast<jlong>(this);
 }
 
 // JNI Calls

@@ -1,14 +1,14 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
-import net.capellari.julien.opengl.base.BaseSharedStorageBlock
-import net.capellari.julien.opengl.base.BaseUniformBlock
+import net.capellari.julien.opengl.base.SharedStorageBlock
+import net.capellari.julien.opengl.base.UniformBlock
 
 @UniformBlock
-abstract class MatricesBlock : BaseUniformBlock() {
+abstract class MatricesBlock : UniformBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseUniformBlock.getImplementation<MatricesBlock>() }
+        val instance by lazy(this) { UniformBlock.getImplementation<MatricesBlock>() }
     }
 
     // Attributs
@@ -18,10 +18,10 @@ abstract class MatricesBlock : BaseUniformBlock() {
 }
 
 @UniformBlock
-abstract class StablesBlock : BaseUniformBlock() {
+abstract class StablesBlock : UniformBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseUniformBlock.getImplementation<StablesBlock>() }
+        val instance by lazy(this) { UniformBlock.getImplementation<StablesBlock>() }
     }
 
     // Attributs
@@ -31,10 +31,10 @@ abstract class StablesBlock : BaseUniformBlock() {
 }
 
 @UniformBlock
-abstract class ParametersBlock : BaseUniformBlock() {
+abstract class ParametersBlock : UniformBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseUniformBlock.getImplementation<ParametersBlock>() }
+        val instance by lazy(this) { UniformBlock.getImplementation<ParametersBlock>() }
     }
 
     // Attributs
@@ -45,10 +45,10 @@ abstract class ParametersBlock : BaseUniformBlock() {
 }
 
 @ShaderStorage
-abstract class LightsBlock : BaseSharedStorageBlock() {
+abstract class LightsBlock : SharedStorageBlock() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseSharedStorageBlock.getImplementation<LightsBlock>() }
+        val instance by lazy(this) { SharedStorageBlock.getImplementation<LightsBlock>() }
     }
 
     // Attributs

@@ -1,20 +1,16 @@
 package net.capellari.julien.opengl.base
 
-import android.content.Context
-import android.graphics.BitmapFactory
 import android.opengl.GLES32
-import android.util.Log
 import net.capellari.julien.opengl.GLUtils
 import net.capellari.julien.opengl.Material
 import net.capellari.julien.opengl.Vec2
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.opengl.buffers.ElementBufferObject
 import net.capellari.julien.opengl.buffers.VertexBufferObject
-import java.io.File
 
-abstract class BaseMesh(var hasIndices: Boolean = true,
-                        var hasNormals: Boolean = false,
-                        var hasTexCoords: Boolean = false) {
+abstract class Mesh(var hasIndices: Boolean = true,
+                    var hasNormals: Boolean = false,
+                    var hasTexCoords: Boolean = false) {
     // Attributs
     private var ibo = ElementBufferObject()
     private var indiceBT: Int = GLES32.GL_UNSIGNED_INT

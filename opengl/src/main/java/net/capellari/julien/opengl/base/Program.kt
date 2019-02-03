@@ -4,19 +4,18 @@ import android.content.Context
 import android.opengl.GLES32
 import android.util.Log
 import net.capellari.julien.opengl.*
-import net.capellari.julien.opengl.buffers.UniformBufferObject
 import java.nio.*
 import kotlin.reflect.full.createInstance
 
-abstract class BaseProgram {
+abstract class Program {
     // Companion
     companion object {
         // Attributs
-        const val TAG = "BaseProgram"
+        const val TAG = "Program"
 
         // Méthodes
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T : BaseProgram> getImplementation() : T =
+        inline fun <reified T : Program> getImplementation() : T =
                 Class.forName("${T::class.qualifiedName}_Impl").kotlin.createInstance() as T
     }
 
@@ -41,8 +40,8 @@ abstract class BaseProgram {
     // - charge vars
     protected abstract fun loadUniforms()
     protected abstract fun loadBuffers()
-    protected abstract fun enableVBO(mesh: BaseMesh)
-    protected abstract fun setMeshMaterial(mesh: BaseMesh)
+    protected abstract fun enableVBO(mesh: Mesh)
+    protected abstract fun setMeshMaterial(mesh: Mesh)
 
     // Méthodes
     fun compile(context: Context) {
@@ -70,8 +69,8 @@ abstract class BaseProgram {
         reloadUniforms = true
     }
 
-    fun prepare(mesh: BaseMesh) = prepare(arrayListOf(mesh))
-    fun prepare(meshes: Collection<BaseMesh>) {
+    fun prepare(mesh: Mesh) = prepare(arrayListOf(mesh))
+    fun prepare(meshes: Collection<Mesh>) {
         usingProgram {
             for (mesh in meshes) {
                 mesh.genBuffers()
@@ -80,8 +79,8 @@ abstract class BaseProgram {
         }
     }
 
-    fun render(mesh: BaseMesh) = render(arrayListOf(mesh))
-    fun render(meshes: Collection<BaseMesh>) {
+    fun render(mesh: Mesh) = render(arrayListOf(mesh))
+    fun render(meshes: Collection<Mesh>) {
         usingProgram {
             // Load variables
             if (reloadUniforms) {
@@ -239,7 +238,7 @@ abstract class BaseProgram {
             // Composed
             is BaseVec<*>   -> v.size
             is BaseMat<*,*> -> v.size * v.size
-            is BaseStructure -> v.getBufferSize()
+            is Structure -> v.getBufferSize()
 
             else -> throw java.lang.RuntimeException("Unsupported type ${T::class.qualifiedName}")
         }
@@ -293,7 +292,7 @@ abstract class BaseProgram {
                 is Mat3 -> GLES32.glUniformMatrix3fv(getUniformLocation(nom), 1, false, v.data, 0)
                 is Mat4 -> GLES32.glUniformMatrix4fv(getUniformLocation(nom), 1, false, v.data, 0)
 
-                is BaseStructure -> v.toUniform(nom, this)
+                is Structure -> v.toUniform(nom, this)
 
                 is Boolean -> GLES32.glUniform1i(getUniformLocation(nom), if (v) 1 else 0)
 

@@ -3,15 +3,15 @@ package net.capellari.julien.opengl.base
 import net.capellari.julien.opengl.buffers.ShaderStorageBufferObject
 import kotlin.reflect.full.createInstance
 
-abstract class BaseSharedStorageBlock {
+abstract class SharedStorageBlock {
     // Companion
     companion object {
         // Attributs
-        const val TAG = "BaseSharedStorageBlock"
+        const val TAG = "SharedStorageBlock"
 
         // Méthodes
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T : BaseSharedStorageBlock> getImplementation() : T =
+        inline fun <reified T : SharedStorageBlock> getImplementation() : T =
                 Class.forName("${T::class.qualifiedName}_Impl").kotlin.createInstance() as T
     }
 

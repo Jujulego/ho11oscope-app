@@ -1,9 +1,9 @@
 package net.capellari.julien.ho11oscope.opengl
 
 import net.capellari.julien.opengl.Vec3
-import net.capellari.julien.opengl.base.BaseMesh
+import net.capellari.julien.opengl.base.Mesh
 
-class Triangle : BaseMesh(false, false) {
+class Triangle : Mesh(false, false) {
     // Méthodes
     override fun getVertices(): Any = arrayOf(
             Vec3(  0f,  0.622008459f, 0f),
@@ -21,7 +21,7 @@ class Triangle : BaseMesh(false, false) {
     }
 }
 
-class Carre : BaseMesh(true,  false) {
+class Carre : Mesh(true,  false) {
     // Méthodes
     override fun getIndices():  Any = arrayOf<Short>(0, 1, 2, 0, 2, 3)
     override fun getVertices(): Any = arrayOf(
@@ -42,7 +42,7 @@ class Carre : BaseMesh(true,  false) {
     }
 }
 
-class Hexagone : BaseMesh(true,  false) {
+class Hexagone : Mesh(true,  false) {
     // Méthodes
     override fun getIndices(): Any = arrayOf<Short>(
             0, 1, 2,

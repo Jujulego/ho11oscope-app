@@ -1,7 +1,7 @@
 package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
-import net.capellari.julien.opengl.base.BaseProgram
+import net.capellari.julien.opengl.base.Program
 
 @Program(
     shaders = Shaders(
@@ -14,10 +14,10 @@ import net.capellari.julien.opengl.base.BaseProgram
         Attribute("aNormal", AttributeType.NORMALS)
     ]
 )
-abstract class NormalsProgram : BaseProgram() {
+abstract class NormalsProgram : Program() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseProgram.getImplementation<NormalsProgram>() }
+        val instance by lazy(this) { Program.getImplementation<NormalsProgram>() }
     }
 
     // Attributs

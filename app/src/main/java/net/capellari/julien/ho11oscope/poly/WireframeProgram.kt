@@ -2,7 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import net.capellari.julien.opengl.*
 import net.capellari.julien.opengl.Material
-import net.capellari.julien.opengl.base.BaseProgram
+import net.capellari.julien.opengl.base.Program
 
 @Program(
     shaders = Shaders(
@@ -16,10 +16,10 @@ import net.capellari.julien.opengl.base.BaseProgram
         Attribute("aTexCoord", AttributeType.TEXCOORDS)
     ]
 )
-abstract class WireframeProgram : BaseProgram() {
+abstract class WireframeProgram : Program() {
     // Companion
     companion object {
-        val instance by lazy(this) { BaseProgram.getImplementation<WireframeProgram>() }
+        val instance by lazy(this) { Program.getImplementation<WireframeProgram>() }
     }
 
     // Attributs

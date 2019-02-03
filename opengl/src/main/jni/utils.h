@@ -5,6 +5,8 @@
 
 #include <string>
 
+template<class O> struct noop { using arg = O; };
+
 inline std::string parent_path(std::string const& path) {
     size_t slash = path.rfind('/');
 

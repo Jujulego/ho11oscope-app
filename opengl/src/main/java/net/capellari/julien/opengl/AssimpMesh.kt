@@ -1,9 +1,9 @@
 package net.capellari.julien.opengl
 
-import net.capellari.julien.opengl.base.BaseMesh
+import net.capellari.julien.opengl.base.Mesh
 import net.capellari.julien.opengl.jni.JNIMesh
 
-class AssimpMesh(val mesh: JNIMesh) : BaseMesh(true, true, true) {
+class AssimpMesh(val mesh: JNIMesh) : Mesh(true, true, true) {
     // Attributs
     private lateinit var material: Material
 

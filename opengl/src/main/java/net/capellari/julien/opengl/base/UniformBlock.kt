@@ -3,15 +3,15 @@ package net.capellari.julien.opengl.base
 import net.capellari.julien.opengl.buffers.UniformBufferObject
 import kotlin.reflect.full.createInstance
 
-abstract class BaseUniformBlock {
+abstract class UniformBlock {
     // Companion
     companion object {
         // Attributs
-        const val TAG = "BaseUniformBlock"
+        const val TAG = "UniformBlock"
 
         // Méthodes
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T : BaseUniformBlock> getImplementation() : T =
+        inline fun <reified T : UniformBlock> getImplementation() : T =
                 Class.forName("${T::class.qualifiedName}_Impl").kotlin.createInstance() as T
     }
 

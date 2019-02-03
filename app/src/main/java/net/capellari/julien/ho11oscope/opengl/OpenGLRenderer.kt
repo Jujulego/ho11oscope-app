@@ -4,7 +4,7 @@ import android.content.Context
 import android.opengl.GLES32
 import android.opengl.GLSurfaceView
 import net.capellari.julien.opengl.Mat4
-import net.capellari.julien.opengl.base.BaseMesh
+import net.capellari.julien.opengl.base.Mesh
 import net.capellari.julien.utils.sharedPreference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -34,7 +34,7 @@ class OpenGLRenderer(val context: Context) : GLSurfaceView.Renderer {
             0f, 1f, 0f)
 
     val program = OpenGLProgram.instance
-    var mesh: BaseMesh = Triangle()
+    var mesh: Mesh = Triangle()
         set(value) {
             field = value
             newMesh = true

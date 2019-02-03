@@ -1,15 +1,12 @@
 package net.capellari.julien.opengl
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.opengl.GLES32
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
-import net.capellari.julien.opengl.base.BaseStructure
+import net.capellari.julien.opengl.base.Structure
 import net.capellari.julien.opengl.base.BaseVec
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
 import java.nio.Buffer
 import java.nio.FloatBuffer
@@ -33,7 +30,7 @@ object GLUtils {
             // Composed
             is BaseVec<*>    -> v.size * GLUtils.FLOAT_SIZE
             is BaseMat<*, *> -> v.size * v.size * GLUtils.FLOAT_SIZE
-            is BaseStructure -> v.getBufferSize()
+            is Structure -> v.getBufferSize()
 
             // Buffers
             is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
@@ -61,7 +58,7 @@ object GLUtils {
             // Composed
             is BaseVec<*>    -> GLES32.GL_FLOAT
             is BaseMat<*,*>  -> GLES32.GL_FLOAT
-            is BaseStructure -> GLES32.GL_BYTE
+            is Structure -> GLES32.GL_BYTE
 
             // Buffers
             is ShortBuffer -> if (unsigned) GLES32.GL_UNSIGNED_SHORT else GLES32.GL_SHORT
