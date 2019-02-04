@@ -6,10 +6,7 @@ import android.opengl.GLES32
 import android.opengl.GLSurfaceView
 import android.util.Log
 import androidx.preference.PreferenceManager
-import net.capellari.julien.opengl.AssimpMesh
-import net.capellari.julien.opengl.Mat4
-import net.capellari.julien.opengl.Material
-import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.opengl.*
 import net.capellari.julien.utils.sharedPreference
 import java.lang.Math.abs
 import javax.microedition.khronos.egl.EGLConfig
@@ -77,7 +74,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
-    private var lightPower by sharedPreference("lightPower",       context, 50)
     private var magnitude  by sharedPreference("explodeMagnitude", context, 50)
 
     // Méthodes
@@ -93,7 +89,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         polyProgram.stables.viewMatrix = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
 
         // Setup
-        setupLightPower()
         setupColorFactors()
 
         // Events
@@ -125,13 +120,19 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         lights?.let {
             val light = it[0].position(1f)
 
-            if (light != polyProgram.stables.lightPosition) {
-                polyProgram.stables.lightPosition = light
+            if (light != polyProgram.light.position) {
+                polyProgram.light = PointLight().apply {
+                    position = light
+
+                    ambient  = ambientFactor  / 100f
+                    diffuse  = diffuseFactor  / 100f
+                    specular = specularFactor / 100f
+                }
             }
 
-            if (new_lights) {
+            /*if (new_lights) {
                 polyProgram.lights.lights = it
-            }
+            }*/
         }
 
         // model matrix rotate around Y axis
@@ -189,9 +190,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         Log.d(TAG, "Poly setup : updated $key")
-        when(key) {
-            ::lightPower.sharedPreference -> setupLightPower()
 
+        when(key) {
             ::transparency.sharedPreference  -> setupChange = true
             ::ambientFactor.sharedPreference,
             ::diffuseFactor.sharedPreference,
@@ -206,20 +206,15 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         if (transparency) activateTransparency() else disactivateTransparency()
     }
 
-    private fun setupLightPower() {
-        Log.d(TAG, "light power     : $lightPower")
-
-        polyProgram.parameters.lightPower = lightPower.toFloat()
-    }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
         Log.d(TAG, "diffuse factor  : $diffuseFactor%")
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.parameters.ambientFactor  = ambientFactor  / 100f
-        polyProgram.parameters.diffuseFactor  = diffuseFactor  / 100f
-        polyProgram.parameters.specularFactor = specularFactor / 100f
+        polyProgram.light.ambient  = ambientFactor  / 100f
+        polyProgram.light.diffuse  = diffuseFactor  / 100f
+        polyProgram.light.specular = specularFactor / 100f
     }
 
     private fun activateTransparency() {

@@ -28,6 +28,10 @@ Vec3::Vec3(aiVector3D vec) : Vec() {
     z() = vec.z;
 }
 
+Vec2 Vec3::xy() const {
+    return Vec2(x(), y());
+}
+
 jobject Vec3::toJava(JNIEnv *env) const {
     return jnitools::construct(env, "net/capellari/julien/opengl/Vec3", "(FFF)V", x(), y(), z());
 }
@@ -40,6 +44,14 @@ template<> Vec3 jnitools::fromJava<Vec3>(JNIEnv* env, jobject jobj) {
     r.z() = call<jfloat>(env, jobj, "getZ", "()F");
 
     return r;
+}
+
+Vec2 Vec4::xy() const {
+    return Vec2(x(), y());
+}
+
+Vec3 Vec4::xyz() const {
+    return Vec3(x(), y(), z());
 }
 
 jobject Vec4::toJava(JNIEnv *env) const {

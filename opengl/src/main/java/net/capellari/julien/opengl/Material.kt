@@ -8,6 +8,23 @@ import net.capellari.julien.opengl.base.BaseProgram
 import net.capellari.julien.opengl.base.Structure
 
 class Material(val name: String) : Structure {
+    /** @class: Material
+     * @brief: Structure to communicate material data to GPU
+     *
+     * GLSL equivalent structure :
+     * struct Material {
+     *     vec3 ambientColor;
+     *     vec3 diffuseColor;
+     *     vec3 specularColor;
+     *
+     *     float specularExp;
+     *     float opacity;
+     *
+     *     int hasTexture;
+     *     sampler2D texture;
+     * };
+     */
+
     // Attributs
     var ambientColor  = Color.WHITE
     var diffuseColor  = Color.WHITE

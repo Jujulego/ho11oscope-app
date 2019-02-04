@@ -23,12 +23,12 @@ abstract class PolyProgram : BaseProgram() {
     }
 
     // Attributs
+    @Uniform("light")     open var light = PointLight()
     @Uniform("magnitude") open var magnitude = .5f
     @Uniform("material", true) var material  = Material("")
 
     @UniformBlock("Matrices")   val matrices   = MatricesBlock.instance
     @UniformBlock("Stables")    val stables    = StablesBlock.instance
-    @UniformBlock("Parameters") val parameters = ParametersBlock.instance
 
-    @SharedStorage("Lights") open var lights = LightsBlock.instance
+    //@SharedStorage("Lights") open var lights = LightsBlock.instance
 }

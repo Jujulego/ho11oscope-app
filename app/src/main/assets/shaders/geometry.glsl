@@ -14,7 +14,6 @@ in Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
 
     // - textures
@@ -27,7 +26,6 @@ out Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
 
     // - textures

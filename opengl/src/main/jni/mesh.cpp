@@ -17,11 +17,11 @@ Mesh::Mesh(Model const& model, aiMesh *mesh) {
     for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
         Vertex vertex;
 
-        vertex.position = mesh->mVertices[i];
-        vertex.normal   = mesh->mNormals[i];
+        vertex.position = Vec3(mesh->mVertices[i]);
+        vertex.normal   = Vec3(mesh->mNormals[i]);
 
         if (mesh->mTextureCoords[0] != nullptr) {
-            vertex.texCoord = mesh->mTextureCoords[0][i];
+            vertex.texCoord = Vec3(mesh->mTextureCoords[0][i]).xy();
         }
 
         vertices.push_back(vertex);

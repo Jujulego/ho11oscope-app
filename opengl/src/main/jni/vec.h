@@ -253,6 +253,8 @@ class Vec3 : public Vec<3>, public jnitools::JNIConvert {
         float const& y() const { return this->operator[](1); }
         float const& z() const { return this->operator[](2); }
 
+        Vec2 xy() const;
+
         virtual jobject toJava(JNIEnv *env) const override;
 };
 
@@ -275,6 +277,9 @@ class Vec4 : public Vec<4>, public jnitools::JNIConvert {
         float const& y() const { return this->operator[](1); }
         float const& z() const { return this->operator[](2); }
         float const& a() const { return this->operator[](3); }
+
+        Vec2 xy() const;
+        Vec3 xyz() const;
 
         virtual jobject toJava(JNIEnv *env) const override;
 };

@@ -86,7 +86,6 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
-    private var lightPower by sharedPreference("lightPower",       context, 50)
     private var magnitude  by sharedPreference("explodeMagnitude", context, 50)
 
     // Méthodes
@@ -99,7 +98,6 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         wireframeProgram.compile(context)
 
         // Setup
-        setupLightPower()
         setupColorFactors()
         setupTransparency()
     }
@@ -179,20 +177,15 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         if (transparency) activateTransparency() else disactivateTransparency()
     }
 
-    private fun setupLightPower() {
-        Log.d(TAG, "light power     : $lightPower")
-
-        polyProgram.parameters.lightPower = lightPower.toFloat()
-    }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
         Log.d(TAG, "diffuse factor  : $diffuseFactor%")
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.parameters.ambientFactor  = ambientFactor  / 100f
-        polyProgram.parameters.diffuseFactor  = diffuseFactor  / 100f
-        polyProgram.parameters.specularFactor = specularFactor / 100f
+        polyProgram.light.ambient  = ambientFactor  / 100f
+        polyProgram.light.diffuse  = diffuseFactor  / 100f
+        polyProgram.light.specular = specularFactor / 100f
     }
 
     private fun activateTransparency() {

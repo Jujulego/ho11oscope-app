@@ -27,7 +27,6 @@ out Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
 
     // - textures
@@ -48,8 +47,4 @@ void main() {
     // Vector from vertex to camera
     vec3 vertexCamera = (viewMatrix * modelMatrix * vec4(aPosition, 1)).xyz;
     vecs.eyeDirection = vec3(0, 0, 0) - vertexCamera;
-
-    // Vector from vertex to light
-    vec3 lightCamera = (viewMatrix * lightMatrix * vec4(lightPosition, 1)).xyz;
-    vecs.lightDirection = lightCamera + vecs.eyeDirection;
 }

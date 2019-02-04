@@ -158,7 +158,7 @@ namespace jnitools {
                                                                             \
             template<class... Args>                                         \
             typename noop<type>::arg operator() (Args const&... args) {     \
-                m_env->Call##jname##Method(m_jobj, m_jmethod, args...);     \
+                return m_env->Call##jname##Method(m_jobj, m_jmethod, args...); \
             }                                                               \
         }
 

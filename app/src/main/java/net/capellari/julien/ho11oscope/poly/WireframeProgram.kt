@@ -23,10 +23,10 @@ abstract class WireframeProgram : BaseProgram() {
     }
 
     // Attributs
+    @Uniform("light")     open var light = PointLight()
     @Uniform("magnitude") open var magnitude = .5f
     @Uniform("material", true) var material  = Material("")
 
     @UniformBlock("Matrices")   val matrices   = MatricesBlock.instance
     @UniformBlock("Stables")    val stables    = StablesBlock.instance
-    @UniformBlock("Parameters") val parameters = ParametersBlock.instance
 }

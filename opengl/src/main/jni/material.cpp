@@ -18,13 +18,13 @@ Material::Material(aiMaterial* material, std::string const& dossier) {
     // couleurs
     aiColor3D buf;
     material->Get(AI_MATKEY_COLOR_AMBIENT, buf);
-    m_ambientColor = buf;
+    m_ambientColor = Color(buf);
 
     material->Get(AI_MATKEY_COLOR_DIFFUSE, buf);
-    m_diffuseColor = buf;
+    m_diffuseColor = Color(buf);
 
     material->Get(AI_MATKEY_COLOR_SPECULAR, buf);
-    m_specularColor = buf;
+    m_specularColor = Color(buf);
 
     // textures
     for (aiTextureType const& type : {aiTextureType_DIFFUSE}) {
