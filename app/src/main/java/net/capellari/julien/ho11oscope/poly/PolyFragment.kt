@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.poly_fragment.*
 import kotlinx.android.synthetic.main.poly_fragment.view.*
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.ho11oscope.youtube.YoutubeSearchProvider
+import net.capellari.julien.opengl.PointLight
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 
@@ -68,7 +69,7 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
                 }
             }
         })
-        polyModel.lights.observe(this, Observer<ArrayList<Light>> {
+        polyModel.lights.observe(this, Observer<ArrayList<PointLight>> {
             poly_surface.renderer.lights = it
         })
     }

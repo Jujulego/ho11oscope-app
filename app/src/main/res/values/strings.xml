@@ -39,7 +39,7 @@
     <string name="poly_settings_explode_magnitude">Explosion</string>
 
     <string name="poly_light_distance">Distance</string>
-    <string name="poly_light_power">Puissance</string>
+    <string name="poly_light_hauteur">Hauteur</string>
     <string name="poly_light_angle">Angle</string>
 
     <!-- Préferences -->

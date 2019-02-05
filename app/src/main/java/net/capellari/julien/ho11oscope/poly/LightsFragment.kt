@@ -1,8 +1,6 @@
 package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
@@ -12,7 +10,12 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.poly_light.view.*
 import net.capellari.julien.fragments.ListFragment
 import net.capellari.julien.ho11oscope.R
+import net.capellari.julien.opengl.PointLight
+import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.utils.inflate
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.sin
 
 class LightsFragment : ListFragment() {
     // Attributs
@@ -43,7 +46,7 @@ class LightsFragment : ListFragment() {
     inner class LightsAdapter : RecyclerView.Adapter<LightHolder>() {
         // Attributs
         var lights = arrayListOf(
-                Light(10f, 120f, 260)
+                PointLight(0f, 1f, 10f)
         )
 
         // Méthodes
@@ -59,49 +62,51 @@ class LightsFragment : ListFragment() {
 
     inner class LightHolder(val view: View) : RecyclerView.ViewHolder(view) {
         // Attributs
-        var light: Light? = null
+        var light: PointLight? = null
+
+        // Propriétés
+        var distance: Float = 10f
+            private set(v) {
+                field = v
+                updatePos()
+            }
+
+        var hauteur: Float = 1f
+            private set(v) {
+                field = v
+                updatePos()
+            }
+
+        var angle: Float = 0f
+            private set(v) {
+                field = v
+                updatePos()
+            }
 
         // Initialisation
         init {
             // Listeners
-            view.distance.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable) {
-                    light?.let {
-                        val nv = s.toString().toFloatOrNull()
-
-                        if (nv != null && it.distance != nv) {
-                            it.distance = nv
-                            updateLights()
-                        }
-                    }
+            view.distance.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (fromUser) distance = progress.toFloat()
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
-            view.power.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable) {
-                    light?.let {
-                        val nv = s.toString().toIntOrNull()
 
-                        if (nv != null && it.puissance != nv) {
-                            it.puissance = nv
-                            updateLights()
-                        }
-                    }
+            view.hauteur.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (fromUser) hauteur = progress.toFloat()
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
 
             view.angle.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if (fromUser) {
-                        light?.let {
-                            it.angle = (progress * Math.PI / 180f).toFloat()
-                        }
-                    }
+                    if (fromUser) angle = (progress * Math.PI / 180f).toFloat()
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -110,13 +115,20 @@ class LightsFragment : ListFragment() {
         }
 
         // Méthodes
-        fun bind(value: Light) {
+        fun bind(value: PointLight) {
             light = value
 
             // Set values
-            view.distance.setText(value.distance.toString())
-            view.power.setText(value.puissance.toString())
-            view.angle.progress = value.angle.toInt()
+            view.distance.progress = distance.toInt()
+            view.hauteur.progress  = hauteur.toInt()
+            view.angle.progress    = (angle * 180 / Math.PI).toInt()
+        }
+
+        private fun updatePos() {
+            light?.apply {
+                position = Vec3((distance * -sin(angle)), hauteur, (distance * -cos(angle)))
+                updateLights()
+            }
         }
     }
 }

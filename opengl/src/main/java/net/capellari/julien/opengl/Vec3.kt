@@ -14,6 +14,8 @@ class Vec3() : BaseVec<Vec3>(3, Vec3::class) {
         set(v) { data[2] = v}
 
     val xy get() = Vec2(x, y)
+    val yz get() = Vec2(y, z)
+    val xz get() = Vec2(x, z)
 
     // Constructeurs
     constructor(o: Vec3) : this(o.x, o.y, o.z)

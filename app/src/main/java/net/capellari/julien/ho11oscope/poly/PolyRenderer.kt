@@ -8,10 +8,8 @@ import android.util.Log
 import androidx.preference.PreferenceManager
 import net.capellari.julien.opengl.*
 import net.capellari.julien.utils.sharedPreference
-import java.lang.Math.abs
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
-import kotlin.math.sign
 
 class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferences.OnSharedPreferenceChangeListener {
     // Companion
@@ -41,7 +39,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var wireframeProgram: WireframeProgram = WireframeProgram.instance
 
     private var readyToRender = false
-    private var new_lights = false
+    private var newLights = false
 
     @Volatile private var setupChange = true
 
@@ -58,10 +56,10 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var meshes = arrayListOf<AssimpMesh>()
 
     @Volatile
-    var lights: ArrayList<Light>? = null
+    var lights: ArrayList<PointLight>? = null
         set(lights) {
             field = lights
-            new_lights = true
+            newLights = true
             Log.d(TAG, "Recieved new lights")
         }
 
@@ -118,21 +116,20 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         // Update lights
         lights?.let {
-            val light = it[0].position(1f)
+            val light = it[0]
 
-            if (light != polyProgram.light.position) {
-                polyProgram.light = PointLight().apply {
-                    position = light
-
+            if (newLights) {
+                light.apply {
                     ambient  = ambientFactor  / 100f
                     diffuse  = diffuseFactor  / 100f
                     specular = specularFactor / 100f
                 }
-            }
 
-            /*if (new_lights) {
-                polyProgram.lights.lights = it
-            }*/
+                polyProgram.light = light
+                wireframeProgram.light = light
+
+                newLights = false
+            }
         }
 
         // model matrix rotate around Y axis

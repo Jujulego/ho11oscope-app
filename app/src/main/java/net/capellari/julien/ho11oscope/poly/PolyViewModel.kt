@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import net.capellari.julien.ho11oscope.RequestManager
+import net.capellari.julien.opengl.PointLight
 
 class PolyViewModel(app: Application) : AndroidViewModel(app) {
     // Attributs
@@ -15,7 +16,7 @@ class PolyViewModel(app: Application) : AndroidViewModel(app) {
 
     val requestManager = RequestManager.getInstance(app)
     val assets: LiveData<PagedList<PolyObject>> = LivePagedListBuilder(dataSourceFactory, 20).build()
-    val lights = MutableLiveData<ArrayList<Light>>()
+    val lights = MutableLiveData<ArrayList<PointLight>>()
 
     var query: String? = null
 

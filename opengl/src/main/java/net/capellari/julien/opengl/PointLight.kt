@@ -3,7 +3,7 @@ package net.capellari.julien.opengl
 import net.capellari.julien.opengl.base.BaseProgram
 import net.capellari.julien.opengl.base.BufferObject
 
-class PointLight : Light() {
+class PointLight() : Light() {
     /** @class: PointLight
      * @brief: Structure to communicate point light data to GPU
      *
@@ -29,6 +29,10 @@ class PointLight : Light() {
     var constant:  Float = 1f
     var linear:    Float = .045f
     var quadratic: Float = .0075f
+
+    // Constructeurs
+    constructor(pos: Vec3): this() { position = pos }
+    constructor(x: Float, y: Float, z: Float): this(Vec3(x, y, z))
 
     // Méthodes
     override fun getBufferSize(): Int {

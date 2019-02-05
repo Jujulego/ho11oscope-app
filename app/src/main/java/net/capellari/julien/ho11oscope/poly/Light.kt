@@ -10,7 +10,7 @@ import kotlin.math.sin
 
 class Light(var distance: Float, var angle: Float, var puissance: Int): Structure {
     // Méthodes
-    fun position(y: Float) = Vec3(distance * sin(angle), y, distance * cos(angle))
+    fun position(y: Float) = Vec3(distance * -sin(angle), y, distance * -cos(angle))
 
     // Méthodes
     override fun toBuffer(buffer: BufferObject) {
