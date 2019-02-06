@@ -38,6 +38,7 @@
     <string name="poly_settings_lumiere_power">Lumière</string>
     <string name="poly_settings_explode_magnitude">Explosion</string>
 
+    <string name="poly_light_pointlight" formatted="true">Light #%d</string>
     <string name="poly_light_distance">Distance</string>
     <string name="poly_light_hauteur">Hauteur</string>
     <string name="poly_light_angle">Angle</string>
@@ -50,4 +51,7 @@
     <string name="opengl_transparency_setting">Transparence</string>
     <string name="opengl_wireframe_rendering_setting">Rendu fil de fer</string>
     <string name="opengl_normals_rendering_setting">Affichage des normales</string>
+
+    <!-- Others -->
+    <string name="angle_deg">°</string>
 </resources>
