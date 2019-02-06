@@ -2,19 +2,14 @@ package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.opengl.GLES31
+import android.opengl.GLES32
 import android.opengl.GLSurfaceView
 import android.util.Log
 import androidx.preference.PreferenceManager
-import net.capellari.julien.opengl.AssimpMesh
-import net.capellari.julien.opengl.Mat4
-import net.capellari.julien.opengl.Material
-import net.capellari.julien.opengl.Vec3
+import net.capellari.julien.opengl.*
 import net.capellari.julien.utils.sharedPreference
-import java.lang.Math.abs
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
-import kotlin.math.sign
 
 class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferences.OnSharedPreferenceChangeListener {
     // Companion
@@ -44,6 +39,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var wireframeProgram: WireframeProgram = WireframeProgram.instance
 
     private var readyToRender = false
+    private var newLights = false
 
     @Volatile private var setupChange = true
 
@@ -59,6 +55,14 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         }
     private var meshes = arrayListOf<AssimpMesh>()
 
+    @Volatile
+    var lights: ArrayList<PointLight>? = null
+        set(lights) {
+            field = lights
+            newLights = true
+            Log.d(TAG, "Recieved new lights")
+        }
+
     // Propriétés
     private var transparency       by sharedPreference("transparency",        context, false)
     private var wireframeRendering by sharedPreference("wireframe_rendering", context, false)
@@ -68,12 +72,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
-    private var lightPower by sharedPreference("lightPower",       context, 50)
     private var magnitude  by sharedPreference("explodeMagnitude", context, 50)
 
     // Méthodes
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
-        GLES31.glClearColor(0f, 0.15f, 0.15f, 1f)
+        GLES32.glClearColor(0f, 0.15f, 0.15f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
@@ -84,7 +87,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         polyProgram.stables.viewMatrix = Mat4.lookAt(PolyRenderer.EYE, PolyRenderer.TARGET, PolyRenderer.UP)
 
         // Setup
-        setupLightPower()
         setupColorFactors()
 
         // Events
@@ -110,7 +112,25 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         if (angle >= 360) angle -= 360
 
         // Draw background
-        GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
+        GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
+
+        // Update lights
+        lights?.let {
+            val light = it[0]
+
+            if (newLights) {
+                light.apply {
+                    ambient  = ambientFactor  / 100f
+                    diffuse  = diffuseFactor  / 100f
+                    specular = specularFactor / 100f
+                }
+
+                polyProgram.light = light
+                wireframeProgram.light = light
+
+                newLights = false
+            }
+        }
 
         // model matrix rotate around Y axis
         polyProgram.matrices.modelMatrix = Mat4.rotate(angle, 0f, 1f, 0f)
@@ -159,7 +179,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
-        GLES31.glViewport(0, 0, width, height)
+        GLES32.glViewport(0, 0, width, height)
 
         val ratio = width / height.toFloat()
         polyProgram.stables.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
@@ -167,9 +187,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         Log.d(TAG, "Poly setup : updated $key")
-        when(key) {
-            ::lightPower.sharedPreference -> setupLightPower()
 
+        when(key) {
             ::transparency.sharedPreference  -> setupChange = true
             ::ambientFactor.sharedPreference,
             ::diffuseFactor.sharedPreference,
@@ -184,34 +203,29 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         if (transparency) activateTransparency() else disactivateTransparency()
     }
 
-    private fun setupLightPower() {
-        Log.d(TAG, "light power     : $lightPower")
-
-        polyProgram.parameters.lightPower = lightPower.toFloat()
-    }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
         Log.d(TAG, "diffuse factor  : $diffuseFactor%")
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.parameters.ambientFactor  = ambientFactor  / 100f
-        polyProgram.parameters.diffuseFactor  = diffuseFactor  / 100f
-        polyProgram.parameters.specularFactor = specularFactor / 100f
+        polyProgram.light.ambient  = ambientFactor  / 100f
+        polyProgram.light.diffuse  = diffuseFactor  / 100f
+        polyProgram.light.specular = specularFactor / 100f
     }
 
     private fun activateTransparency() {
-        GLES31.glDisable(GLES31.GL_DEPTH_TEST)
-        GLES31.glDepthMask(false)
+        GLES32.glDisable(GLES32.GL_DEPTH_TEST)
+        GLES32.glDepthMask(false)
 
-        GLES31.glEnable(GLES31.GL_BLEND)
-        GLES31.glBlendFunc(GLES31.GL_ONE, GLES31.GL_ONE_MINUS_SRC_ALPHA)
+        GLES32.glEnable(GLES32.GL_BLEND)
+        GLES32.glBlendFunc(GLES32.GL_ONE, GLES32.GL_ONE_MINUS_SRC_ALPHA)
     }
 
     private fun disactivateTransparency() {
-        GLES31.glEnable(GLES31.GL_DEPTH_TEST)
-        GLES31.glDepthMask(true)
+        GLES32.glEnable(GLES32.GL_DEPTH_TEST)
+        GLES32.glDepthMask(true)
 
-        GLES31.glDisable(GLES31.GL_BLEND)
+        GLES32.glDisable(GLES32.GL_BLEND)
     }
 }

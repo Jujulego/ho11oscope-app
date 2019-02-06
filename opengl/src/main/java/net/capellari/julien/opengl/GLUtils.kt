@@ -1,11 +1,11 @@
 package net.capellari.julien.opengl
 
 import android.content.Context
-import android.opengl.GLES31
-import android.opengl.GLES31Ext
+import android.graphics.Bitmap
+import android.opengl.GLES32
 import android.util.Log
 import net.capellari.julien.opengl.base.BaseMat
-import net.capellari.julien.opengl.base.BaseStructure
+import net.capellari.julien.opengl.base.Structure
 import net.capellari.julien.opengl.base.BaseVec
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -31,7 +31,7 @@ object GLUtils {
             // Composed
             is BaseVec<*>    -> v.size * GLUtils.FLOAT_SIZE
             is BaseMat<*, *> -> v.size * v.size * GLUtils.FLOAT_SIZE
-            is BaseStructure -> v.getBufferSize()
+            is Structure     -> v.getBufferSize()
 
             // Buffers
             is ShortBuffer -> (v as Buffer).capacity() * GLUtils.SHORT_SIZE
@@ -52,24 +52,24 @@ object GLUtils {
     fun bufferType(v: Any, unsigned: Boolean = false): Int {
         return when (v) {
             // Base
-            is Short -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
-            is Int   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
-            is Float -> GLES31.GL_FLOAT
+            is Short -> if (unsigned) GLES32.GL_UNSIGNED_SHORT else GLES32.GL_SHORT
+            is Int   -> if (unsigned) GLES32.GL_UNSIGNED_INT   else GLES32.GL_INT
+            is Float -> GLES32.GL_FLOAT
 
             // Composed
-            is BaseVec<*>    -> GLES31.GL_FLOAT
-            is BaseMat<*,*>  -> GLES31.GL_FLOAT
-            is BaseStructure -> GLES31.GL_BYTE
+            is BaseVec<*>   -> GLES32.GL_FLOAT
+            is BaseMat<*,*> -> GLES32.GL_FLOAT
+            is Structure    -> GLES32.GL_BYTE
 
             // Buffers
-            is ShortBuffer -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
-            is IntBuffer   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
-            is FloatBuffer -> GLES31.GL_FLOAT
+            is ShortBuffer -> if (unsigned) GLES32.GL_UNSIGNED_SHORT else GLES32.GL_SHORT
+            is IntBuffer   -> if (unsigned) GLES32.GL_UNSIGNED_INT   else GLES32.GL_INT
+            is FloatBuffer -> GLES32.GL_FLOAT
 
             // Arrays
-            is ShortArray -> if (unsigned) GLES31.GL_UNSIGNED_SHORT else GLES31.GL_SHORT
-            is IntArray   -> if (unsigned) GLES31.GL_UNSIGNED_INT   else GLES31.GL_INT
-            is FloatArray -> GLES31.GL_FLOAT
+            is ShortArray -> if (unsigned) GLES32.GL_UNSIGNED_SHORT else GLES32.GL_SHORT
+            is IntArray   -> if (unsigned) GLES32.GL_UNSIGNED_INT   else GLES32.GL_INT
+            is FloatArray -> GLES32.GL_FLOAT
 
             is Array<*>      -> if (v.isEmpty()) -1 else bufferType(v.first()!!, unsigned)
             is Collection<*> -> if (v.isEmpty()) -1 else bufferType(v.first()!!, unsigned)
@@ -94,19 +94,19 @@ object GLUtils {
     }
 
     fun checkGlError(glOperation: String) {
-        val error: Int = GLES31.glGetError()
+        val error: Int = GLES32.glGetError()
 
-        if (error != GLES31.GL_NO_ERROR) {
+        if (error != GLES32.GL_NO_ERROR) {
             Log.w("GLUtils", "$glOperation: glError $error")
         }
     }
 
     fun getGlShaderType(type: ShaderType): Int {
         return when (type) {
-            ShaderType.FRAGMENT -> GLES31.GL_FRAGMENT_SHADER
-            ShaderType.VERTEX   -> GLES31.GL_VERTEX_SHADER
-            ShaderType.COMPUTE  -> GLES31.GL_COMPUTE_SHADER
-            ShaderType.GEOMETRY -> GLES31Ext.GL_GEOMETRY_SHADER_EXT
+            ShaderType.FRAGMENT -> GLES32.GL_FRAGMENT_SHADER
+            ShaderType.VERTEX   -> GLES32.GL_VERTEX_SHADER
+            ShaderType.COMPUTE  -> GLES32.GL_COMPUTE_SHADER
+            ShaderType.GEOMETRY -> GLES32.GL_GEOMETRY_SHADER
         }
     }
 
@@ -122,4 +122,17 @@ object GLUtils {
 
         return shaderCode.toString()
     }
+
+    // Functions from android.opengl.GLUtils
+    fun getInternalFormat(bitmap: Bitmap): Int = android.opengl.GLUtils.getInternalFormat(bitmap)
+    fun getType(bitmap: Bitmap): Int = android.opengl.GLUtils.getType(bitmap)
+
+    fun texImage2D(target: Int, level: Int, bitmap: Bitmap, border: Int) = android.opengl.GLUtils.texImage2D(target, level, bitmap, border)
+    fun texImage2D(target: Int, level: Int, internalformat: Int, bitmap: Bitmap, border: Int) = android.opengl.GLUtils.texImage2D(target, level, internalformat, bitmap, border)
+    fun texImage2D(target: Int, level: Int, internalformat: Int, bitmap: Bitmap, type: Int, border: Int) = android.opengl.GLUtils.texImage2D(target, level, internalformat, bitmap, type, border)
+
+    fun texSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, bitmap: Bitmap) = android.opengl.GLUtils.texSubImage2D(target, level, xoffset, yoffset, bitmap)
+    fun texSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, bitmap: Bitmap, format: Int, type: Int) = android.opengl.GLUtils.texSubImage2D(target, level, xoffset, yoffset, bitmap, format, type)
+
+    fun getEGLErrorString(error: Int): String = android.opengl.GLUtils.getEGLErrorString(error)
 }

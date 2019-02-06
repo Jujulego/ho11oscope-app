@@ -24,7 +24,6 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         val PREFERENCE_FRAGMENTS = mapOf(
                 "net.capellari.julien.ho11oscope.poly.PolySettingsFragment" to R.id.action_to_rendering_settings
         )
-
         val PLAYER_FRAGMENTS = arrayOf(
                 R.id.youtubePlayerFragment,
                 R.id.hologramPlayerFragment
@@ -39,7 +38,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
     private var preferenceBrightness by sharedPreference("player_brightness", true)
 
     private val navController get() = findNavController(R.id.navHostFragment)
-    private val isAtTopLevel get()  = navController.currentDestination?.run {isTopLevelDestination(id) } ?: false
+    private val isAtTopLevel get()  = navController.currentDestination?.run { isTopLevelDestination(id) } ?: false
 
     // Events
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +75,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return item.onNavDestinationSelected(navController)
-                || (if (isAtTopLevel) drawerToggle.onOptionsItemSelected(item) else false)
+                || (isAtTopLevel && drawerToggle.onOptionsItemSelected(item))
                 || super.onOptionsItemSelected(item)
     }
 
@@ -134,7 +133,7 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         // Events
-        navController.addOnNavigatedListener { _, destination ->
+        navController.addOnDestinationChangedListener { _, destination, _ ->
             // Manage drawer
             when (destination.id) {
                 R.id.youtubeFragment, R.id.youtubeVideoFragment,

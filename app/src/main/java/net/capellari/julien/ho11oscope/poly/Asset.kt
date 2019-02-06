@@ -14,13 +14,6 @@ class Asset(val id: String) {
         const val TAG = "Asset"
     }
 
-    // Objet
-    object Files {
-        var objFileURL:  String? = null
-        var mtlFileURL:  String? = null
-        var mtlFileName: String? = null
-    }
-
     // Listeners
     interface OnAssetReadyListener {
         fun onReady()
@@ -37,13 +30,6 @@ class Asset(val id: String) {
     private val listeners = mutableSetOf<OnAssetReadyListener>()
 
     // Méthodes
-    fun getObjFile(context: Context): File {
-        return File(context.filesDir, "asset.obj")
-    }
-    fun getMtlFile(context: Context): File {
-        return File(context.filesDir, "asset.mtl")
-    }
-    
     fun addOnReadyListener(listener: OnAssetReadyListener) {
         if (listeners.add(listener) && ready) {
             listener.onReady()
@@ -58,50 +44,25 @@ class Asset(val id: String) {
         PolyAPI.asset(context, id) { files ->
             // Download files
             // .obj file
-            Log.d(PolyFragment.TAG, "Downloading .obj file ...")
+            Log.d(PolyFragment.TAG, "Downloading asset's files ...")
+            files.download(context,
+                    {
+                        Log.d(TAG, "Asset downloaded !")
 
-            files.objFileURL!!.httpDownload().destination { _, _ ->
-                getObjFile(context)
-            }.response { _, _, result ->
-                result.fold({
-                    doAsync {
-                        Log.d(TAG, ".obj file downloaded to ${context.filesDir}")
-
-                        synchronized(this@Asset) {
-                            objReady = true
-                            if (mtlReady) ready(context)
+                        doAsync {
+                            ready(context, files)
                         }
+                    },
+                    {
+                        Log.d(TAG, "Asset download failed !")
                     }
-                }, {
-                    Log.e(TAG, "Error while downloading file", it)
-                })
-            }
-
-            // .mtl file
-            Log.d(PolyFragment.TAG, "Downloading .mtl file ...")
-
-            files.mtlFileURL!!.httpDownload().destination { _, _ ->
-                getMtlFile(context)
-            }.response { _, _, result ->
-                result.fold({
-                    doAsync {
-                        Log.d(TAG, ".mtl file downloaded to ${context.filesDir}")
-
-                        synchronized(this@Asset) {
-                            mtlReady = true
-                            if (objReady) ready(context)
-                        }
-                    }
-                }, {
-                    Log.e(TAG, "Error while downloading file", it)
-                })
-            }
+            )
         }
     }
 
-    fun ready(context: Context) {
+    fun ready(context: Context, files: PolyAPI.AssetData) {
         // Assimp ;)
-        model = Model(getObjFile(context).absolutePath)
+        model = Model(files.root!!.getFile(context).absolutePath)
 
         // Listener
         ready = true

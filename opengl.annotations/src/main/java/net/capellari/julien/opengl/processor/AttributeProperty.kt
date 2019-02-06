@@ -21,7 +21,7 @@ internal class AttributeProperty(val annotation: Attribute) : BaseProperty() {
 
     private fun createHandle() {
         handle = PropertySpec.builder("${annotation.name}Handle", Int::class, KModifier.PRIVATE)
-                .initializer("GLES31.GL_INVALID_INDEX").mutable()
+                .initializer("GLES32.GL_INVALID_INDEX").mutable()
                 .build()
     }
 

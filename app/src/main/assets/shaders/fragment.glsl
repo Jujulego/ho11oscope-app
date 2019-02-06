@@ -1,4 +1,6 @@
-#version 310 es
+#version 320 es
+#extension GL_EXT_shader_io_blocks : enable
+
 precision mediump float;
 
 // Structures
@@ -6,19 +8,35 @@ struct Material {
     vec3 ambientColor;
     vec3 diffuseColor;
     vec3 specularColor;
+
     float specularExp;
     float opacity;
+
+    int hasTexture;
+    sampler2D texture;
+};
+
+struct PointLight {
+    vec3 color;
+    float ambient;
+    float diffuse;
+    float specular;
+
+    vec3 position;
+    float constant;
+    float linear;
+    float quadratic;
 };
 
 // Uniformes
-layout (std140) uniform Parameters {
-    float lightPower;
-    float ambientFactor;
-    float diffuseFactor;
-    float specularFactor;
+layout (std140) uniform Matrices {
+    mat4 mvpMatrix;
+    mat4 modelMatrix;
+    mat4 lightMatrix;
 };
 
 uniform Material material;
+uniform PointLight light;
 
 // Entrées
 in Vectors {
@@ -27,50 +45,74 @@ in Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } vecs;
 
 // Sortie
 out vec4 FragColor;
 
+// Prototypes
+vec3 getAmbientColor();
+vec3 getDiffuseColor();
+vec3 getSpecularColor();
+
+vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+
+// Fonctions
 void main() {
-    // vecs.normalize vectors
-    vec3 n = normalize(vecs.normal);
-    vec3 l = normalize(vecs.lightDirection);
-    vec3 e = normalize(vecs.eyeDirection);
+    // Prepare
+    vec3 normal = normalize(vecs.normal);
+    vec3 eyeDir = normalize(vecs.eyeDirection);
 
-    // Light factor
-    float distance = length(vecs.lightDirection);
-    float lightFactor = lightPower / (distance * distance);
+    vec3 result = calcPointLight(light, normal, vecs.position, eyeDir);
 
-    // Prepare diffuse color
-    float df = dot(n, l);
-    if (df < float(0)) df = float(0);
+    FragColor = vec4(result, material.opacity);
+}
 
-    // Prepare specular color
-    float sf = float(0);
-
-    if (material.specularExp != float(0) && dot(n, l) > float(0)) {
-        vec3 r = reflect(-l, n);
-        sf = dot(e, r);
-
-        if (sf < float(0)) {
-            sf = float(0);
-        } else {
-            sf = pow(sf, material.specularExp);
-        }
+vec3 getAmbientColor() {
+    if (material.hasTexture == 0) {
+        return material.ambientColor;
+    } else {
+        return texture(material.texture, vecs.uv).xyz;
     }
+}
+vec3 getDiffuseColor() {
+    if (material.hasTexture == 0) {
+        return material.diffuseColor;
+    } else {
+        return texture(material.texture, vecs.uv).xyz;
+    }
+}
+vec3 getSpecularColor() {
+    return material.specularColor;
+}
 
-    // Compute colors
-    FragColor = vec4(
-        // Ambient color
-        (material.ambientColor * ambientFactor) +
-        // Diffuse color
-        (material.diffuseColor * diffuseFactor * lightFactor * df) +
-        // Specular color
-        (material.specularColor * specularFactor * lightFactor * sf),
-        // Transparence
-        material.opacity
-    );
+vec3 calcPointLight(PointLight light, vec3 normal, vec3 pos, vec3 viewDir) {
+    vec3 lightPos = (lightMatrix * vec4(light.position, 1)).xyz;
+    vec3 lightDir = normalize(lightPos - pos);
+
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.specularExp);
+
+    // attenuation
+    float distance    = length(lightPos - pos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+    // combine results
+    vec3 ambient  = light.ambient  * vec3(getAmbientColor());
+    vec3 diffuse  = light.diffuse  * diff * vec3(getDiffuseColor());
+    vec3 specular = light.specular * spec * vec3(getSpecularColor());
+
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    return (ambient + diffuse + specular);
 }

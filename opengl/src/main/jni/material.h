@@ -3,18 +3,32 @@
 //
 #pragma once
 
+#include <list>
 #include <string>
 
 #include <assimp/material.h>
 
+#include "color.h"
 #include "jnitools.h"
 #include "vec.h"
 
 class Material : public jnitools::JNIConvert {
 public:
+    // Structure
+    struct Texture {
+        // - general
+        aiTextureType type;
+        std::string file;
+        int uv_chanel;
+
+        // - blend
+        aiTextureOp blend_op;
+        float blend_factor;
+    };
+
     // Constructeur
     Material() = default;
-    Material(aiMaterial* material);
+    Material(aiMaterial* material, std::string const& dossier);
 
     // Méthodes
     std::string const& name() const;
@@ -28,7 +42,10 @@ private:
     float m_opacity;
 
     // - couleurs
-    Vec3 m_ambientColor;
-    Vec3 m_diffuseColor;
-    Vec3 m_specularColor;
+    Color m_ambientColor;
+    Color m_diffuseColor;
+    Color m_specularColor;
+
+    // - textures
+    std::list<Texture> m_textures;
 };

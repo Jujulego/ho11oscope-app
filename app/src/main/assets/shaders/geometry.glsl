@@ -1,4 +1,6 @@
-#version 310 es
+#version 320 es
+#extension GL_EXT_shader_io_blocks : enable
+
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
@@ -12,8 +14,10 @@ in Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } gs_in[];
 
 out Vectors {
@@ -22,8 +26,10 @@ out Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } gs_out;
 
 // Fonctions

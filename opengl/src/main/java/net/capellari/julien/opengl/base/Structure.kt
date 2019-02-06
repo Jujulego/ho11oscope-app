@@ -1,8 +1,8 @@
 package net.capellari.julien.opengl.base
 
-interface BaseStructure {
+interface Structure {
     // Méthodes
-    fun toBuffer(buffer: BaseBufferObject)
+    fun toBuffer(buffer: BufferObject)
     fun getBufferSize(): Int
     fun toUniform(nom: String, program: BaseProgram)
 }

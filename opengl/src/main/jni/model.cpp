@@ -6,18 +6,25 @@
 #include <assimp/postprocess.h>
 #include <android/log.h>
 
+#include "utils.h"
+
 Model::Model(std::string const& file) {
     // Initialisation Assimp
     Assimp::Importer importer;
     importer.SetPropertyBool(AI_CONFIG_PP_PTV_NORMALIZE, true);
 
-    const aiScene* scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices
-            | aiProcess_GenSmoothNormals
-            | aiProcess_PreTransformVertices
+    const aiScene* scene = importer.ReadFile(file, aiProcess_FindInvalidData
+            | aiProcess_JoinIdenticalVertices
             | aiProcess_Triangulate
+            | aiProcess_GenSmoothNormals
+            | aiProcess_FixInfacingNormals
+            | aiProcess_PreTransformVertices
             | aiProcess_FlipUVs
+            | aiProcess_GenUVCoords
+            | aiProcess_TransformUVCoords
             | aiProcess_RemoveRedundantMaterials
-            | aiProcess_OptimizeMeshes);
+            | aiProcess_OptimizeMeshes
+    );
 
     // Check errors
     if (!scene) {
@@ -26,9 +33,10 @@ Model::Model(std::string const& file) {
     }
 
     // Récupération des données
+    std::string dossier = parent_path(file);
     materials.reserve(scene->mNumMaterials);
     for (unsigned int i = 0; i < scene->mNumMaterials; ++i) {
-        Material mat(scene->mMaterials[i]);
+        Material mat(scene->mMaterials[i], dossier);
         materials.push_back(mat);
     }
 

@@ -1,6 +1,6 @@
 package net.capellari.julien.opengl.buffers
 
-import android.opengl.GLES31
-import net.capellari.julien.opengl.base.BaseBufferObject
+import android.opengl.GLES32
+import net.capellari.julien.opengl.base.BufferObject
 
-class ElementBufferObject : BaseBufferObject(GLES31.GL_ELEMENT_ARRAY_BUFFER)
+class ElementBufferObject : BufferObject(GLES32.GL_ELEMENT_ARRAY_BUFFER)

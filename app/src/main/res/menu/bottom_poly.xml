@@ -10,6 +10,12 @@
 
             app:showAsAction="ifRoom" />
 
+        <item android:id="@+id/poly_lights"
+            android:icon="@drawable/ic_flat_lights_24dp"
+            android:title="@string/poly_lights"
+
+            app:showAsAction="ifRoom" />
+
         <item android:id="@+id/poly_settings"
             android:icon="@drawable/ic_flat_settings2_24dp"
             android:title="@string/poly_settings"

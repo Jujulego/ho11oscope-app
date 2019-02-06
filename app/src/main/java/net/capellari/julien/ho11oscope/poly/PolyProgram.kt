@@ -12,7 +12,8 @@ import net.capellari.julien.opengl.base.BaseProgram
     ),
     attributs = [
         Attribute("aPosition", AttributeType.VERTICES),
-        Attribute("aNormal",   AttributeType.NORMALS)
+        Attribute("aNormal",   AttributeType.NORMALS),
+        Attribute("aTexCoord", AttributeType.TEXCOORDS)
     ]
 )
 abstract class PolyProgram : BaseProgram() {
@@ -22,10 +23,12 @@ abstract class PolyProgram : BaseProgram() {
     }
 
     // Attributs
+    @Uniform("light")     open var light = PointLight()
     @Uniform("magnitude") open var magnitude = .5f
     @Uniform("material", true) var material  = Material("")
 
     @UniformBlock("Matrices")   val matrices   = MatricesBlock.instance
     @UniformBlock("Stables")    val stables    = StablesBlock.instance
-    @UniformBlock("Parameters") val parameters = ParametersBlock.instance
+
+    //@SharedStorage("Lights") open var lights = LightsBlock.instance
 }

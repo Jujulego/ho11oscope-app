@@ -5,17 +5,6 @@
     <PreferenceCategory android:title="@string/poly_settings_effects">
         <!--suppress AndroidElementNotAllowed -->
         <net.capellari.julien.preference.SeekBarPreference
-            android:title="@string/poly_settings_lumiere_power"
-
-            android:key="lightPower"
-            android:defaultValue="50"
-            android:max="400"
-            app:min="100"
-
-            app:iconSpaceReserved="false" />
-
-        <!--suppress AndroidElementNotAllowed -->
-        <net.capellari.julien.preference.SeekBarPreference
             android:title="@string/poly_settings_explode_magnitude"
 
             android:key="explodeMagnitude"

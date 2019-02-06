@@ -1,19 +1,21 @@
 package net.capellari.julien.opengl.base
 
-import android.opengl.GLES31
+import android.opengl.GLES32
 import net.capellari.julien.opengl.GLUtils
 import net.capellari.julien.opengl.Material
+import net.capellari.julien.opengl.Vec2
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.opengl.buffers.ElementBufferObject
 import net.capellari.julien.opengl.buffers.VertexBufferObject
 
-abstract class BaseMesh(var hasIndices: Boolean = true,
-                        var hasNormals: Boolean = false) {
+abstract class Mesh(var hasIndices: Boolean = true,
+                    var hasNormals: Boolean = false,
+                    var hasTexCoords: Boolean = false) {
     // Attributs
     private var ibo = ElementBufferObject()
-    private var indiceBT: Int = GLES31.GL_UNSIGNED_INT
+    private var indiceBT: Int = GLES32.GL_UNSIGNED_INT
 
-    private var vaoId = GLES31.GL_INVALID_INDEX
+    private var vaoId = GLES32.GL_INVALID_INDEX
     private var vaoBound = false
 
     private var vbo = VertexBufferObject()
@@ -23,32 +25,43 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
     var vertexSize: Int = 0
         private set
 
-    var vertexType: Int = GLES31.GL_FLOAT
+    var vertexType: Int = GLES32.GL_FLOAT
         private set
 
     var normalSize: Int = 0
         private set
 
-    var normalType: Int = GLES31.GL_FLOAT
+    var normalType: Int = GLES32.GL_FLOAT
+        private set
+
+    var texCoordSize: Int = 0
+        private set
+
+    var texCoordType: Int = GLES32.GL_FLOAT
         private set
 
     val othersOff = mutableMapOf<String,Int>()
     val othersType = mutableMapOf<String,Int>()
 
     // Méthodes à redéfinir
-    open     fun getMaterial() = Material("")
-    abstract fun getVertices() : Any
-    open     fun getNormals()  : Any = arrayOf<Vec3>()
-    open     fun getIndices()  : Any = ShortArray(0)
+    open     fun getMaterial()  = Material("")
+    abstract fun getVertices()  : Any
+    open     fun getNormals()   : Any = arrayOf<Vec3>()
+    open     fun getTexCoords() : Any = arrayOf<Vec2>()
+    open     fun getIndices()   : Any = ShortArray(0)
     open fun getOther(name: String) : Any = ShortArray(0)
 
     fun draw(mode: Int) {
+        // Bind texture
+        getMaterial().bindTexture()
+
+        // Draw !
         bindVAO {
             if (hasIndices) {
-                GLES31.glDrawElements(mode, ibo.size, indiceBT, 0)
+                GLES32.glDrawElements(mode, ibo.size, indiceBT, 0)
                 GLUtils.checkGlError("glDrawElements")
             } else {
-                GLES31.glDrawArrays(mode, 0, vertexCount)
+                GLES32.glDrawArrays(mode, 0, vertexCount)
                 GLUtils.checkGlError("glDrawArrays")
             }
         }
@@ -62,7 +75,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
                 wasBounded = vaoBound
 
                 if (!vaoBound) {
-                    GLES31.glBindVertexArray(vaoId)
+                    GLES32.glBindVertexArray(vaoId)
                     vaoBound = true
                 }
             }
@@ -72,7 +85,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
         } finally {
             if (wasBounded == false) {
                 synchronized(this) {
-                    GLES31.glBindVertexArray(0)
+                    GLES32.glBindVertexArray(0)
                     vaoBound = false
                 }
             }
@@ -88,13 +101,17 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
     // Méthodes internes
     internal fun genBuffers() {
         // Vertex buffer
-        vaoId = IntArray(1).also { GLES31.glGenVertexArrays(1, it, 0) }[0]
+        vaoId = IntArray(1).also { GLES32.glGenVertexArrays(1, it, 0) }[0]
 
         vbo.generate()
 
+        // Indices Buffer
         if (hasIndices) {
             ibo.generate()
         }
+    }
+    internal fun loadTexture() {
+        getMaterial().loadTexture()
     }
     internal fun loadBuffers(others: Array<String>) {
         // load IBO
@@ -132,6 +149,18 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
                 size += normalSize
             }
 
+            // TexCoord data
+            texCoordSize = 0
+            var texCoords: Any? = null
+
+            if (hasTexCoords) {
+                texCoords = getTexCoords()
+                texCoordSize = GLUtils.bufferSize(texCoords)
+                texCoordType = GLUtils.bufferType(texCoords)
+
+                size += texCoordSize
+            }
+
             // Others
             val othersV = mutableListOf<Any>()
 
@@ -150,6 +179,7 @@ abstract class BaseMesh(var hasIndices: Boolean = true,
             vbo.allocate(size)
             vbo.put(vertices)
             normals?.also { vbo.put(it) }
+            texCoords?.also { vbo.put(it) }
             othersV.forEach { vbo.put(it) }
 
             vbo.reload = false

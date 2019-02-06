@@ -52,7 +52,8 @@ class YoutubeFragment : Fragment(), MenuItem.OnActionExpandListener {
         inflater.inflate(R.menu.toolbar_recherche, menu)
 
         // SearchItem
-        searchMenuItem = menu.findItem(R.id.tool_search)?.setOnActionExpandListener(this)
+        searchMenuItem = menu.findItem(R.id.tool_search)
+                ?.setOnActionExpandListener(this)
 
         setupSearchView()
     }

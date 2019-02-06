@@ -4,7 +4,7 @@
 
 #include "vec.h"
 
-Vec2::Vec2(aiVector3D vec) {
+Vec2::Vec2(aiVector2D vec) : Vec() {
     x() = vec.x;
     y() = vec.y;
 }
@@ -22,16 +22,14 @@ template<> Vec2 jnitools::fromJava<Vec2>(JNIEnv* env, jobject jobj) {
     return r;
 }
 
-Vec3::Vec3(aiVector3D vec) {
+Vec3::Vec3(aiVector3D vec) : Vec() {
     x() = vec.x;
     y() = vec.y;
     z() = vec.z;
 }
 
-Vec3::Vec3(aiColor3D color) {
-    x() = color.r;
-    y() = color.g;
-    z() = color.b;
+Vec2 Vec3::xy() const {
+    return Vec2(x(), y());
 }
 
 jobject Vec3::toJava(JNIEnv *env) const {
@@ -46,6 +44,14 @@ template<> Vec3 jnitools::fromJava<Vec3>(JNIEnv* env, jobject jobj) {
     r.z() = call<jfloat>(env, jobj, "getZ", "()F");
 
     return r;
+}
+
+Vec2 Vec4::xy() const {
+    return Vec2(x(), y());
+}
+
+Vec3 Vec4::xyz() const {
+    return Vec3(x(), y(), z());
 }
 
 jobject Vec4::toJava(JNIEnv *env) const {

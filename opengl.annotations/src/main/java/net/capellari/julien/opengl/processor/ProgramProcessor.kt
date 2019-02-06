@@ -20,7 +20,8 @@ internal class ProgramProcessor : AbstractProcessor() {
     override fun getSupportedAnnotationTypes(): Set<String> {
         return setOf(
                 Program::class.java.canonicalName,
-                UniformBlock::class.java.canonicalName
+                UniformBlock::class.java.canonicalName,
+                SharedStorage::class.java.canonicalName
         )
     }
     override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -36,6 +37,13 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .forEach {
                     if (it is TypeElement  && uniformBlockCheck(it)) {
                         createUniformBlockImpl(it)
+                    }
+                }
+
+        roundEnv.getElementsAnnotatedWith(SharedStorage::class.java)
+                .forEach {
+                    if (it is TypeElement  && sharedStorageBlockCheck(it)) {
+                        createSharedStorageBlockImpl(it)
                     }
                 }
 
@@ -89,6 +97,15 @@ internal class ProgramProcessor : AbstractProcessor() {
 
         return true
     }
+    private fun sharedStorageBlockCheck(type: TypeElement) : Boolean {
+        // should inherit from BaseUniformBlock
+        if (!Utils.inherit(processingEnv, type, "net.capellari.julien.opengl.base.BaseSharedStorage")) {
+            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${type.simpleName} should inherit from BaseSharedStorage")
+            return false
+        }
+
+        return true
+    }
 
     // - implementations
     private fun createProgramImpl(element: TypeElement) {
@@ -104,7 +121,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         val attrs = mutableListOf<AttributeProperty>()
         val unifs = mutableListOf<UniformProperty>()
         val unifBlocks = mutableListOf<UniformBlockProperty>()
-        val ssbos = mutableMapOf<String, ShaderStorageProperty>()
+        val ssbos = mutableListOf<ShaderStorageProperty>()
 
         var meshMaterialAttribute: UniformProperty? = null
 
@@ -131,7 +148,7 @@ internal class ProgramProcessor : AbstractProcessor() {
 
             // Annotations
             val unif = it.getAnnotation(Uniform::class.java)
-            val ssbo = it.getAnnotation(ShaderStorage::class.java)
+            val ssbo = it.getAnnotation(SharedStorage::class.java)
             val unifBlock = it.getAnnotation(UniformBlock::class.java)
 
             // Attributs & Uniforms
@@ -150,11 +167,11 @@ internal class ProgramProcessor : AbstractProcessor() {
 
                 unifBlocks.add(UniformBlockProperty(fields[name]!!, unifBlock))
             } else if (ssbo != null) {
-                if (!ssbos.containsKey(ssbo.name)) {
-                    ssbos[ssbo.name] = ShaderStorageProperty(ssbo)
+                if (ssbo.name == "") {
+                    processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "SharedStorageBlock name is required for attributes")
                 }
 
-                ssbos[ssbo.name]!!.add(fields[name]!!)
+                ssbos.add(ShaderStorageProperty(fields[name]!!, ssbo))
             }
         }
 
@@ -168,13 +185,13 @@ internal class ProgramProcessor : AbstractProcessor() {
                     for (shader in program.shaders.scripts) {
                         if (shader.file != "") {
                             addStatement(
-                                    "GLES31.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
+                                    "GLES32.glAttachShader(program, loadShaderAsset(context, %S, %T.%L))",
                                     shader.file,
                                     ShaderType::class, shader.type.name
                             )
                         } else if (shader.script != "") {
                             addStatement(
-                                    "GLES31.glAttachShader(program, loadShader(%S, %T.%L))",
+                                    "GLES32.glAttachShader(program, loadShader(%S, %T.%L))",
                                     shader.script,
                                     ShaderType::class, shader.type.name
                             )
@@ -194,15 +211,15 @@ internal class ProgramProcessor : AbstractProcessor() {
                         }
                     }
 
-                    for (prop in ssbos.values) prop.bindFunc(this)
+                    for (prop in ssbos) addStatement("${prop.name}.binding = bindSharedStorage(%S)", prop.annotation.name)
                 }.build()
 
         val genBuffers = FunSpec.builder("genBuffers")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in unifBlocks)   addStatement("${prop.name}.generate()")
-                    for (prop in ssbos.values) prop.genBufferFunc(this)
+                    for (prop in unifBlocks) addStatement("${prop.name}.generate()")
+                    for (prop in ssbos)      addStatement("${prop.name}.generate()")
                 }.build()
 
         val loadUniforms = FunSpec.builder("loadUniforms")
@@ -218,32 +235,38 @@ internal class ProgramProcessor : AbstractProcessor() {
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
 
-                    for (prop in unifBlocks)   addStatement("${prop.name}.load()")
-                    for (prop in ssbos.values) prop.loadBufferFunc(this)
+                    for (prop in unifBlocks) addStatement("${prop.name}.load()")
+                    for (prop in ssbos)      addStatement("${prop.name}.load()")
                 }.build()
 
         val enableVBO = FunSpec.builder("enableVBO")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
-                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
+                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "Mesh"))
 
                     // Link to arrays
                     beginControlFlow("mesh.bindVBO")
                     for (prop in attrs) {
                         when (prop.annotation.type) {
                             AttributeType.VERTICES -> {
-                                addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.vertexType, %L, 0, 0)", prop.handle, prop.annotation.normalized)
+                                addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES32.glVertexAttribPointer(%N, 3, mesh.vertexType, %L, 0, 0)", prop.handle, prop.annotation.normalized)
                             }
                             AttributeType.NORMALS -> {
                                 beginControlFlow("if (mesh.hasNormals)")
-                                    addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                    addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
+                                    addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                    addStatement("GLES32.glVertexAttribPointer(%N, 3, mesh.normalType, %L, 0, mesh.vertexSize)", prop.handle, prop.annotation.normalized)
+                                endControlFlow()
+                            }
+                            AttributeType.TEXCOORDS -> {
+                                beginControlFlow("if (mesh.hasTexCoords)")
+                                    addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                    addStatement("GLES32.glVertexAttribPointer(%N, 2, mesh.texCoordType, %L, 0, mesh.vertexSize + mesh.normalSize)", prop.handle, prop.annotation.normalized)
                                 endControlFlow()
                             }
                             AttributeType.OTHER -> {
-                                addStatement("GLES31.glEnableVertexAttribArray(%N)", prop.handle)
-                                addStatement("GLES31.glVertexAttribPointer(%N, 3, mesh.othersType[%S]!!, %L, 0, mesh.othersOff[%S]!!)",
+                                addStatement("GLES32.glEnableVertexAttribArray(%N)", prop.handle)
+                                addStatement("GLES32.glVertexAttribPointer(%N, 3, mesh.othersType[%S]!!, %L, 0, mesh.othersOff[%S]!!)",
                                         prop.handle, prop.annotation.name, prop.annotation.normalized, prop.annotation.name)
                             }
                         }
@@ -254,7 +277,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         val setMeshMaterial = FunSpec.builder("setMeshMaterial")
                 .apply {
                     addModifiers(KModifier.OVERRIDE)
-                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "BaseMesh"))
+                    addParameter("mesh", ClassName("net.capellari.julien.opengl.base", "Mesh"))
 
                     meshMaterialAttribute?.also {
                         // Chargement du material
@@ -270,7 +293,6 @@ internal class ProgramProcessor : AbstractProcessor() {
                 // Attributs
                 addProperties(attrs)
                 addProperties(unifs)
-                addProperties(ssbos.values)
 
                 // Contructeur
                 addInitializerBlock(CodeBlock.builder()
@@ -298,7 +320,7 @@ internal class ProgramProcessor : AbstractProcessor() {
         // Ecriture
         val code = FileSpec.builder(pkgProgram, implCls.simpleName)
                 .apply {
-                    addImport("android.opengl", "GLES31")
+                    addImport("android.opengl", "GLES32")
                     addImport("android.util", "Log")
                     addImport("net.capellari.julien.opengl", "GLUtils")
 
@@ -371,7 +393,7 @@ internal class ProgramProcessor : AbstractProcessor() {
                             // Compute ssbo size
                             addStatement("var size = 0")
                             champs.forEach {
-                                addStatement("size += GLUtils.bufferSize(${it.simpleName.toString()})")
+                                addStatement("size += GLUtils.bufferSize(${it.simpleName})")
                             }
 
                             // Allocate UBO
@@ -380,7 +402,7 @@ internal class ProgramProcessor : AbstractProcessor() {
 
                             // Put data
                             champs.forEach {
-                                addStatement("ubo.put(${it.simpleName.toString()})")
+                                addStatement("ubo.put(${it.simpleName})")
                             }
 
                             // Bind UBO
@@ -388,6 +410,102 @@ internal class ProgramProcessor : AbstractProcessor() {
                             addStatement("GLUtils.checkGlError(%S)", "Loading uniform block ${baseCls.simpleName}")
 
                             addStatement("ubo.reload = false")
+                        endControlFlow()
+                    }.build()
+                )
+            }.build()
+
+        // Ecriture
+        val code = FileSpec.builder(pkgProgram, implCls.simpleName)
+                .apply {
+                    addImport("net.capellari.julien.opengl", "GLUtils")
+
+                    addType(cls)
+                }.build()
+
+        // Create file
+        Utils.writeTo(sourceRoot, code)
+    }
+    private fun createSharedStorageBlockImpl(element: TypeElement) {
+        // Get infos
+        val pkgProgram = processingEnv.elementUtils.getPackageOf(element).toString()
+
+        // Classes
+        val baseCls = ClassName(pkgProgram, element.simpleName.toString())
+        val implCls = ClassName(pkgProgram, "${element.simpleName}_Impl")
+
+        // Liste des attributs
+        val fields = mutableMapOf<String,VariableElement>()
+        element.enclosedElements.forEach {
+            if (it.kind == ElementKind.FIELD) fields[it.simpleName.toString()] = it as VariableElement
+        }
+
+        // Champs
+        val champs = mutableListOf<VariableElement>()
+        element.enclosedElements.forEach {
+            val name = it.simpleName.split("$").first()
+
+            // Annotations
+            val field = it.getAnnotation(Field::class.java)
+
+            if (field != null) {
+                champs.add(fields[name]!!)
+            }
+        }
+
+        // Implémentation de la classe
+        val cls = TypeSpec.classBuilder(implCls)
+            .apply {
+                superclass(baseCls)
+
+                // Propriétés
+                champs.forEach {
+                    val name = it.simpleName.toString()
+                    val type = it.asType().asTypeName()
+
+                    val param = ParameterSpec.builder("value", type).build()
+
+                    addProperty(PropertySpec.builder(name, type, KModifier.OVERRIDE)
+                        .apply {
+                            mutable()
+                            initializer("super.$name")
+
+                            setter(FunSpec.builder("set()").apply {
+                                addParameter(param)
+
+                                addStatement("field = %N", param)
+                                addStatement("ssbo.reload = true")
+                            }.build())
+                        }.build()
+                    )
+                }
+
+                // Méthodes
+                addFunction(FunSpec.builder("load")
+                    .apply {
+                        addModifiers(KModifier.OVERRIDE)
+
+                        beginControlFlow("if (ssbo.reload)")
+                            // Compute ssbo size
+                            addStatement("var size = 0")
+                            champs.forEach {
+                                addStatement("size += GLUtils.bufferSize(${it.simpleName})")
+                            }
+
+                            // Allocate SSBO
+                            addStatement("ssbo.allocate(size)")
+                            addStatement("ssbo.position = 0")
+
+                            // Put data
+                            champs.forEach {
+                                addStatement("ssbo.put(${it.simpleName})")
+                            }
+
+                            // Bind SSBO
+                            addStatement("ssbo.toGPU()")
+                            addStatement("GLUtils.checkGlError(%S)", "Loading shared storage block ${baseCls.simpleName}")
+
+                            addStatement("ssbo.reload = false")
                         endControlFlow()
                     }.build()
                 )

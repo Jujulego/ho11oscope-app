@@ -1,9 +1,10 @@
 package net.capellari.julien.ho11oscope.opengl
 
+import net.capellari.julien.opengl.Color
 import net.capellari.julien.opengl.Vec3
-import net.capellari.julien.opengl.base.BaseMesh
+import net.capellari.julien.opengl.base.Mesh
 
-class Triangle : BaseMesh(false, false) {
+class Triangle : Mesh(false, false) {
     // Méthodes
     override fun getVertices(): Any = arrayOf(
             Vec3(  0f,  0.622008459f, 0f),
@@ -13,15 +14,15 @@ class Triangle : BaseMesh(false, false) {
 
     override fun getOther(name: String): Any = when(name) {
         "vColor" -> arrayOf(
-                Vec3(0f, 0f, 1f),
-                Vec3(0f, 1f, 0f),
-                Vec3(1f, 0f, 0f)
+                Color.RED,
+                Color.GREEN,
+                Color.BLUE
         )
         else -> super.getOther(name)
     }
 }
 
-class Carre : BaseMesh(true,  false) {
+class Carre : Mesh(true,  false) {
     // Méthodes
     override fun getIndices():  Any = arrayOf<Short>(0, 1, 2, 0, 2, 3)
     override fun getVertices(): Any = arrayOf(
@@ -33,16 +34,16 @@ class Carre : BaseMesh(true,  false) {
 
     override fun getOther(name: String): Any = when(name) {
         "vColor" -> arrayOf(
-                Vec3(0f, 0f, 1f),
-                Vec3(1f, 0f, 1f),
-                Vec3(1f, 0f, 0f),
-                Vec3(1f, 0f, 1f)
+                Color.BLUE,
+                Color.MAGENTA,
+                Color.RED,
+                Color.MAGENTA
         )
         else -> super.getOther(name)
     }
 }
 
-class Hexagone : BaseMesh(true,  false) {
+class Hexagone : Mesh(true,  false) {
     // Méthodes
     override fun getIndices(): Any = arrayOf<Short>(
             0, 1, 2,
@@ -65,13 +66,13 @@ class Hexagone : BaseMesh(true,  false) {
 
     override fun getOther(name: String): Any = when(name) {
         "vColor" -> arrayOf(
-                Vec3(1f, 1f, 1f),
-                Vec3(0f, 0f, 1f),
-                Vec3(0f, 1f, 1f),
-                Vec3(0f, 1f, 0f),
-                Vec3(1f, 1f, 0f),
-                Vec3(1f, 0f, 0f),
-                Vec3(1f, 0f, 1f)
+                Color.WHITE,
+                Color.BLUE,
+                Color.CYAN,
+                Color.GREEN,
+                Color.YELLOW,
+                Color.RED,
+                Color.MAGENTA
         )
         else -> super.getOther(name)
     }

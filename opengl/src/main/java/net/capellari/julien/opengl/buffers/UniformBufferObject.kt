@@ -1,8 +1,8 @@
 package net.capellari.julien.opengl.buffers
 
-import android.opengl.GLES31
+import android.opengl.GLES32
 
-class UniformBufferObject : BindedBufferObject(GLES31.GL_UNIFORM_BUFFER) {
+class UniformBufferObject : BindedBufferObject(GLES32.GL_UNIFORM_BUFFER) {
     // Companion
     companion object {
         private val bindings = mutableSetOf<Int>()

@@ -2,7 +2,7 @@ package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.opengl.GLES31
+import android.opengl.GLES32
 import android.opengl.GLSurfaceView
 import android.util.Log
 import androidx.preference.PreferenceManager
@@ -86,12 +86,11 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
-    private var lightPower by sharedPreference("lightPower",       context, 50)
     private var magnitude  by sharedPreference("explodeMagnitude", context, 50)
 
     // Méthodes
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
-        GLES31.glClearColor(0f, 0f, 0f, 1f)
+        GLES32.glClearColor(0f, 0f, 0f, 1f)
 
         lastFrameTime = System.currentTimeMillis()
         polyProgram.compile(context)
@@ -99,7 +98,6 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         wireframeProgram.compile(context)
 
         // Setup
-        setupLightPower()
         setupColorFactors()
         setupTransparency()
     }
@@ -115,7 +113,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         if (angle >= 360) angle -= 360
 
         // Draw background
-        GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT or GLES31.GL_DEPTH_BUFFER_BIT)
+        GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
 
         val m = magnitude / 20f
         if (polyProgram.magnitude != m) {
@@ -166,7 +164,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
-        GLES31.glViewport(0, 0, width, height)
+        GLES32.glViewport(0, 0, width, height)
 
         val ratio = width / height.toFloat()
         polyProgram.stables.projMatrix = Mat4.perspective(FOV_Y, ratio, NEAR_CLIP, FAR_CLIP)
@@ -179,34 +177,29 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         if (transparency) activateTransparency() else disactivateTransparency()
     }
 
-    private fun setupLightPower() {
-        Log.d(TAG, "light power     : $lightPower")
-
-        polyProgram.parameters.lightPower = lightPower.toFloat()
-    }
     private fun setupColorFactors() {
         Log.d(TAG, "ambient factor  : $ambientFactor%")
         Log.d(TAG, "diffuse factor  : $diffuseFactor%")
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.parameters.ambientFactor  = ambientFactor  / 100f
-        polyProgram.parameters.diffuseFactor  = diffuseFactor  / 100f
-        polyProgram.parameters.specularFactor = specularFactor / 100f
+        polyProgram.light.ambient  = ambientFactor  / 100f
+        polyProgram.light.diffuse  = diffuseFactor  / 100f
+        polyProgram.light.specular = specularFactor / 100f
     }
 
     private fun activateTransparency() {
-        GLES31.glDisable(GLES31.GL_DEPTH_TEST)
-        GLES31.glDepthMask(false)
+        GLES32.glDisable(GLES32.GL_DEPTH_TEST)
+        GLES32.glDepthMask(false)
 
-        GLES31.glEnable(GLES31.GL_BLEND)
-        GLES31.glBlendFunc(GLES31.GL_ONE, GLES31.GL_ONE_MINUS_SRC_ALPHA)
+        GLES32.glEnable(GLES32.GL_BLEND)
+        GLES32.glBlendFunc(GLES32.GL_ONE, GLES32.GL_ONE_MINUS_SRC_ALPHA)
     }
 
     private fun disactivateTransparency() {
-        GLES31.glEnable(GLES31.GL_DEPTH_TEST)
-        GLES31.glDepthMask(true)
+        GLES32.glEnable(GLES32.GL_DEPTH_TEST)
+        GLES32.glDepthMask(true)
 
-        GLES31.glDisable(GLES31.GL_BLEND)
+        GLES32.glDisable(GLES32.GL_BLEND)
     }
 }

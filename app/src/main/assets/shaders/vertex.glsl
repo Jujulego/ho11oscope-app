@@ -1,4 +1,5 @@
-#version 310 es
+#version 320 es
+#extension GL_EXT_shader_io_blocks : enable
 
 // Uniforms
 layout (std140) uniform Matrices {
@@ -17,11 +18,7 @@ layout (std140) uniform Stables {
 // Entrées
 in vec3 aPosition;
 in vec3 aNormal;
-in vec3 aAmbientColor;
-in vec3 aDiffuseColor;
-in vec3 aSpecularColor;
-in float aSpecularExp;
-in float aOpacity;
+in vec2 aTexCoord;
 
 // Sorties
 out Vectors {
@@ -30,13 +27,16 @@ out Vectors {
 
     // - camera space
     vec3 eyeDirection;
-    vec3 lightDirection;
     vec3 normal;
+
+    // - textures
+    vec2 uv;
 } vecs;
 
 void main() {
     // vertex positions
     gl_Position = mvpMatrix * vec4(aPosition, 1);
+    vecs.uv = aTexCoord;
 
     // Compute world space positions
     vecs.position = (modelMatrix * vec4(aPosition, 1)).xyz;
@@ -47,8 +47,4 @@ void main() {
     // Vector from vertex to camera
     vec3 vertexCamera = (viewMatrix * modelMatrix * vec4(aPosition, 1)).xyz;
     vecs.eyeDirection = vec3(0, 0, 0) - vertexCamera;
-
-    // Vector from vertex to light
-    vec3 lightCamera = (viewMatrix * lightMatrix * vec4(lightPosition, 1)).xyz;
-    vecs.lightDirection = lightCamera + vecs.eyeDirection;
 }
