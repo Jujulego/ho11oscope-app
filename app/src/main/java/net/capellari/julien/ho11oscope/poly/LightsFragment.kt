@@ -15,6 +15,8 @@ import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.opengl.PointLight
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.utils.inflate
+import net.capellari.julien.wrapper.InputWrapper
+import net.capellari.julien.wrapper.SeekbarWrapper
 import kotlin.math.*
 
 class LightsFragment : ListFragment() {
@@ -65,6 +67,10 @@ class LightsFragment : ListFragment() {
         var light: PointLight? = null
         var noUpdate = false
 
+        private val _distance = SeekbarWrapper(view.seek_distance)
+        private val _hauteur  = SeekbarWrapper(view.seek_hauteur, 10, -10)
+        private val _angle    = SeekbarWrapper(view.seek_angle, 180, -180)
+
         // Propriétés
         var distance: Float = 10f
             private set(v) {
@@ -87,24 +93,19 @@ class LightsFragment : ListFragment() {
         // Initialisation
         init {
             // Listeners
-            view.seek_distance.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if (fromUser) {
-                        distance = progress.toFloat()
-                        view.edit_distance.setText(progress.toString())
-                    }
+            _distance.addValueListener(object : InputWrapper.OnValueChanged<Int> {
+                override fun onValueChanged(value: Int) {
+                    distance = value.toFloat()
+                    view.edit_distance.setText(value.toString())
                 }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
             view.edit_distance.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(txt: Editable) {
                     var nval = txt.toString().toIntOrNull() ?: 0
-                    nval = max(nval, 0)
-                    nval = min(nval, view.seek_distance.max)
+                    nval = max(nval, _distance.min)
+                    nval = min(nval, _distance.max)
 
-                    view.seek_distance.progress = nval
+                    _distance.value = nval
                     distance = nval.toFloat()
                 }
 
@@ -112,49 +113,39 @@ class LightsFragment : ListFragment() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             })
 
-            view.seek_hauteur.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if (fromUser) {
-                        hauteur = progress.toFloat() - 10
-                        view.edit_hauteur.setText((progress - 10).toString())
-                    }
+            _hauteur.addValueListener(object : InputWrapper.OnValueChanged<Int> {
+                override fun onValueChanged(value: Int) {
+                    hauteur = value.toFloat()
+                    view.edit_hauteur.setText(value.toString())
                 }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
             view.edit_hauteur.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(txt: Editable) {
-                    var nval = (txt.toString().toIntOrNull() ?: 0) + 10
-                    nval = max(nval, 0)
-                    nval = min(nval, view.seek_hauteur.max)
+                    var nval = txt.toString().toIntOrNull() ?: 0
+                    nval = max(nval, _hauteur.min)
+                    nval = min(nval, _hauteur.max)
 
-                    view.seek_hauteur.progress = nval
-                    hauteur = (nval - 10).toFloat()
+                    _hauteur.value = nval
+                    hauteur = nval.toFloat()
                 }
 
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             })
 
-            view.seek_angle.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if (fromUser) {
-                        angle = (progress * Math.PI / 180f).toFloat()
-                        view.edit_angle.setText(progress.toString())
-                    }
+            _angle.addValueListener(object : InputWrapper.OnValueChanged<Int> {
+                override fun onValueChanged(value: Int) {
+                    angle = (value * Math.PI / 180f).toFloat()
+                    view.edit_angle.setText(value.toString())
                 }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
             view.edit_angle.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(txt: Editable) {
                     var nval = txt.toString().toIntOrNull() ?: 0
-                    nval = max(nval, 0)
-                    nval = min(nval, view.seek_angle.max)
+                    nval = max(nval, _angle.min)
+                    nval = min(nval, _angle.max)
 
-                    view.seek_angle.progress = nval
+                    _angle.value = nval
                     angle = (nval * Math.PI / 180f).toFloat()
                 }
 
@@ -171,31 +162,31 @@ class LightsFragment : ListFragment() {
             noUpdate = true
                 distance = light!!.position.xz.length
                 hauteur  = light!!.position.y
-                angle    = tan(light!!.position.x / light!!.position.z) + Math.PI.toFloat()
+                angle    = tan(light!!.position.x / light!!.position.z)
             noUpdate = false
 
             // Set values
             view.nom.text = getString(R.string.poly_light_pointlight, id)
 
             distance.toInt().let {
-                view.seek_distance.progress = it
+                _distance.value = it
                 view.edit_distance.setText(it.toString())
             }
 
             hauteur.toInt().let {
-                view.seek_hauteur.progress = it + 10
+                _hauteur.value = it
                 view.edit_hauteur.setText(it.toString())
             }
 
             (angle * 180 / Math.PI).toInt().let {
-                view.seek_angle.progress = it
+                _angle.value = it
                 view.edit_angle.setText(it.toString())
             }
         }
 
         private fun updatePos() {
             light?.apply {
-                position = Vec3((distance * -sin(angle)), hauteur, (distance * -cos(angle)))
+                position = Vec3((distance * sin(angle)), hauteur, (distance * cos(angle)))
                 updateLights()
             }
         }
