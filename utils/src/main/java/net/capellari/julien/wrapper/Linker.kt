@@ -5,6 +5,7 @@ import androidx.annotation.CallSuper
 open class Linker<T, W : InputWrapper<T>>(default: T) : BaseInputWrapper<T>() {
     // Attributs
     protected val wrappers = mutableListOf<W>()
+    protected val printers = mutableListOf<Printer<T>>()
 
     private val listener = object : ValueListener<T> {
         @Suppress("UNCHECKED_CAST")
@@ -22,15 +23,27 @@ open class Linker<T, W : InputWrapper<T>>(default: T) : BaseInputWrapper<T>() {
     @CallSuper
     protected open fun onAddWrapper(wrapper: W) {
         wrapper.addValueListener(listener)
-        wrappers.add(wrapper)
 
+        wrappers.add(wrapper)
         wrapper.value = value
     }
 
     @CallSuper
     protected open fun onRemoveWrapper(wrapper: W) {
         wrappers.remove(wrapper)
+
         wrapper.removeValueListener(listener)
+    }
+
+    @CallSuper
+    protected open fun onAddPrinter(printer: Printer<T>) {
+        printers.add(printer)
+        printer.value = value
+    }
+
+    @CallSuper
+    protected open fun onRemovePrinter(printer: Printer<T>) {
+        printers.remove(printer)
     }
 
     // Méthodes
@@ -38,10 +51,10 @@ open class Linker<T, W : InputWrapper<T>>(default: T) : BaseInputWrapper<T>() {
         if (keep) keep(wrapper)
         onAddWrapper(wrapper)
     }
-    fun add(vararg wrappers: W) { wrappers.forEach(this::onAddWrapper) }
-
     fun remove(wrapper: W) { onRemoveWrapper(wrapper) }
-    fun remove(vararg wrappers: W) { wrappers.forEach(this::onRemoveWrapper) }
+
+    fun add(printer: Printer<T>) { onAddPrinter(printer) }
+    fun remove(printer: Printer<T>) { onRemovePrinter(printer) }
 
     @CallSuper
     protected open fun keep(wrapper: W) {
@@ -49,6 +62,8 @@ open class Linker<T, W : InputWrapper<T>>(default: T) : BaseInputWrapper<T>() {
     }
 
     protected fun propagate(value: T, origin: W? = null) {
+        printers.forEach { it.value = value }
+
         wrappers.filter { it != origin }
                 .forEach { it.value = value }
     }

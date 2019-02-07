@@ -68,11 +68,13 @@ class LightsFragment : ListFragment() {
         }
 
         private val hauteur = NumberLinker(1, 10, -10).apply {
-            add(SeekBarWrapper(view.seek_hauteur), NumberTextWrapper(view.edit_hauteur))
+            add(SeekBarWrapper(view.seek_hauteur))
+            add(NumberTextWrapper(view.edit_hauteur))
         }
 
         private val angle = NumberLinker(0, 180, -180).apply {
-            add(SeekBarWrapper(view.seek_angle), NumberTextWrapper(view.edit_angle))
+            add(SeekBarWrapper(view.seek_angle))
+            add(NumberTextWrapper(view.edit_angle))
         }
 
         // Initialisation

@@ -52,9 +52,5 @@ class NumberTextWrapper(val editText: EditText) : BaseInputWrapper<Int>(), Numbe
     // Propriétés
     override var value: Int
         get() = extract(editText.text)
-        set(value) {
-            if (!user) {
-                editText.setText(value.toString())
-            }
-        }
+        set(value) { if (!user) editText.setText(value.toString()) }
 }
