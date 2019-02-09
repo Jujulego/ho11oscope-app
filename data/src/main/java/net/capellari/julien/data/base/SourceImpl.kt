@@ -1,21 +1,15 @@
 package net.capellari.julien.data.base
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import net.capellari.julien.data.Sink
 import net.capellari.julien.data.Source
 
 abstract class SourceImpl<T> : Source<T> {
     // Attributs
     private val sinks = mutableSetOf<Sink<T>>()
-    private val _livedata = MutableLiveData<T>()
-
-    // Propriétés
-    override val livedata: LiveData<T> get() = _livedata
 
     // Méthodes
-    protected fun emitData(data: T, origin: Source<T> = this) {
-        _livedata.value = data
+    protected fun emitData(data: T) = emitData(data, this)
+    protected fun emitData(data: T, origin: Source<T>) {
         sinks.forEach { it.updateData(data, origin) }
     }
 
