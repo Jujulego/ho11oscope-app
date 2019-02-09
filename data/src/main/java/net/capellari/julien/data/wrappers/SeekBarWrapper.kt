@@ -12,7 +12,8 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
     private var _min: Int = 0 // compatibility
 
     // Propriétés
-    override val data: Int get() = fromSeekBar(seekbar.progress)
+    override var data: Int get() = fromSeekBar(seekbar.progress)
+        set(value) { seekbar.progress = toSeekBar(value) }
 
     var max: Int by property("max", 100)
     var min: Int by property("min", 0)
@@ -40,7 +41,7 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
             = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) value else (value - _min)
 
     override fun updateData(data: Int, origin: Source<Int>) {
-        seekbar.progress = toSeekBar(data)
+        this.data = data
     }
 
     override fun get(nom: String): Any? {
@@ -69,7 +70,7 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
 
                     // Adapt !
                     max -= v - _min
-                    seekbar.progress = toSeekBar(data - v - _min)
+                    data -= v - _min
 
                     // Update
                     _min = v

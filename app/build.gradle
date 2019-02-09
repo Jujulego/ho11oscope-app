@@ -47,6 +47,7 @@ dependencies {
     implementation project(':opengl.annotations')
     annotationProcessor project(":opengl.annotations")
 
+    implementation project(':data')
     implementation project(':utils')
 
     // Kotlin

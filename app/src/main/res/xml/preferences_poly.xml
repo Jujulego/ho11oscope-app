@@ -4,7 +4,7 @@
 
     <PreferenceCategory android:title="@string/poly_settings_effects">
         <!--suppress AndroidElementNotAllowed -->
-        <net.capellari.julien.preference.SeekBarPreference
+        <net.capellari.julien.data.preferences.SeekBarPreference
             android:title="@string/poly_settings_explode_magnitude"
 
             android:key="explodeMagnitude"
@@ -16,7 +16,7 @@
 
     <PreferenceCategory android:title="@string/poly_settings_colors">
         <!--suppress AndroidElementNotAllowed -->
-        <net.capellari.julien.preference.SeekBarPreference
+        <net.capellari.julien.data.preferences.SeekBarPreference
             android:title="@string/poly_settings_ambient"
 
             android:key="ambientFactor"
@@ -26,7 +26,7 @@
             app:iconSpaceReserved="false" />
 
         <!--suppress AndroidElementNotAllowed -->
-        <net.capellari.julien.preference.SeekBarPreference
+        <net.capellari.julien.data.preferences.SeekBarPreference
             android:title="@string/poly_settings_diffuse"
 
             android:key="diffuseFactor"
@@ -36,7 +36,7 @@
             app:iconSpaceReserved="false" />
 
         <!--suppress AndroidElementNotAllowed -->
-        <net.capellari.julien.preference.SeekBarPreference
+        <net.capellari.julien.data.preferences.SeekBarPreference
             android:title="@string/poly_settings_specular"
 
             android:key="specularFactor"
