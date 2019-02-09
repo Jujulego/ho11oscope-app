@@ -1,1 +1,1 @@
-include ':app', ':opengl', ':opengl.annotations', ':opengl.tests', ':utils'
+include ':app', ':opengl', ':opengl.annotations', ':opengl.tests', ':utils', ':data'
