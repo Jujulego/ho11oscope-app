@@ -113,12 +113,12 @@ class SeekBarPreference : Preference {
             return
         }
 
-        val state = state as SavedState
-        super.onRestoreInstanceState(state.superState)
+        val s = state as SavedState
+        super.onRestoreInstanceState(s.superState)
 
-        linker.value = state.value
-        linker.min = state.min
-        linker.max = state.max
+        linker.value = s.value
+        linker.min = s.min
+        linker.max = s.max
 
         notifyChanged()
     }

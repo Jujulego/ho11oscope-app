@@ -2,7 +2,6 @@ package net.capellari.julien.opengl.processor
 
 import com.squareup.kotlinpoet.*
 import net.capellari.julien.opengl.Attribute
-import javax.lang.model.element.VariableElement
 
 internal class AttributeProperty(val annotation: Attribute) : BaseProperty() {
     // Attributs
