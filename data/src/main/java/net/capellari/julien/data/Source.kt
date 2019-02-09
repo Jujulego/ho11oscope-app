@@ -1,6 +1,6 @@
 package net.capellari.julien.data
 
-interface Source<T> {
+interface Source<T>: Configurable {
     // Attributs
     val data: T
 

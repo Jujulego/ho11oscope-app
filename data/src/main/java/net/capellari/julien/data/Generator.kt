@@ -6,6 +6,9 @@ class Generator<T>(default: T, val generator: () -> T): Source<T>, Runnable, Sou
     // Attributs
     override var data: T = default
 
+    // Constructeur
+    constructor(default: T, value: T): this(default, { value })
+
     // Méthodes
     override fun run() {
         data = generator()

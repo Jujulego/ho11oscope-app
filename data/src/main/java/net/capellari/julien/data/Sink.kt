@@ -1,6 +1,6 @@
 package net.capellari.julien.data
 
-interface Sink<T> {
+interface Sink<T>: Configurable {
     // Méthodes
     fun updateData(data: T, origin: Source<T>)
 }
