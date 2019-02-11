@@ -6,6 +6,12 @@ interface Configurable {
     // Attributs
     val attributs: MutableMap<String,Any?>
 
+    // Méthodes
+    fun getKeys() = attributs.keys
+    fun applyConfig(target: Configurable) {
+        getKeys().forEach { key -> target[key] = this[key] }
+    }
+
     // Opérateurs
     operator fun get(nom: String): Any? = attributs[nom]
     operator fun set(nom: String, value: Any?) { attributs[nom] = value }

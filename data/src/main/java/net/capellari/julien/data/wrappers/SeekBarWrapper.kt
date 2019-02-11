@@ -44,6 +44,14 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
         this.data = data
     }
 
+    override fun getKeys(): MutableSet<String> {
+        val keys = super<SourceImpl>.getKeys()
+        keys.add("max")
+        keys.add("min")
+
+        return keys
+    }
+
     override fun get(nom: String): Any? {
         return when(nom) {
             "max" -> fromSeekBar(seekbar.max)

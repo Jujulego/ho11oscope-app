@@ -60,6 +60,35 @@ class UnitTest {
         assertEquals(2, sink.sum)
     }
 
+    @Test
+    fun linker() {
+        // Test :
+        // G  => |
+        // Sk => |} L
+        // G  => |
+        val gen1 = Generator(0, 1)
+        val gen2 = Generator(0, 1)
+        gen2["test"] = 2
+
+        val sink = TestSink(1)
+
+        val linker = Linker(0)
+        linker.link(gen1)
+        linker.link(gen2, true)
+        linker.link(sink)
+
+        // Propriétés
+        assertEquals(2, linker["test"])
+
+        linker["test"] = 1
+        assertEquals(1, linker["test"])
+        assertEquals(1, gen1["test"])
+
+        // Valeur
+        linker.data = 1
+        gen1.run()
+    }
+
     // Classes
     class TestSink<T: Any>(val result: T): SinkImpl<T>() {
         // Méthodes
