@@ -18,8 +18,6 @@ import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.opengl.PointLight
 import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.utils.inflate
-import net.capellari.julien.wrapper.InputWrapper
-import net.capellari.julien.wrapper.ValueListener
 import kotlin.math.*
 
 class LightsFragment : ListFragment() {
@@ -65,7 +63,7 @@ class LightsFragment : ListFragment() {
         }
     }
 
-    inner class LightHolder(val view: View) : RecyclerView.ViewHolder(view), ValueListener<Int>, Sink<Int> {
+    inner class LightHolder(val view: View) : RecyclerView.ViewHolder(view), Sink<Int> {
         // Attributs
         var light: PointLight? = null
 
@@ -100,10 +98,6 @@ class LightsFragment : ListFragment() {
         }
 
         // Events
-        override fun onNewValue(value: Int, from: InputWrapper<Int>) {
-            updatePos()
-        }
-
         override fun updateData(data: Int, origin: Source<Int>) {
             updatePos()
         }

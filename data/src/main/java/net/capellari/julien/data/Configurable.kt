@@ -30,6 +30,7 @@ fun<T: Any> property(nom: String, default: T, callback: () -> Unit) = DefaultPro
 
 open class PropertyDelegate<T: Any>(val nom : String, val callback: () -> Unit) {
     // Opérateurs
+    @Suppress("UNCHECKED_CAST")
     open operator fun<R: Configurable> getValue(thisRef: R, property: KProperty<*>): T? {
         return thisRef[nom] as? T
     }

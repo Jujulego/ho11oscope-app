@@ -8,7 +8,7 @@ open class Transform<F,T>(default: T, val transform: (data: F, origin: Source<F>
         protected set
 
     // Constructeur
-    constructor(default: T) : this(default, { d, o -> default })
+    constructor(default: T) : this(default, { _, _ -> default })
 
     // Méthodes
     protected open fun applyTransform(data: F, origin: Source<F>): T {
