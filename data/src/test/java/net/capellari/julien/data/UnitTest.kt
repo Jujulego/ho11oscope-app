@@ -1,6 +1,7 @@
 package net.capellari.julien.data
 
 import net.capellari.julien.data.base.SinkImpl
+import net.capellari.julien.data.utils.StringToIntTransform
 import org.junit.Test
 import org.junit.Assert.*
 
@@ -64,7 +65,7 @@ class UnitTest {
     fun linker() {
         // Test :
         // G  => |
-        // Sk => |} L
+        // Sk <= |} L
         // G  => |
         val gen1 = Generator(0, 1)
         val gen2 = Generator(0, 1)
@@ -87,6 +88,26 @@ class UnitTest {
         // Valeur
         linker.data = 1
         gen1.run()
+    }
+
+    @Test
+    fun stringToIntTransform() {
+        // G => S2I => Sk
+        val sink = TestSink(1)
+
+        val trans = StringToIntTransform()
+        trans.addSink(sink)
+
+        val gen1 = Generator("", "1")
+        gen1.addSink(trans)
+
+        gen1.run()
+
+        val gen2 = Generator("", "50")
+        gen2.addSink(trans)
+        trans["max"] = 1
+
+        gen2.run()
     }
 
     // Classes

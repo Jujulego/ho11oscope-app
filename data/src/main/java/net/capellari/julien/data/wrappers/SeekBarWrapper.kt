@@ -2,18 +2,20 @@ package net.capellari.julien.data.wrappers
 
 import android.os.Build
 import android.widget.SeekBar
-import net.capellari.julien.data.Noeud
 import net.capellari.julien.data.Source
-import net.capellari.julien.data.base.SourceImpl
+import net.capellari.julien.data.base.NoeudImpl
 import net.capellari.julien.data.property
 
-class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
+class SeekBarWrapper(val seekbar: SeekBar): NoeudImpl<Int>() {
     // Attributs
     private var _min: Int = 0 // compatibility
 
     // Propriétés
     override var data: Int get() = fromSeekBar(seekbar.progress)
-        set(value) { seekbar.progress = toSeekBar(value) }
+        set(value) {
+            seekbar.progress = toSeekBar(value)
+            emitData(value)
+        }
 
     var max: Int by property("max", 100)
     var min: Int by property("min", 0)
@@ -41,15 +43,13 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
             = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) value else (value - _min)
 
     override fun updateData(data: Int, origin: Source<Int>) {
-        this.data = data
+        seekbar.progress = toSeekBar(data)
     }
 
     override fun getKeys(): MutableSet<String> {
-        val keys = super<SourceImpl>.getKeys()
-        keys.add("max")
-        keys.add("min")
-
-        return keys
+        return super.getKeys().apply {
+            addAll(listOf("max", "min"))
+        }
     }
 
     override fun get(nom: String): Any? {
@@ -63,7 +63,7 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
                 }
             }
 
-            else -> super<SourceImpl>.get(nom)
+            else -> super.get(nom)
         }
     }
 
@@ -85,7 +85,7 @@ class SeekBarWrapper(val seekbar: SeekBar): Noeud<Int>, SourceImpl<Int>() {
                 }
             }
 
-            else -> super<SourceImpl>.set(nom, value)
+            else -> super.set(nom, value)
         }
     }
 }

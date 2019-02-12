@@ -5,9 +5,10 @@ import android.text.TextWatcher
 import android.widget.EditText
 import net.capellari.julien.data.Noeud
 import net.capellari.julien.data.Source
+import net.capellari.julien.data.base.NoeudImpl
 import net.capellari.julien.data.base.SourceImpl
 
-class EditTextWrapper(val edittext: EditText) : Noeud<String>, SourceImpl<String>() {
+class EditTextWrapper(val edittext: EditText) : NoeudImpl<String>() {
     // Propriétés
     private var editing: Boolean = false
     private var newdata: String? = null

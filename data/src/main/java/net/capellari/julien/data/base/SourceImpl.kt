@@ -3,11 +3,9 @@ package net.capellari.julien.data.base
 import net.capellari.julien.data.Sink
 import net.capellari.julien.data.Source
 
-abstract class SourceImpl<T> : Source<T> {
+abstract class SourceImpl<T>: Source<T>, ConfigurableImpl() {
     // Attributs
     private val sinks = mutableSetOf<Sink<T>>()
-
-    override val attributs = mutableMapOf<String,Any?>()
 
     // Méthodes
     protected fun emitData(data: T) = emitData(data, this)
@@ -17,6 +15,7 @@ abstract class SourceImpl<T> : Source<T> {
 
     override fun addSink(sink: Sink<T>) {
         sinks.add(sink)
+        sink.updateData(data, this)
     }
 
     override fun removeSink(sink: Sink<T>) {

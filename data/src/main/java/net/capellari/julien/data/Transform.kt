@@ -2,14 +2,21 @@ package net.capellari.julien.data
 
 import net.capellari.julien.data.base.SourceImpl
 
-class Transform<F,T>(default: T, val transform: (data: F, origin: Source<F>) -> T): Sink<F>, Source<T>, SourceImpl<T>() {
+open class Transform<F,T>(default: T, val transform: (data: F, origin: Source<F>) -> T): Sink<F>, Source<T>, SourceImpl<T>() {
     // Attributs
     override var data: T = default
-        private set
+        protected set
+
+    // Constructeur
+    constructor(default: T) : this(default, { d, o -> default })
 
     // Méthodes
+    protected open fun applyTransform(data: F, origin: Source<F>): T {
+        return transform(data, origin)
+    }
+
     override fun updateData(data: F, origin: Source<F>) {
-        this.data = transform(data, origin)
+        this.data = applyTransform(data, origin)
         emitData(this.data)
     }
 }

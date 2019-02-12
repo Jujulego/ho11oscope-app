@@ -7,7 +7,12 @@ interface Configurable {
     val attributs: MutableMap<String,Any?>
 
     // Méthodes
-    fun getKeys() = attributs.keys
+    fun getKeys(): MutableSet<String> {
+        val keys = mutableSetOf<String>()
+        keys.addAll(attributs.keys)
+
+        return keys
+    }
     fun applyConfig(target: Configurable) {
         getKeys().forEach { key -> target[key] = this[key] }
     }
