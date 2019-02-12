@@ -46,16 +46,35 @@ class Linker<T>(default: T) : Source<T>, SourceImpl<T>() {
     }
 
     fun link(noeud: Noeud<T>, keep: Boolean = false) {
+        if (keep) {
+            // Keep it's data
+            data = noeud.data
+        } else {
+            // Apply current data
+            noeud.updateData(data, this)
+        }
+
+        // Add !
         noeud.addSink(internal_sink)
         sinks.add(noeud)
 
         addConfig(noeud, keep)
     }
     fun link(sink: Sink<T>, keep: Boolean = false) {
+        // Apply current data
+        sink.updateData(data, this)
+
+        // Add !
         sinks.add(sink)
         addConfig(sink, keep)
     }
     fun link(source: Source<T>, keep: Boolean = false) {
+        // Keep it's data
+        if (keep) {
+            data = source.data
+        }
+
+        // Add !
         source.addSink(internal_sink)
         addConfig(source, keep)
     }

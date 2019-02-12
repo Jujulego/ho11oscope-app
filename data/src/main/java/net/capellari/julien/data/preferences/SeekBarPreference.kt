@@ -13,6 +13,7 @@ import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
+import net.capellari.julien.data.Linker
 import net.capellari.julien.data.R
 import net.capellari.julien.data.Source
 import net.capellari.julien.data.base.SinkImpl
@@ -28,14 +29,8 @@ class SeekBarPreference : Preference {
     }
 
     // Attributs
-    //private val linker = NumberLinker(0)
-    private var _value: Int = 0
-    private var _min: Int
-    private var _max: Int
-    private var seekbar: SeekBarWrapper? = null
-
+    private val linker = Linker(0)
     private val showValue: Boolean
-    private val format: String?
 
     private val sink = object : SinkImpl<Int>() {
         override fun updateData(data: Int, origin: Source<Int>) {
@@ -49,16 +44,19 @@ class SeekBarPreference : Preference {
     constructor(context: Context, attrs: AttributeSet?, @AttrRes defStyleAttr: Int, @StyleRes defStyleRes: Int)
             : super(context, attrs, defStyleAttr, defStyleRes) {
 
+        // Linker initialisation
+        linker.addSink(sink)
+
         // Get attributes
         val a = context.obtainStyledAttributes(attrs, androidx.preference.R.styleable.SeekBarPreference, defStyleAttr, defStyleRes)
 
-        _min = a.getInt(androidx.preference.R.styleable.SeekBarPreference_min, 0)
-        _max = a.getInt(androidx.preference.R.styleable.SeekBarPreference_android_max, 100)
+        linker["min"] = a.getInt(androidx.preference.R.styleable.SeekBarPreference_min, 0)
+        linker["max"] = a.getInt(androidx.preference.R.styleable.SeekBarPreference_android_max, 100)
         // TODO: androidx.preference.R.styleable.SeekBarPreference_seekBarIncrement
         // TODO: androidx.preference.R.styleable.SeekBarPreference_adjustable
 
         showValue = a.getBoolean(androidx.preference.R.styleable.SeekBarPreference_showSeekBarValue, true)
-        format    = a.getString(R.styleable.SeekBarPreference_format)
+        linker["format"] = a.getString(R.styleable.SeekBarPreference_format)
 
         a.recycle()
     }
@@ -79,9 +77,6 @@ class SeekBarPreference : Preference {
         val textview = view.findViewById(androidx.preference.R.id.seekbar_value) as TextView
         textview.visibility = if (showValue) View.VISIBLE else View.GONE
 
-        val tvw = TextViewWrapper<Int>(textview)
-        tvw.format = format
-
         // Setup seekbar
         val seekbar = view.findViewById(androidx.preference.R.id.seekbar) as? SeekBar
         if (seekbar == null) {
@@ -89,13 +84,9 @@ class SeekBarPreference : Preference {
             return
         }
 
-        this.seekbar = SeekBarWrapper(seekbar).apply {
-            data = _value
-            min = _min
-            max = _max
-
-            addSink(sink)
-            if (showValue) addSink(tvw)
+        linker.link(SeekBarWrapper(seekbar))
+        if (showValue) {
+            linker.link(TextViewWrapper(textview))
         }
     }
 
@@ -127,15 +118,9 @@ class SeekBarPreference : Preference {
         val s = state as SavedState
         super.onRestoreInstanceState(s.superState)
 
-        if (seekbar == null) {
-            _value = s.value
-            _max = s.max
-            _min = s.min
-        } else {
-            seekbar!!.data = s.value
-            seekbar!!.min = s.min
-            seekbar!!.max = s.max
-        }
+        linker.data = s.value
+        linker["min"] = s.min
+        linker["max"] = s.max
 
         notifyChanged()
     }
@@ -143,11 +128,7 @@ class SeekBarPreference : Preference {
     // Méthodes
     private fun setValueInternal(v: Int, notify: Boolean) {
         if (value != v) {
-            if (seekbar == null) {
-                _value = v
-            } else {
-                seekbar!!.data = v
-            }
+            linker.data = v
 
             persistInt(v)
             if (notify) notifyChanged()
@@ -155,33 +136,23 @@ class SeekBarPreference : Preference {
     }
 
     // Propriétés
-    var min: Int get() = seekbar?.min ?: _min
+    var min: Int get() = linker["min"]!! as Int
         set(v) {
             if (min != v) {
-                if (seekbar == null) {
-                    _min = v
-                } else {
-                    seekbar!!.min = v
-                }
-
+                linker["min"] = v
                 notifyChanged()
             }
         }
 
-    var max: Int get() = seekbar?.max ?: _max
+    var max: Int get() = linker["max"]!! as Int
         set(v) {
             if (max != v) {
-                if (seekbar == null) {
-                    _max = v
-                } else {
-                    seekbar!!.max = v
-                }
-
+                linker["max"] = v
                 notifyChanged()
             }
         }
 
-    var value: Int get() = seekbar?.data ?: _value
+    var value: Int get() = linker.data
         set(v) { setValueInternal(v, true) }
 
     // Classe

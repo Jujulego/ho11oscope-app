@@ -14,6 +14,15 @@ class TextViewWrapper<T: Any>(val textview: TextView): SinkImpl<T>() {
 
     var format: String? by property("format", this::refresh)
 
+    // Opérateurs
+    override fun set(nom: String, value: Any?) {
+        super.set(nom, value)
+
+        if (nom == "format") {
+            refresh()
+        }
+    }
+
     // Méthodes
     override fun getKeys(): MutableSet<String> {
         return super.getKeys().apply { add("format") }
