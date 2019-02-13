@@ -36,9 +36,9 @@ class Linker<T>(default: T) : SourceImpl<T>() {
     private fun addConfig(config: Configurable, keep: Boolean) {
         // Attributs
         if (keep) {
-            config.applyConfig(this)
+            config.applyTo(this)
         } else {
-            this.applyConfig(config)
+            this.applyTo(config)
         }
 
         // Liste !

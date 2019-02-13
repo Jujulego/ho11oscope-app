@@ -7,10 +7,6 @@ import kotlin.reflect.full.memberProperties
 
 interface Configurable {
     // Méthodes
-    fun applyConfig(target: Configurable) {
-        getKeys().forEach { key -> target.setProp(key, this.getProp<Any>(key)) }
-    }
-
     @CallSuper
     fun getKeys(): MutableSet<String> {
         val set = mutableSetOf<String>()
@@ -45,4 +41,12 @@ interface Configurable {
             }
         }
     }
+}
+
+// Extensions
+operator fun<T: Any> Configurable.get(nom: String) = getProp<T>(nom)
+operator fun<T: Any> Configurable.set(nom: String, value: T?) = setProp(nom, value)
+
+fun Configurable.applyTo(target: Configurable) {
+    getKeys().forEach { key -> target.setProp(key, this.getProp<Any>(key)) }
 }

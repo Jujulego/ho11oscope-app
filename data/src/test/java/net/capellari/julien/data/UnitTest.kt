@@ -21,7 +21,7 @@ class UnitTest {
         source.run()
 
         // Propriété
-        sink.setProp("test", "test")
+        sink["test"] = "test"
         assertEquals("test", sink.test)
     }
 
@@ -74,7 +74,7 @@ class UnitTest {
         // G  => |
         val gen1 = ValueGenerator(1)
         val gen2 = ValueGenerator(1)
-        gen2.setProp("test", "carrotte")
+        gen2["test"] = "carotte"
 
         val sink = TestSink(1)
 
@@ -84,11 +84,11 @@ class UnitTest {
         linker.link(sink)
 
         // Propriétés
-        assertEquals("carrotte", linker.getProp("test"))
+        assertEquals("carotte", linker["test"])
 
         linker.setProp("test", "banane")
-        assertEquals("banane", linker.getProp<String>("test"))
-        assertEquals("banane", gen1.getProp<String>("test"))
+        assertEquals("banane", linker["test"])
+        assertEquals("banane", gen1.test)
 
         // Valeur
         linker.data = 1
@@ -110,7 +110,7 @@ class UnitTest {
 
         val gen2 = Generator("", "50")
         gen2.addSink(trans)
-        trans.setProp("max", 1)
+        trans["max"] = 1
 
         gen2.run()
     }
