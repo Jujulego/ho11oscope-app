@@ -15,8 +15,8 @@ class UnitTest {
         // Test : G => Sk
         val sink = TestSink(1)
 
-        val source = Generator(1, 1)
-        source.addSink(sink)
+        val source = Generator(0, 1)
+        source.addSink(sink, sync = false)
 
         source.run()
 
@@ -28,11 +28,11 @@ class UnitTest {
     @Test
     fun transform() {
         // Test : G => T => Sk
-        val trans  = Transform<Int,Int>(2) { d, _ -> d + 1 }
-        trans.addSink(TestSink(2))
+        val trans  = Transform<Int,Int>(0) { d, _ -> d + 1 }
+        trans.addSink(TestSink(2), sync = false)
 
-        val source = Generator(1, 1)
-        source.addSink(trans)
+        val source = Generator(0, 1)
+        source.addSink(trans, sync = false)
 
         source.run()
     }
@@ -52,7 +52,7 @@ class UnitTest {
         }
 
         val mux = Multiplexer(0)
-        mux.addSink(sink)
+        mux.addSink(sink, sync = false)
 
         val gen1 = Generator(0, 1)
         gen1.addSink(mux)
@@ -78,10 +78,10 @@ class UnitTest {
 
         val sink = TestSink(1)
 
-        val linker = Linker(1)
+        val linker = Linker(0)
         linker.link(gen1)
         linker.link(gen2, keep = true)
-        linker.link(sink)
+        linker.link(sink, sync = false)
 
         // Propriétés
         assertEquals("carotte", linker["test"])
@@ -100,16 +100,16 @@ class UnitTest {
         // G => S2I => Sk
         val sink = TestSink(1)
 
-        val trans = StringToIntTransform(1)
-        trans.addSink(sink)
+        val trans = StringToIntTransform(0)
+        trans.addSink(sink, sync = false)
 
         val gen1 = Generator("", "1")
-        gen1.addSink(trans)
+        gen1.addSink(trans, sync = false)
 
         gen1.run()
 
         val gen2 = Generator("", "50")
-        gen2.addSink(trans)
+        gen2.addSink(trans, sync = false)
         trans["max"] = 1
 
         gen2.run()

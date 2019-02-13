@@ -13,9 +13,12 @@ abstract class SourceImpl<T>: Source<T> {
         sinks.forEach { it.updateData(data, origin) }
     }
 
-    override fun addSink(sink: Sink<T>) {
+    override fun addSink(sink: Sink<T>, sync: Boolean) {
         sinks.add(sink)
-        sink.updateData(data, this)
+
+        if (sync) {
+            sink.updateData(data, this)
+        }
     }
 
     override fun removeSink(sink: Sink<T>) {

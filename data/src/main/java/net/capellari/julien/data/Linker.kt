@@ -60,9 +60,9 @@ class Linker<T>(default: T, vararg config: Pair<String,Any?>) : SourceImpl<T>() 
 
         addConfig(noeud, keep)
     }
-    fun link(sink: Sink<T>, keep: Boolean = false) {
+    fun link(sink: Sink<T>, keep: Boolean = false, sync: Boolean = true) {
         // Apply current data
-        sink.updateData(data, this)
+        if (sync) sink.updateData(data, this)
 
         // Add !
         sinks.add(sink)

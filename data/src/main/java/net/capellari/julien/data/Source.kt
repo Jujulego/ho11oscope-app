@@ -5,6 +5,6 @@ interface Source<T>: Configurable {
     val data: T
 
     // Méthodes
-    fun addSink(sink: Sink<T>)
+    fun addSink(sink: Sink<T>, sync: Boolean = true)
     fun removeSink(sink: Sink<T>)
 }
