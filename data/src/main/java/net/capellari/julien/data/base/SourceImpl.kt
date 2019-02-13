@@ -3,7 +3,7 @@ package net.capellari.julien.data.base
 import net.capellari.julien.data.Sink
 import net.capellari.julien.data.Source
 
-abstract class SourceImpl<T>: Source<T>, ConfigurableImpl() {
+abstract class SourceImpl<T>: Source<T> {
     // Attributs
     private val sinks = mutableSetOf<Sink<T>>()
 

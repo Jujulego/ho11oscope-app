@@ -1,14 +1,13 @@
 package net.capellari.julien.data
 
 import net.capellari.julien.data.base.NoeudImpl
-import net.capellari.julien.data.base.SinkImpl
 
 open class Converter<F,T>(
         protected val f2t: Transform<F,T>,
         protected val t2f: Transform<T,F>, noeud: Noeud<F>) : NoeudImpl<T>() {
 
     // Attributs
-    private val internal_sink = object : SinkImpl<T>() {
+    private val internal_sink = object : Sink<T> {
         override fun updateData(data: T, origin: Source<T>) {
             emitData(data, origin)
         }

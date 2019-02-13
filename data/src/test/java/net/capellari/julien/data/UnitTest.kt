@@ -1,6 +1,5 @@
 package net.capellari.julien.data
 
-import net.capellari.julien.data.base.SinkImpl
 import net.capellari.julien.data.utils.StringToIntTransform
 import org.junit.Test
 import org.junit.Assert.*
@@ -38,7 +37,7 @@ class UnitTest {
         // G => |
         //      |} M => Sk
         // G => |
-        val sink = object : SinkImpl<Int>() {
+        val sink = object : Sink<Int> {
             var sum = 0
 
             override fun updateData(data: Int, origin: Source<Int>) {
@@ -111,7 +110,7 @@ class UnitTest {
     }
 
     // Classes
-    class TestSink<T: Any>(val result: T): SinkImpl<T>() {
+    class TestSink<T: Any>(val result: T): Sink<T> {
         // Méthodes
         override fun updateData(data: T, origin: Source<T>) {
             assertEquals(data, result)

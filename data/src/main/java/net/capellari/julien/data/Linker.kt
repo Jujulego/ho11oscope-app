@@ -1,6 +1,5 @@
 package net.capellari.julien.data
 
-import net.capellari.julien.data.base.SinkImpl
 import net.capellari.julien.data.base.SourceImpl
 
 class Linker<T>(default: T) : Source<T>, SourceImpl<T>() {
@@ -8,8 +7,9 @@ class Linker<T>(default: T) : Source<T>, SourceImpl<T>() {
     private var _data: T = default
     private var sinks   = mutableSetOf<Sink<T>>()
     private var configs = mutableSetOf<Configurable>()
+    private val config  = mutableMapOf<String,Any?>()
 
-    private val internal_sink = object : SinkImpl<T>() {
+    private val internal_sink = object : Sink<T> {
         // Méthodes
         override fun updateData(data: T, origin: Source<T>) {
             // to all childs
@@ -92,8 +92,12 @@ class Linker<T>(default: T) : Source<T>, SourceImpl<T>() {
     }
 
     // Opérateurs
+    override fun get(nom: String): Any? {
+        return config[nom]
+    }
+
     override fun set(nom: String, value: Any?) {
-        super<SourceImpl>.set(nom, value)
+        config[nom] = value
         configs.forEach { it[nom] = value }
     }
 }

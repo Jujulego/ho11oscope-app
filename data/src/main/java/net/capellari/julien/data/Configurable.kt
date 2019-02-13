@@ -3,23 +3,15 @@ package net.capellari.julien.data
 import kotlin.reflect.KProperty
 
 interface Configurable {
-    // Attributs
-    val attributs: MutableMap<String,Any?>
-
     // Méthodes
-    fun getKeys(): MutableSet<String> {
-        val keys = mutableSetOf<String>()
-        keys.addAll(attributs.keys)
-
-        return keys
-    }
+    fun getKeys(): MutableSet<String> = mutableSetOf()
     fun applyConfig(target: Configurable) {
         getKeys().forEach { key -> target[key] = this[key] }
     }
 
     // Opérateurs
-    operator fun get(nom: String): Any? = attributs[nom]
-    operator fun set(nom: String, value: Any?) { attributs[nom] = value }
+    operator fun get(nom: String): Any? = null
+    operator fun set(nom: String, value: Any?) {}
 }
 
 // Delegate

@@ -47,11 +47,10 @@ class SeekBarWrapper(val seekbar: SeekBar): NoeudImpl<Int>() {
     }
 
     override fun getKeys(): MutableSet<String> {
-        return super.getKeys().apply {
-            addAll(listOf("max", "min"))
-        }
+        return mutableSetOf("max", "min")
     }
 
+    // Opérateurs
     override fun get(nom: String): Any? {
         return when(nom) {
             "max" -> fromSeekBar(seekbar.max)
@@ -84,8 +83,6 @@ class SeekBarWrapper(val seekbar: SeekBar): NoeudImpl<Int>() {
                     _min = v
                 }
             }
-
-            else -> super.set(nom, value)
         }
     }
 }

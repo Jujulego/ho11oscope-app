@@ -67,8 +67,6 @@ class LightsFragment : ListFragment() {
         // Attributs
         var light: PointLight? = null
 
-        override val attributs = mutableMapOf<String, Any?>()
-
         private val distance = Linker(10).apply {
             link(SeekBarWrapper(view.seek_distance), keep = true)
             link(StringToIntConverter(EditTextWrapper(view.edit_distance)))

@@ -15,8 +15,8 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import net.capellari.julien.data.Linker
 import net.capellari.julien.data.R
+import net.capellari.julien.data.Sink
 import net.capellari.julien.data.Source
-import net.capellari.julien.data.base.SinkImpl
 import net.capellari.julien.data.wrappers.SeekBarWrapper
 import net.capellari.julien.data.wrappers.TextViewWrapper
 import net.capellari.julien.utils.parcelableCreator
@@ -32,7 +32,7 @@ class SeekBarPreference : Preference {
     private val linker = Linker(0)
     private val showValue: Boolean
 
-    private val sink = object : SinkImpl<Int>() {
+    private val sink = object : Sink<Int> {
         override fun updateData(data: Int, origin: Source<Int>) {
             if (callChangeListener(value)) {
                 persistInt(value)

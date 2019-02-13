@@ -22,12 +22,11 @@ class StringToIntConverter(noeud: Noeud<String>)
     override fun set(nom: String, value: Any?) {
         when(nom) {
             "max", "min" -> f2t[nom] = value
-            else -> super.set(nom, value)
         }
     }
 
     // Méthodes
     override fun getKeys(): MutableSet<String> {
-        return super.getKeys().apply { addAll(listOf("max", "min")) }
+        return mutableSetOf("max", "min")
     }
 }
