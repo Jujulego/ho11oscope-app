@@ -50,13 +50,14 @@
                 android:gravity="center" />
 
             <SeekBar android:id="@+id/seek_distance"
+                android:max="20"
+
                 android:layout_row="0"
                 android:layout_rowWeight="1"
                 android:layout_column="1"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
 
-                tools:max="20"
                 tools:progress="10" />
 
             <EditText android:id="@+id/edit_distance"
@@ -122,7 +123,7 @@
                 tools:progress="135" />
 
             <EditText android:id="@+id/edit_angle"
-                android:inputType="number"
+                android:inputType="number|numberSigned"
 
                 android:layout_row="2"
                 android:layout_rowWeight="1"
