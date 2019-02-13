@@ -51,7 +51,6 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         set(asset) {
             field = asset
             readyToRender = false
-            Log.d(TAG, "Recieved new object to render")
         }
     private var meshes = arrayListOf<AssimpMesh>()
 

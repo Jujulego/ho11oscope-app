@@ -36,7 +36,7 @@ import androidx.preference.PreferenceViewHolder;
  * Other SeekBar specific attributes (e.g. {@code title, summary, defaultValue, min, max}) can be
  * set directly on the preference widget layout.
  */
-public class SeekBarPreference extends Preference {
+public class _SeekBarPreference extends Preference {
 
     @SuppressWarnings("WeakerAccess") /* synthetic access */
             int mSeekBarValue;
@@ -114,7 +114,7 @@ public class SeekBarPreference extends Preference {
         }
     };
 
-    public SeekBarPreference(
+    public _SeekBarPreference(
             Context context, AttributeSet attrs, @AttrRes int defStyleAttr, @StyleRes int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
@@ -126,26 +126,26 @@ public class SeekBarPreference extends Preference {
          * to perform the same steps by changing min/max to max/min as following:
          * mMax = a.getInt(...) and setMin(...).
          */
-        mMin = a.getInt(R.styleable.SeekBarPreference_min, 0);
-        setMax(a.getInt(R.styleable.SeekBarPreference_android_max, 100));
-        setSeekBarIncrement(a.getInt(R.styleable.SeekBarPreference_seekBarIncrement, 0));
-        mAdjustable = a.getBoolean(R.styleable.SeekBarPreference_adjustable, true);
-        mShowSeekBarValue = a.getBoolean(R.styleable.SeekBarPreference_showSeekBarValue, true);
+        mMin = a.getInt(androidx.preference.R.styleable.SeekBarPreference_min, 0);
+        setMax(a.getInt(androidx.preference.R.styleable.SeekBarPreference_android_max, 100));
+        setSeekBarIncrement(a.getInt(androidx.preference.R.styleable.SeekBarPreference_seekBarIncrement, 0));
+        mAdjustable = a.getBoolean(androidx.preference.R.styleable.SeekBarPreference_adjustable, true);
+        mShowSeekBarValue = a.getBoolean(androidx.preference.R.styleable.SeekBarPreference_showSeekBarValue, true);
         mFormat = a.getString(R.styleable.SeekBarPreference_format);
         a.recycle();
 
         if (mFormat == null) mFormat = "%d";
     }
 
-    public SeekBarPreference(Context context, AttributeSet attrs, @AttrRes int defStyleAttr) {
+    public _SeekBarPreference(Context context, AttributeSet attrs, @AttrRes int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
     }
 
-    public SeekBarPreference(Context context, AttributeSet attrs) {
+    public _SeekBarPreference(Context context, AttributeSet attrs) {
         this(context, attrs, R.attr.seekBarPreferenceStyle);
     }
 
-    public SeekBarPreference(Context context) {
+    public _SeekBarPreference(Context context) {
         this(context, null);
     }
 
@@ -383,15 +383,15 @@ public class SeekBarPreference extends Preference {
 
         @SuppressWarnings("unused")
         public static final Creator<SavedState> CREATOR =
-                new Creator<SeekBarPreference.SavedState>() {
+                new Creator<_SeekBarPreference.SavedState>() {
                     @Override
-                    public SeekBarPreference.SavedState createFromParcel(Parcel in) {
-                        return new SeekBarPreference.SavedState(in);
+                    public _SeekBarPreference.SavedState createFromParcel(Parcel in) {
+                        return new _SeekBarPreference.SavedState(in);
                     }
 
                     @Override
-                    public SeekBarPreference.SavedState[] newArray(int size) {
-                        return new SeekBarPreference.SavedState[size];
+                    public _SeekBarPreference.SavedState[] newArray(int size) {
+                        return new _SeekBarPreference.SavedState[size];
                     }
                 };
     }

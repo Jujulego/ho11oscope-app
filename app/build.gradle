@@ -47,6 +47,7 @@ dependencies {
     implementation project(':opengl.annotations')
     annotationProcessor project(":opengl.annotations")
 
+    implementation project(':data')
     implementation project(':utils')
 
     // Kotlin
@@ -75,7 +76,7 @@ dependencies {
     testImplementation "androidx.arch.core:core-testing:$lifecycle_version"
 
     // Navigation
-    def nav_version = "1.0.0-alpha11"
+    def nav_version = "1.0.0-beta01"
 
     implementation "android.arch.navigation:navigation-fragment-ktx:$nav_version"
     implementation "android.arch.navigation:navigation-ui-ktx:$nav_version"
