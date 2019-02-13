@@ -2,9 +2,9 @@ package net.capellari.julien.data.wrappers
 
 import android.os.Build
 import android.widget.SeekBar
+import net.capellari.julien.data.Property
 import net.capellari.julien.data.Source
 import net.capellari.julien.data.base.NoeudImpl
-import net.capellari.julien.data.property
 
 class SeekBarWrapper(val seekbar: SeekBar): NoeudImpl<Int>() {
     // Attributs
@@ -17,8 +17,24 @@ class SeekBarWrapper(val seekbar: SeekBar): NoeudImpl<Int>() {
             emitData(value)
         }
 
-    var max: Int by property("max", 100)
-    var min: Int by property("min", 0)
+    @Property
+    var max: Int get() = fromSeekBar(seekbar.max)
+        set(value) { seekbar.max = toSeekBar(value) }
+
+    @Property
+    var min: Int get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) seekbar.min else _min
+        set(value) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                seekbar.min = value
+            } else {
+                // Adapt !
+                max -= value - _min
+                data -= value - _min
+
+                // Update
+                _min = value
+            }
+        }
 
     // Initialisation
     init {
@@ -44,45 +60,5 @@ class SeekBarWrapper(val seekbar: SeekBar): NoeudImpl<Int>() {
 
     override fun updateData(data: Int, origin: Source<Int>) {
         seekbar.progress = toSeekBar(data)
-    }
-
-    override fun getKeys(): MutableSet<String> {
-        return mutableSetOf("max", "min")
-    }
-
-    // Opérateurs
-    override fun get(nom: String): Any? {
-        return when(nom) {
-            "max" -> fromSeekBar(seekbar.max)
-            "min" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    seekbar.min
-                } else {
-                    _min
-                }
-            }
-
-            else -> super.get(nom)
-        }
-    }
-
-    override fun set(nom: String, value: Any?) {
-        when(nom) {
-            "max" -> seekbar.max = toSeekBar((value as? Int) ?: 100)
-            "min" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    seekbar.min = (value as? Int) ?: 100
-                } else {
-                    val v = (value as? Int) ?: 0
-
-                    // Adapt !
-                    max -= v - _min
-                    data -= v - _min
-
-                    // Update
-                    _min = v
-                }
-            }
-        }
     }
 }

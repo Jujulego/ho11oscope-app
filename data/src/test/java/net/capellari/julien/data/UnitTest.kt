@@ -13,19 +13,25 @@ class UnitTest {
     @Test
     fun sink() {
         // Test : G => Sk
-        val source = Generator(0, 1)
-        source.addSink(TestSink(1))
+        val sink = TestSink(1)
+
+        val source = Generator(1, 1)
+        source.addSink(sink)
 
         source.run()
+
+        // Propriété
+        sink.setProp("test", "test")
+        assertEquals("test", sink.test)
     }
 
     @Test
     fun transform() {
         // Test : G => T => Sk
-        val trans  = Transform<Int,Int>(0) { d, _ -> d + 1 }
+        val trans  = Transform<Int,Int>(2) { d, _ -> d + 1 }
         trans.addSink(TestSink(2))
 
-        val source = Generator(0, 1)
+        val source = Generator(1, 1)
         source.addSink(trans)
 
         source.run()
@@ -66,23 +72,23 @@ class UnitTest {
         // G  => |
         // Sk <= |} L
         // G  => |
-        val gen1 = Generator(0, 1)
-        val gen2 = Generator(0, 1)
-        gen2["test"] = 2
+        val gen1 = ValueGenerator(1)
+        val gen2 = ValueGenerator(1)
+        gen2.setProp("test", "carrotte")
 
         val sink = TestSink(1)
 
-        val linker = Linker(0)
+        val linker = Linker(1)
         linker.link(gen1)
-        linker.link(gen2, true)
+        linker.link(gen2, keep = true)
         linker.link(sink)
 
         // Propriétés
-        assertEquals(2, linker["test"])
+        assertEquals("carrotte", linker.getProp("test"))
 
-        linker["test"] = 1
-        assertEquals(1, linker["test"])
-        assertEquals(1, gen1["test"])
+        linker.setProp("test", "banane")
+        assertEquals("banane", linker.getProp<String>("test"))
+        assertEquals("banane", gen1.getProp<String>("test"))
 
         // Valeur
         linker.data = 1
@@ -94,7 +100,7 @@ class UnitTest {
         // G => S2I => Sk
         val sink = TestSink(1)
 
-        val trans = StringToIntTransform()
+        val trans = StringToIntTransform(1)
         trans.addSink(sink)
 
         val gen1 = Generator("", "1")
@@ -104,16 +110,24 @@ class UnitTest {
 
         val gen2 = Generator("", "50")
         gen2.addSink(trans)
-        trans["max"] = 1
+        trans.setProp("max", 1)
 
         gen2.run()
     }
 
     // Classes
     class TestSink<T: Any>(val result: T): Sink<T> {
+        // Propriétés
+        @Property var test: String = ""
+
         // Méthodes
         override fun updateData(data: T, origin: Source<T>) {
-            assertEquals(data, result)
+            assertEquals(result, data)
         }
+    }
+
+    class ValueGenerator<T>(val value: T): Generator<T>(value, value) {
+        // Propriétés
+        @Property var test: String = ""
     }
 }

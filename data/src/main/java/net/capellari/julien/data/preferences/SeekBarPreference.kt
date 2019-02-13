@@ -50,13 +50,13 @@ class SeekBarPreference : Preference {
         // Get attributes
         val a = context.obtainStyledAttributes(attrs, androidx.preference.R.styleable.SeekBarPreference, defStyleAttr, defStyleRes)
 
-        linker["min"] = a.getInt(androidx.preference.R.styleable.SeekBarPreference_min, 0)
-        linker["max"] = a.getInt(androidx.preference.R.styleable.SeekBarPreference_android_max, 100)
+        linker.setProp("min", a.getInt(androidx.preference.R.styleable.SeekBarPreference_min, 0))
+        linker.setProp("max", a.getInt(androidx.preference.R.styleable.SeekBarPreference_android_max, 100))
         // TODO: androidx.preference.R.styleable.SeekBarPreference_seekBarIncrement
         // TODO: androidx.preference.R.styleable.SeekBarPreference_adjustable
 
         showValue = a.getBoolean(androidx.preference.R.styleable.SeekBarPreference_showSeekBarValue, true)
-        linker["format"] = a.getString(R.styleable.SeekBarPreference_format)
+        linker.setProp("format", a.getString(R.styleable.SeekBarPreference_format))
 
         a.recycle()
     }
@@ -119,8 +119,8 @@ class SeekBarPreference : Preference {
         super.onRestoreInstanceState(s.superState)
 
         linker.data = s.value
-        linker["min"] = s.min
-        linker["max"] = s.max
+        linker.setProp("min", s.min)
+        linker.setProp("max", s.max)
 
         notifyChanged()
     }
@@ -136,18 +136,18 @@ class SeekBarPreference : Preference {
     }
 
     // Propriétés
-    var min: Int get() = linker["min"]!! as Int
+    var min: Int get() = linker.getProp("min")!!
         set(v) {
             if (min != v) {
-                linker["min"] = v
+                linker.setProp("min", v)
                 notifyChanged()
             }
         }
 
-    var max: Int get() = linker["max"]!! as Int
+    var max: Int get() = linker.getProp("max")!!
         set(v) {
             if (max != v) {
-                linker["max"] = v
+                linker.setProp("max", v)
                 notifyChanged()
             }
         }

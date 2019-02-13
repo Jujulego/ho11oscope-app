@@ -2,7 +2,7 @@ package net.capellari.julien.data
 
 import net.capellari.julien.data.base.SourceImpl
 
-class Linker<T>(default: T) : Source<T>, SourceImpl<T>() {
+class Linker<T>(default: T) : SourceImpl<T>() {
     // Attributs
     private var _data: T = default
     private var sinks   = mutableSetOf<Sink<T>>()
@@ -91,13 +91,21 @@ class Linker<T>(default: T) : Source<T>, SourceImpl<T>() {
         configs.remove(source)
     }
 
-    // Opérateurs
-    override fun get(nom: String): Any? {
-        return config[nom]
+    override fun getKeys(): MutableSet<String> {
+        return super.getKeys().apply {
+            addAll(config.keys)
+        }
     }
 
-    override fun set(nom: String, value: Any?) {
+    override fun<T: Any> getProp(nom: String): T? {
+        super.getProp<T>(nom)
+        return config[nom] as? T
+    }
+
+    override fun<T: Any> setProp(nom: String, value: T?) {
+        super.setProp(nom, value)
+
         config[nom] = value
-        configs.forEach { it[nom] = value }
+        configs.forEach { it.setProp(nom, value) }
     }
 }

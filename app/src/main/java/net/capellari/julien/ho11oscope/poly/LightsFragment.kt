@@ -76,16 +76,16 @@ class LightsFragment : ListFragment() {
             link(SeekBarWrapper(view.seek_hauteur))
             link(StringToIntConverter(EditTextWrapper(view.edit_hauteur)))
 
-            this["max"] = 10
-            this["min"] = -10
+            setProp("max", 10)
+            setProp("min", -10)
         }
 
         private val angle = Linker(0).apply {
             link(SeekBarWrapper(view.seek_angle))
             link(StringToIntConverter(EditTextWrapper(view.edit_angle)))
 
-            this["max"] = 180
-            this["min"] = -180
+            setProp("max", 180)
+            setProp("min", -180)
         }
 
         // Initialisation

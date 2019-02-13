@@ -1,41 +1,48 @@
 package net.capellari.julien.data
 
-import kotlin.reflect.KProperty
+import androidx.annotation.CallSuper
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.memberProperties
 
 interface Configurable {
     // Méthodes
-    fun getKeys(): MutableSet<String> = mutableSetOf()
     fun applyConfig(target: Configurable) {
-        getKeys().forEach { key -> target[key] = this[key] }
+        getKeys().forEach { key -> target.setProp(key, this.getProp<Any>(key)) }
     }
 
-    // Opérateurs
-    operator fun get(nom: String): Any? = null
-    operator fun set(nom: String, value: Any?) {}
-}
+    @CallSuper
+    fun getKeys(): MutableSet<String> {
+        val set = mutableSetOf<String>()
 
-// Delegate
-fun<T: Any> property(nom: String) = PropertyDelegate<T>(nom) {}
-fun<T: Any> property(nom: String, default: T) = DefaultPropertyDelegate(nom, default) {}
-fun<T: Any> property(nom: String, callback: () -> Unit) = PropertyDelegate<T>(nom, callback)
-fun<T: Any> property(nom: String, default: T, callback: () -> Unit) = DefaultPropertyDelegate(nom, default, callback)
+        this::class.memberProperties
+                .filter { it.annotations.filterIsInstance<Property>().isNotEmpty() }
+                .forEach { set.add(it.name) }
 
-open class PropertyDelegate<T: Any>(val nom : String, val callback: () -> Unit) {
-    // Opérateurs
+        return set
+    }
+
+    @CallSuper
     @Suppress("UNCHECKED_CAST")
-    open operator fun<R: Configurable> getValue(thisRef: R, property: KProperty<*>): T? {
-        return thisRef[nom] as? T
+    fun<T: Any> getProp(nom: String): T? {
+        val prop = this::class.memberProperties.find { it.name == nom }
+        prop?.let {
+            if (it.findAnnotation<Property>() != null) {
+                return it.getter.call(this) as? T
+            }
+        }
+
+        return null
     }
 
-    open operator fun<R : Configurable> setValue(thisRef: R, property: KProperty<*>, value: T?) {
-        thisRef[nom] = value
-        callback()
-    }
-}
-
-class DefaultPropertyDelegate<T: Any>(nom : String, val default: T, callback: () -> Unit): PropertyDelegate<T>(nom, callback) {
-    // Opérateurs
-    override operator fun<R: Configurable> getValue(thisRef: R, property: KProperty<*>): T {
-        return super.getValue(thisRef, property) ?: default
+    @CallSuper
+    @Suppress("UNCHECKED_CAST")
+    fun<T: Any> setProp(nom: String, value: T?) {
+        val prop = this::class.memberProperties.find { it.name == nom }
+        prop?.let {
+            if (it is KMutableProperty<*> && it.findAnnotation<Property>() != null) {
+                it.setter.call(this, value)
+            }
+        }
     }
 }
