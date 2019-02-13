@@ -2,12 +2,12 @@ package net.capellari.julien.data
 
 import net.capellari.julien.data.base.SourceImpl
 
-class Linker<T>(default: T) : SourceImpl<T>() {
+class Linker<T>(default: T, vararg config: Pair<String,Any?>) : SourceImpl<T>() {
     // Attributs
     private var _data: T = default
     private var sinks   = mutableSetOf<Sink<T>>()
     private var configs = mutableSetOf<Configurable>()
-    private val config  = mutableMapOf<String,Any?>()
+    private val config  = mutableMapOf(*config)
 
     private val internal_sink = object : Sink<T> {
         // Méthodes

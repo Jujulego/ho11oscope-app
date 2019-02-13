@@ -1,7 +1,9 @@
 package net.capellari.julien.data
 
 import androidx.annotation.CallSuper
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 
@@ -49,4 +51,17 @@ operator fun<T: Any> Configurable.set(nom: String, value: T?) = setProp(nom, val
 
 fun Configurable.applyTo(target: Configurable) {
     getKeys().forEach { key -> target.setProp(key, this.getProp<Any>(key)) }
+}
+
+// Delegate
+fun<T: Any> linkTo(config: Configurable, nom: String? = null) = LinkToDelegate<T>(config, nom)
+
+class LinkToDelegate<T: Any>(val config: Configurable, val nom: String? = null): ReadWriteProperty<Configurable,T?> {
+    override fun getValue(thisRef: Configurable, property: KProperty<*>): T? {
+        return config.getProp(nom ?: property.name)
+    }
+
+    override fun setValue(thisRef: Configurable, property: KProperty<*>, value: T?) {
+        config.setProp(nom ?: property.name, value)
+    }
 }
