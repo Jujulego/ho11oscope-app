@@ -47,6 +47,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var angle: Float = 0f // current rotation angle (deg)
 
     @Volatile
+    var explode: Boolean = false
+
+    @Volatile
     var asset: Asset? = null // object to render
         set(asset) {
             field = asset
@@ -137,7 +140,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         // Compute MVP Matrix
         polyProgram.matrices.mvpMatrix = polyProgram.stables.projMatrix * (polyProgram.stables.viewMatrix * polyProgram.matrices.modelMatrix)
 
-        val m = magnitude / 20f
+        val m = if (explode) magnitude / 20f else 0f
         if (polyProgram.magnitude != m) {
             polyProgram.magnitude += (m - polyProgram.magnitude) * deltaT
 

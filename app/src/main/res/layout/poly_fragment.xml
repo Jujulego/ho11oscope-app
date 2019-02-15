@@ -35,6 +35,17 @@
             app:layout_constraintBottom_toBottomOf="@+id/poly_surface"
             app:layout_constraintRight_toRightOf="@id/poly_surface" />
 
+        <ToggleButton android:id="@+id/btn_bomb"
+            android:background="@drawable/btn_bomb_bg"
+            style="@style/AppTheme.ImageToggleButton"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+
+            app:layout_constraintBottom_toBottomOf="@id/poly_surface"
+            app:layout_constraintEnd_toEndOf="@id/poly_surface" />
+
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/pager"
             android:layout_width="match_parent"

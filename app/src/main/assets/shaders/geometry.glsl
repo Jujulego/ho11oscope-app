@@ -40,7 +40,7 @@ vec3 getNormal() {
 }
 
 vec4 explode(vec4 position, vec3 normal) {
-    if (magnitude < 0.01) {
+    if (magnitude < 0.001) {
         return position;
     }
 

@@ -111,6 +111,11 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
                 }
             }
         })
+
+        // Bomb button
+        btn_bomb.setOnCheckedChangeListener { _, isChecked ->
+            poly_surface.renderer.explode = isChecked
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
