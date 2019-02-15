@@ -46,8 +46,8 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
     private var lastFrameTime: Long = 0
     private var angle: Float = 0f // current rotation angle (deg)
 
-    @Volatile
-    var explode: Boolean = false
+    @Volatile var rotate: Boolean = true
+    @Volatile var explode: Boolean = false
 
     @Volatile
     var asset: Asset? = null // object to render
@@ -109,9 +109,11 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         val deltaT = minOf((now - lastFrameTime) * 0.001f, 0.1f)
 
         lastFrameTime = now
-        angle += deltaT * MODEL_ROTATION_SPEED
 
-        if (angle >= 360) angle -= 360
+        if (rotate) {
+            angle += deltaT * MODEL_ROTATION_SPEED
+            if (angle >= 360) angle -= 360
+        }
 
         // Draw background
         GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
@@ -142,7 +144,7 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
 
         val m = if (explode) magnitude / 20f else 0f
         if (polyProgram.magnitude != m) {
-            polyProgram.magnitude += (m - polyProgram.magnitude) * deltaT
+            polyProgram.magnitude += (m - polyProgram.magnitude) * deltaT * 2f
 
             if (polyProgram.magnitude < m) {
                 polyProgram.magnitude = minOf(m, polyProgram.magnitude)

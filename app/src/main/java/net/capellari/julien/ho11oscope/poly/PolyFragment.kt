@@ -112,7 +112,10 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
             }
         })
 
-        // Bomb button
+        // Buttons
+        btn_rotate.setOnCheckedChangeListener { _, isChecked ->
+            poly_surface.renderer.rotate = isChecked
+        }
         btn_bomb.setOnCheckedChangeListener { _, isChecked ->
             poly_surface.renderer.explode = isChecked
         }

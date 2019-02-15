@@ -27,6 +27,18 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toLeftOf="@id/surface_guideline" />
 
+    <ToggleButton android:id="@+id/btn_rotate"
+        android:background="@drawable/btn_rotate_bg"
+        style="@style/AppTheme.ImageToggleButton"
+        android:checked="true"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+
+        app:layout_constraintBottom_toTopOf="@id/btn_bomb"
+        app:layout_constraintEnd_toEndOf="@id/poly_surface" />
+
     <ToggleButton android:id="@+id/btn_bomb"
         android:background="@drawable/btn_bomb_bg"
         style="@style/AppTheme.ImageToggleButton"
