@@ -97,6 +97,7 @@ class Linker<T>(default: T, vararg config: Pair<String,Any?>) : SourceImpl<T>() 
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun<T: Any> getProp(nom: String): T? {
         super.getProp<T>(nom)
         return config[nom] as? T
