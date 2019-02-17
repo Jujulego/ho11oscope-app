@@ -23,7 +23,8 @@ abstract class WireframeProgram : BaseProgram() {
     }
 
     // Attributs
-    @Uniform("light")     open var light = PointLight()
+    @Uniform("nbLights")  open var nbLights = 0
+    @Uniform("lights")    open var lights   = arrayOf<PointLight>()
     @Uniform("magnitude") open var magnitude = .5f
     @Uniform("material", true) var material  = Material("")
 

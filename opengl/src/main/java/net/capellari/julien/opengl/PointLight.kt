@@ -14,6 +14,7 @@ class PointLight() : Light() {
      *     float ambient;
      *     float diffuse;
      *     float specular;
+     *     bool isActive;
      *
      *     vec3 position;
      *

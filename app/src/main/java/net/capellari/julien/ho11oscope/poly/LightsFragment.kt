@@ -1,24 +1,14 @@
 package net.capellari.julien.ho11oscope.poly
 
 import android.content.Context
-import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.poly_light.view.*
-import net.capellari.julien.data.Linker
-import net.capellari.julien.data.Sink
-import net.capellari.julien.data.Source
-import net.capellari.julien.data.utils.StringToIntConverter
-import net.capellari.julien.data.wrappers.EditTextWrapper
-import net.capellari.julien.data.wrappers.SeekBarWrapper
 import net.capellari.julien.fragments.ListFragment
 import net.capellari.julien.ho11oscope.R
 import net.capellari.julien.opengl.PointLight
-import net.capellari.julien.opengl.Vec3
 import net.capellari.julien.utils.inflate
-import kotlin.math.*
 
 class LightsFragment : ListFragment() {
     // Attributs
@@ -49,13 +39,14 @@ class LightsFragment : ListFragment() {
     inner class LightsAdapter : RecyclerView.Adapter<LightHolder>() {
         // Attributs
         var lights = arrayListOf(
-                PointLight(0f, 1f, 10f)
+                PointLight(0f, 1f, 10f),
+                PointLight(10f, 1f, 0f)
         )
 
         // Méthodes
         override fun getItemCount(): Int = lights.size
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LightHolder {
-            return LightHolder(parent.inflate(R.layout.poly_light, false))
+            return LightHolder(parent.inflate(R.layout.poly_light, false), this@LightsFragment)
         }
 
         override fun onBindViewHolder(holder: LightHolder, position: Int) {
@@ -63,60 +54,4 @@ class LightsFragment : ListFragment() {
         }
     }
 
-    inner class LightHolder(val view: View) : RecyclerView.ViewHolder(view), Sink<Int> {
-        // Attributs
-        var light: PointLight? = null
-
-        private val distance = Linker(10).apply {
-            link(SeekBarWrapper(view.seek_distance), keep = true)
-            link(StringToIntConverter(EditTextWrapper(view.edit_distance)))
-        }
-
-        private val hauteur = Linker(1, "max" to 10, "min" to -10).apply {
-            link(SeekBarWrapper(view.seek_hauteur))
-            link(StringToIntConverter(EditTextWrapper(view.edit_hauteur)))
-        }
-
-        private val angle = Linker(0, "max" to 180, "min" to -180).apply {
-            link(SeekBarWrapper(view.seek_angle))
-            link(StringToIntConverter(EditTextWrapper(view.edit_angle)))
-        }
-
-        // Initialisation
-        init {
-            distance.addSink(this)
-            hauteur.addSink(this)
-            angle.addSink(this)
-        }
-
-        // Events
-        override fun updateData(data: Int, origin: Source<Int>) {
-            updatePos()
-        }
-
-        // Méthodes
-        fun bind(id: Int, value: PointLight) {
-            light = value
-
-            // Set values
-            view.nom.text = getString(R.string.poly_light_pointlight, id)
-
-            distance.data = light!!.position.xz.length.toInt()
-            hauteur.data  = light!!.position.y.toInt()
-            angle.data    = (tan(light!!.position.x / light!!.position.z) * 180 / Math.PI).toInt()
-        }
-
-        private fun updatePos() {
-            light?.apply {
-                // Get values
-                val d = distance.data.toFloat()
-                val h = hauteur.data.toFloat()
-                val a = angle.data * Math.PI.toFloat() / 180f
-
-                // Apply
-                position = Vec3((d * sin(a)), h, (d * cos(a)))
-                updateLights()
-            }
-        }
-    }
 }

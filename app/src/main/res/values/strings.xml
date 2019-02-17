@@ -54,4 +54,6 @@
 
     <!-- Others -->
     <string name="angle_deg">°</string>
+    <string name="poly_light_action_deactivate">Désactiver</string>
+    <string name="poly_light_action_delete">Supprimer</string>
 </resources>

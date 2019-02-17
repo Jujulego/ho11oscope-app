@@ -21,6 +21,7 @@ struct PointLight {
     float ambient;
     float diffuse;
     float specular;
+    bool isActive;
 
     vec3 position;
     float constant;
@@ -36,7 +37,9 @@ layout (std140) uniform Matrices {
 };
 
 uniform Material material;
-uniform PointLight light;
+
+uniform int nbLights;
+uniform PointLight[8] lights;
 
 // Entrées
 in Vectors {
@@ -66,8 +69,15 @@ void main() {
     // Prepare
     vec3 normal = normalize(vecs.normal);
     vec3 eyeDir = normalize(vecs.eyeDirection);
+    vec3 result = vec3(0f, 0f, 0f);
 
-    vec3 result = calcPointLight(light, normal, vecs.position, eyeDir);
+    for (int i = 0; i < nbLights; ++i) {
+        PointLight light = lights[i];
+
+        if (light.isActive) {
+            result += calcPointLight(light, normal, vecs.position, eyeDir);
+        }
+    }
 
     FragColor = vec4(result, material.opacity);
 }

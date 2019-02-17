@@ -277,6 +277,11 @@ abstract class BaseProgram {
             setUniformValue(nom, array)
         }
     }
+    fun<T : Structure> setUniformValue(nom: String, v: Array<T>) {
+        for (i in  0 until v.size) {
+            v[i].toUniform("$nom[$i]", this)
+        }
+    }
 
     fun setUniformValue(nom: String, v: Any?) {
         if (v != null) {

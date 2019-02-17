@@ -17,10 +17,12 @@ abstract class Light : Structure {
     var diffuse: Float = 1f
     var specular: Float = 1f
 
+    var isActive: Boolean = true
+
     // Méthodes
     @CallSuper
     override fun getBufferSize(): Int {
-        return (3 + 1 + 1 + 1) * GLUtils.FLOAT_SIZE
+        return (3 + 1 + 1 + 1) * GLUtils.FLOAT_SIZE + 1 * GLUtils.INT_SIZE
     }
 
     @CallSuper
@@ -29,6 +31,7 @@ abstract class Light : Structure {
         buffer.put(ambient)
         buffer.put(diffuse)
         buffer.put(specular)
+        buffer.put(isActive)
     }
 
     @CallSuper
@@ -38,6 +41,7 @@ abstract class Light : Structure {
             program.setUniformValue("$nom.ambient",  ambient)
             program.setUniformValue("$nom.diffuse",  diffuse)
             program.setUniformValue("$nom.specular", specular)
+            program.setUniformValue("$nom.isActive", isActive)
         }
     }
 }

@@ -183,9 +183,9 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.light.ambient  = ambientFactor  / 100f
-        polyProgram.light.diffuse  = diffuseFactor  / 100f
-        polyProgram.light.specular = specularFactor / 100f
+        polyProgram.lights.forEach { it.ambient  = ambientFactor  / 100f }
+        polyProgram.lights.forEach { it.diffuse  = diffuseFactor  / 100f }
+        polyProgram.lights.forEach { it.specular = specularFactor / 100f }
     }
 
     private fun activateTransparency() {

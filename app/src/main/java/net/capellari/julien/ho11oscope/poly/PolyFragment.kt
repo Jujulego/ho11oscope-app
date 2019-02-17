@@ -124,7 +124,7 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         // Inflate menu
         inflater.inflate(R.menu.toolbar_recherche, menu)
-        inflater.inflate(R.menu.poly_toolbar, menu)
+        inflater.inflate(R.menu.toolbar_poly, menu)
 
         // SearchItem
         searchMenuItem = menu.findItem(R.id.tool_search)

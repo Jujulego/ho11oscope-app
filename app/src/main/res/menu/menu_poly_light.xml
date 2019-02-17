@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_deactivate"
+        android:checkable="true"
+        android:checked="false"
+        android:title="@string/poly_light_action_deactivate" />
+
+    <item android:id="@+id/action_delete"
+        android:title="@string/poly_light_action_delete" />
+</menu>

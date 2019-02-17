@@ -10,6 +10,7 @@ import net.capellari.julien.opengl.*
 import net.capellari.julien.utils.sharedPreference
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.min
 
 class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferences.OnSharedPreferenceChangeListener {
     // Companion
@@ -119,18 +120,22 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
 
         // Update lights
-        lights?.let {
-            val light = it[0]
-
+        lights?.let { lights ->
             if (newLights) {
-                light.apply {
-                    ambient  = ambientFactor  / 100f
-                    diffuse  = diffuseFactor  / 100f
-                    specular = specularFactor / 100f
+                val array = Array(min(8, lights.size)) { PointLight() }
+                for (i in 0 until array.size) {
+                    lights[i].ambient  = ambientFactor  / 100f
+                    lights[i].diffuse  = diffuseFactor  / 100f
+                    lights[i].specular = specularFactor / 100f
+
+                    array[i] = lights[i]
                 }
 
-                polyProgram.light = light
-                wireframeProgram.light = light
+                polyProgram.lights = array
+                polyProgram.nbLights = lights.size
+
+                wireframeProgram.lights = array
+                wireframeProgram.nbLights = lights.size
 
                 newLights = false
             }
@@ -213,9 +218,9 @@ class PolyRenderer(val context: Context): GLSurfaceView.Renderer, SharedPreferen
         Log.d(TAG, "specular factor : $specularFactor%")
 
         // update factors
-        polyProgram.light.ambient  = ambientFactor  / 100f
-        polyProgram.light.diffuse  = diffuseFactor  / 100f
-        polyProgram.light.specular = specularFactor / 100f
+        polyProgram.lights.forEach { it.ambient  = ambientFactor  / 100f }
+        polyProgram.lights.forEach { it.diffuse  = diffuseFactor  / 100f }
+        polyProgram.lights.forEach { it.specular = specularFactor / 100f }
     }
 
     private fun activateTransparency() {
