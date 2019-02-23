@@ -14,25 +14,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/nom"
+        <ToggleButton android:id="@+id/btn_activate"
+            android:background="@drawable/btn_light_bulb_bg"
+            style="@style/AppTheme.ImageToggleButton"
+            android:checked="true"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView android:id="@+id/nom"
+            android:textSize="18sp"
+
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
 
-            android:drawableStart="@drawable/ic_flat_light_bulb_24dp"
-            android:drawablePadding="8dp"
-            android:textSize="18sp"
-
             app:layout_constraintEnd_toStartOf="@id/light_menu"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_activate"
             app:layout_constraintTop_toTopOf="parent"
 
             tools:text="Light #1" />
 
         <ImageButton android:id="@+id/light_menu"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_menu_more_24dp"
+            android:src="@drawable/ic_menu_more"
 
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -45,6 +45,14 @@ class LightHolder(val view: View, val frag: LightsFragment) : RecyclerView.ViewH
         hauteur.addSink(this)
         angle.addSink(this)
 
+        // toggle btn
+        view.btn_activate.setOnCheckedChangeListener { _, isChecked ->
+            light?.apply {
+                isActive = isChecked
+                frag.updateLights()
+            }
+        }
+
         // Popup Menu
         menu = PopupMenu(frag.requireContext(), view.light_menu)
         menu.inflate(R.menu.menu_poly_light)
@@ -59,17 +67,6 @@ class LightHolder(val view: View, val frag: LightsFragment) : RecyclerView.ViewH
     // Events
     override fun onMenuItemClick(item: MenuItem): Boolean {
         return when(item.itemId) {
-            R.id.action_deactivate -> {
-                item.isChecked = !item.isChecked
-
-                light?.apply {
-                    isActive = !item.isChecked
-                    frag.updateLights()
-                }
-
-                true
-            }
-
             else -> false
         }
     }
@@ -80,16 +77,19 @@ class LightHolder(val view: View, val frag: LightsFragment) : RecyclerView.ViewH
 
     // Méthodes
     fun bind(id: Int, value: PointLight) {
-        light = value
+        light = null
 
         // Set values
         view.nom.text = frag.getString(R.string.poly_light_pointlight, id)
 
-        distance.data = light!!.position.xz.length.toInt()
-        hauteur.data  = light!!.position.y.toInt()
-        angle.data    = (tan(light!!.position.x / light!!.position.z) * 180 / Math.PI).toInt()
+        distance.data = value.position.xz.length.toInt()
+        hauteur.data  = value.position.y.toInt()
+        angle.data    = (tan(value.position.x / value.position.z) * 180f / Math.PI).toInt()-360
 
-        menu.menu.findItem(R.id.action_deactivate)?.isChecked = !light!!.isActive
+        view.btn_activate.isChecked = value.isActive
+
+        // Keep light
+        light = value
     }
 
     private fun updatePos() {

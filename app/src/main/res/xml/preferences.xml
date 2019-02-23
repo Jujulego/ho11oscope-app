@@ -5,7 +5,7 @@
     <Preference android:title="@string/opengl_settings"
         app:fragment="net.capellari.julien.ho11oscope.poly.PolySettingsFragment"
 
-        android:icon="@drawable/ic_flat_cube_24dp"/>
+        android:icon="@drawable/ic_flat_cube" />
 
     <PreferenceCategory android:title="@string/player_settings">
         <CheckBoxPreference android:title="@string/player_brightness_setting"

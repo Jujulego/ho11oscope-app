@@ -5,19 +5,19 @@
     <group android:checkableBehavior="single">
 
         <item android:id="@+id/poly_liste"
-            android:icon="@drawable/ic_flat_search_24dp"
+            android:icon="@drawable/ic_flat_search"
             android:title="@string/poly_list"
 
             app:showAsAction="ifRoom" />
 
         <item android:id="@+id/poly_lights"
-            android:icon="@drawable/ic_flat_lights_24dp"
+            android:icon="@drawable/ic_flat_lights"
             android:title="@string/poly_lights"
 
             app:showAsAction="ifRoom" />
 
         <item android:id="@+id/poly_settings"
-            android:icon="@drawable/ic_flat_settings2_24dp"
+            android:icon="@drawable/ic_flat_settings2"
             android:title="@string/poly_settings"
 
             app:showAsAction="ifRoom" />

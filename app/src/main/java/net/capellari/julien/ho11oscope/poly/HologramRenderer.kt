@@ -86,7 +86,7 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
     private var diffuseFactor  by sharedPreference("diffuseFactor",  context, 50)
     private var specularFactor by sharedPreference("specularFactor", context, 50)
 
-    private var magnitude  by sharedPreference("explodeMagnitude", context, 50)
+    //private var magnitude by sharedPreference("explodeMagnitude", context, 50)
 
     // Méthodes
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
@@ -114,19 +114,6 @@ class HologramRenderer(val context: Context): GLSurfaceView.Renderer {
 
         // Draw background
         GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
-
-        val m = magnitude / 20f
-        if (polyProgram.magnitude != m) {
-            polyProgram.magnitude += (m - polyProgram.magnitude) * deltaT
-
-            if (polyProgram.magnitude < m) {
-                polyProgram.magnitude = minOf(m, polyProgram.magnitude)
-            } else {
-                polyProgram.magnitude = maxOf(m, polyProgram.magnitude)
-            }
-
-            wireframeProgram.magnitude = polyProgram.magnitude
-        }
 
         // render
         if (readyToRender) {

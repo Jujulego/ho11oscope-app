@@ -55,7 +55,7 @@
         android:paddingStart="0dp"
         android:paddingEnd="12dp"
 
-        android:drawableStart="@drawable/ic_play_arrow_36dp"
+        android:drawableStart="@drawable/ic_play_arrow"
         android:drawablePadding="8dp"
         android:drawableTint="@android:color/white"
 

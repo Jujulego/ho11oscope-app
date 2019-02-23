@@ -48,30 +48,6 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
 
         // ViewModels
         polyModel = ViewModelProviders.of(activity!!)[PolyViewModel::class.java]
-        polyModel.getAsset().observe(this, Observer<Asset> {
-            progress.visibility = View.VISIBLE
-
-            doAsync {
-                // Add listener : it will be called even if is already ready
-                it.addOnReadyListener(object : Asset.OnAssetReadyListener {
-                    override fun onReady() {
-                        poly_surface.renderer.asset = it
-
-                        this@doAsync.uiThread {
-                            progress?.visibility = View.GONE
-                        }
-                    }
-                })
-
-                // Lance le téléchargement
-                if (!it.ready) {
-                    it.download(context)
-                }
-            }
-        })
-        polyModel.lights.observe(this, Observer<ArrayList<PointLight>> {
-            poly_surface.renderer.lights = it
-        })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,6 +125,35 @@ class PolyFragment : Fragment(), MenuItem.OnActionExpandListener {
         polyModel.invalidate()
 
         return true
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        polyModel.getAsset().observe(this, Observer<Asset> {
+            progress.visibility = View.VISIBLE
+
+            doAsync {
+                // Add listener : it will be called even if is already ready
+                it.addOnReadyListener(object : Asset.OnAssetReadyListener {
+                    override fun onReady() {
+                        poly_surface.renderer.asset = it
+
+                        this@doAsync.uiThread {
+                            progress?.visibility = View.GONE
+                        }
+                    }
+                })
+
+                // Lance le téléchargement
+                if (!it.ready) {
+                    it.download(requireContext())
+                }
+            }
+        })
+        polyModel.lights.observe(this, Observer<ArrayList<PointLight>> {
+            poly_surface.renderer.lights = it
+        })
     }
 
     // Méthodes

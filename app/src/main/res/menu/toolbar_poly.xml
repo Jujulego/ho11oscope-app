@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item android:id="@+id/poly_play"
-        android:icon="@drawable/ic_play_arrow_36dp"
+        android:icon="@drawable/ic_play_arrow"
         android:title="@string/poly_play"
 
         app:showAsAction="ifRoom" />

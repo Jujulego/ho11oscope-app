@@ -28,8 +28,8 @@ class PointLight() : Light() {
     var position: Vec3 = Vec3()
 
     var constant:  Float = 1f
-    var linear:    Float = .045f
-    var quadratic: Float = .0075f
+    var linear:    Float = .09f
+    var quadratic: Float = .032f
 
     // Constructeurs
     constructor(pos: Vec3): this() { position = pos }

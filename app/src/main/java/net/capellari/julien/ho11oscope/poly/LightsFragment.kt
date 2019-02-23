@@ -40,7 +40,7 @@ class LightsFragment : ListFragment() {
         // Attributs
         var lights = arrayListOf(
                 PointLight(0f, 1f, 10f),
-                PointLight(10f, 1f, 0f)
+                PointLight(5f, 2f, 5f)
         )
 
         // Méthodes
