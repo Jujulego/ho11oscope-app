@@ -45,13 +45,20 @@ class LightHolder(val view: View, val frag: LightsFragment) : RecyclerView.ViewH
         hauteur.addSink(this)
         angle.addSink(this)
 
-        // toggle btn
+        // toggle btns
         view.btn_activate.setOnCheckedChangeListener { _, isChecked ->
             light?.apply {
                 isActive = isChecked
                 frag.updateLights()
             }
         }
+
+        view.btn_expand.setOnCheckedChangeListener { _, isChecked ->
+            view.grid.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        view.btn_expand.isChecked = false
+        view.grid.visibility = View.GONE
 
         // Popup Menu
         menu = PopupMenu(frag.requireContext(), view.light_menu)
