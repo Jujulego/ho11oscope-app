@@ -56,6 +56,7 @@
 
         <ToggleButton android:id="@+id/btn_expand"
             android:background="@drawable/btn_expand_bg"
+            android:stateListAnimator="@animator/btn_expand"
             style="@style/AppTheme.ImageToggleButton"
             android:checked="false"
 

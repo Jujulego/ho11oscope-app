@@ -4,5 +4,5 @@
         android:drawable="@android:color/transparent" />
 
     <item android:id="@android:id/toggle"
-        android:drawable="@drawable/btn_expand" />
+        android:drawable="@drawable/ic_expand_more" />
 </layer-list>
