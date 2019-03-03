@@ -3,20 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
 
     tools:context=".opengl.OpenGLFragment">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-
+        android:elevation="4dp"
         android:background="?attr/colorPrimary"
         android:theme="@style/AppTheme.AppBarOverlay"
 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        app:tabBackground="?attr/colorPrimary"
         app:tabTextAppearance="@style/AppTheme.TabAppearance">
 
         <com.google.android.material.tabs.TabItem
