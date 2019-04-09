@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -16,6 +15,8 @@ import com.google.api.services.youtube.model.SearchResult
 import kotlinx.android.synthetic.main.result_item.view.*
 import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
+import net.capellari.julien.utils.DiffItemCallback
+import net.capellari.julien.utils.RecyclerHolder
 import net.capellari.julien.utils.inflate
 import org.jetbrains.anko.bundleOf
 import java.text.SimpleDateFormat
@@ -24,18 +25,7 @@ import java.util.*
 class YoutubeResultsFragment : RefreshListFragment() {
     // Companion
     companion object {
-        val VIDEO_DIFF_CALLBACK = object : DiffUtil.ItemCallback<SearchResult>() {
-            override fun areItemsTheSame(oldItem: SearchResult, newItem: SearchResult): Boolean {
-                return oldItem.id.videoId == newItem.id.videoId
-            }
-
-            override fun areContentsTheSame(oldItem: SearchResult, newItem: SearchResult): Boolean {
-                return oldItem.snippet.title == newItem.snippet.title
-
-                    && oldItem.snippet.description == newItem.snippet.description
-                    && oldItem.snippet.thumbnails.high.url == newItem.snippet.thumbnails.high.url
-            }
-        }
+        val VIDEO_DIFF_CALLBACK = DiffItemCallback<VideoResult>()
     }
 
     // Attributs
@@ -75,7 +65,7 @@ class YoutubeResultsFragment : RefreshListFragment() {
     }
 
     // Classes
-    inner class Adapter : PagedListAdapter<SearchResult,ViewHolder>(VIDEO_DIFF_CALLBACK) {
+    inner class Adapter : PagedListAdapter<VideoResult,ViewHolder>(VIDEO_DIFF_CALLBACK) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             return ViewHolder(parent.inflate(R.layout.result_item, false))
         }
@@ -85,40 +75,29 @@ class YoutubeResultsFragment : RefreshListFragment() {
         }
     }
 
-    inner class ViewHolder(val view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
-        // Attributs
-        var searchResult: SearchResult? = null
-
+    inner class ViewHolder(view: View) : RecyclerHolder<VideoResult>(view), View.OnClickListener {
         // Initialisation
         init {
             view.setOnClickListener(this)
         }
 
         // Méthodes
-        fun bind(result: SearchResult?) {
-            searchResult = result
-
-            result?.snippet?.also {
-                view.name.text = it.title
-                view.date.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it.publishedAt.value))
-                view.description.text = it.description
-                view.image.setImageUrl(it.thumbnails.high.url, ytModel.requestManager.imageLoader)
-            } ?: {
-                view.name.text = "Loading ..."
-                view.description.text = ""
-                view.date.text = ""
-            }()
+        override fun onBind(value: VideoResult?) {
+            view.name.text        = value?.title ?: "Loading ..."
+            view.description.text = value?.description ?: ""
+            view.date.text = value?.publishedAt?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it) } ?: ""
+            value?.imageUrl?.let { view.image.setImageUrl(it, ytModel.requestManager.imageLoader) }
         }
 
         override fun onClick(v: View?) {
-            searchResult?.let {
+            value?.let {
                 navController.navigate(
                         R.id.action_video_details,
                         bundleOf(
-                                YoutubeVideoFragment.ARGS_VIDEO_ID to it.id.videoId,
-                                YoutubeVideoFragment.ARGS_VIDEO_TITLE to it.snippet.title,
-                                YoutubeVideoFragment.ARGS_VIDEO_DESCRIPTION to it.snippet.description,
-                                YoutubeVideoFragment.ARGS_VIDEO_IMAGE_URL to it.snippet.thumbnails.high.url
+                                YoutubeVideoFragment.ARGS_VIDEO_ID          to it.id,
+                                YoutubeVideoFragment.ARGS_VIDEO_TITLE       to it.title,
+                                YoutubeVideoFragment.ARGS_VIDEO_DESCRIPTION to it.description,
+                                YoutubeVideoFragment.ARGS_VIDEO_IMAGE_URL   to it.imageUrl
                         )
                 )
             }

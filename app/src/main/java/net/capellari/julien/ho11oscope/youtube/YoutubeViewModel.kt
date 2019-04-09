@@ -25,7 +25,7 @@ class YoutubeViewModel(app: Application): AndroidViewModel(app) {
     private val dataSourceFactory = YoutubeDataSource.Factory(this)
 
     val requestManager = RequestManager.getInstance(app)
-    val videos: LiveData<PagedList<SearchResult>> = LivePagedListBuilder(dataSourceFactory, 20).build()
+    val videos: LiveData<PagedList<VideoResult>> = LivePagedListBuilder(dataSourceFactory, 20).build()
 
     var query: String? = null
     val isLoading = MutableLiveData<Boolean>()

@@ -13,6 +13,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.result_item.view.*
 import net.capellari.julien.fragments.RefreshListFragment
 import net.capellari.julien.ho11oscope.R
+import net.capellari.julien.utils.RecyclerHolder
 import net.capellari.julien.utils.inflate
 
 class PolyResultsFragment : RefreshListFragment() {
@@ -62,7 +63,7 @@ class PolyResultsFragment : RefreshListFragment() {
         }
     }
 
-    inner class PolyHolder(val view : View) : RecyclerView.ViewHolder(view), View.OnClickListener {
+    inner class PolyHolder(view : View) : RecyclerHolder<PolyObject>(view), View.OnClickListener {
         // Attributs
         var polyObject: PolyObject? = null
 
@@ -72,13 +73,13 @@ class PolyResultsFragment : RefreshListFragment() {
         }
 
         // Méthodes
-        fun bind(obj : PolyObject?) {
-            polyObject = obj
+        override fun onBind(value: PolyObject?) {
+            polyObject = value
 
-            view.name.text        = obj?.name ?: "Loading ..."
-            view.description.text = obj?.description ?: ""
+            view.name.text        = value?.name ?: "Loading ..."
+            view.description.text = value?.description ?: ""
 
-            obj?.imageUrl?.let {
+            value?.imageUrl?.let {
                 view.image.setImageUrl(it, polyModel.requestManager.imageLoader)
             }
         }

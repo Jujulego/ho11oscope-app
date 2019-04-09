@@ -1,27 +1,20 @@
 package net.capellari.julien.ho11oscope.poly
 
-import androidx.recyclerview.widget.DiffUtil
+import net.capellari.julien.utils.DiffItem
+import net.capellari.julien.utils.DiffItemCallback
 
-class PolyObject(val id: String,
-                 val name: String,
-                 val description: String?,
-                 val imageUrl: String?) {
+class PolyObject(val id: String, val name: String, val description: String? = null, val imageUrl: String? = null)
+        : DiffItem<PolyObject> {
+
     // Companion
     companion object {
-        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PolyObject>() {
-            override fun areItemsTheSame(oldItem: PolyObject, newItem: PolyObject): Boolean {
-                return oldItem.id == newItem.id
-            }
-
-            override fun areContentsTheSame(oldItem: PolyObject, newItem: PolyObject): Boolean {
-                return oldItem.name == newItem.name &&
-                        oldItem.description == newItem.description &&
-                        oldItem.imageUrl == newItem.imageUrl
-            }
-        }
+        val DIFF_CALLBACK = DiffItemCallback<PolyObject>()
     }
 
-    // Constructeur
-    constructor(id : String, name: String) : this(id, name, null, null)
-    constructor(id : String, name: String, description: String) : this(id, name, description, null)
+    // Méthodes
+    override fun isSameItem(other: PolyObject)
+            = (other.id == id)
+
+    override fun hasSameContent(other: PolyObject)
+            = (other.name == name) && (other.imageUrl == imageUrl) && (other.description == description)
 }

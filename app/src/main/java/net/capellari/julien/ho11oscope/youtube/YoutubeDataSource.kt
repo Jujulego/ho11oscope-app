@@ -4,17 +4,17 @@ import androidx.paging.DataSource
 import androidx.paging.PageKeyedDataSource
 import com.google.api.services.youtube.model.SearchResult
 
-class YoutubeDataSource(val ytModel: YoutubeViewModel) : PageKeyedDataSource<String, SearchResult>() {
+class YoutubeDataSource(val ytModel: YoutubeViewModel) : PageKeyedDataSource<String, VideoResult>() {
     // Classes
-    class Factory(val ytModel: YoutubeViewModel) : DataSource.Factory<String, SearchResult>() {
+    class Factory(val ytModel: YoutubeViewModel) : DataSource.Factory<String, VideoResult>() {
         // Méthodes
-        override fun create(): DataSource<String, SearchResult> {
+        override fun create(): DataSource<String, VideoResult> {
             return YoutubeDataSource(ytModel)
         }
     }
 
     // Méthodes
-    override fun loadInitial(params: LoadInitialParams<String>, callback: LoadInitialCallback<String, SearchResult>) {
+    override fun loadInitial(params: LoadInitialParams<String>, callback: LoadInitialCallback<String, VideoResult>) {
         // Préparation de la requête
         val req = ytModel.youtubeApi.search().list("snippet")
 
@@ -28,11 +28,11 @@ class YoutubeDataSource(val ytModel: YoutubeViewModel) : PageKeyedDataSource<Str
         ytModel.isLoading.postValue(true)
         val results = req.execute()
 
-        callback.onResult(results.items, results.prevPageToken, results.nextPageToken)
+        callback.onResult(results.items.map { VideoResult(it) }, results.prevPageToken, results.nextPageToken)
         ytModel.isLoading.postValue(false)
     }
 
-    override fun loadAfter(params: LoadParams<String>, callback: LoadCallback<String, SearchResult>) {
+    override fun loadAfter(params: LoadParams<String>, callback: LoadCallback<String, VideoResult>) {
         // Préparation de la requête
         val req = ytModel.youtubeApi.search().list("snippet")
 
@@ -44,11 +44,11 @@ class YoutubeDataSource(val ytModel: YoutubeViewModel) : PageKeyedDataSource<Str
         ytModel.isLoading.postValue(true)
         val results = req.execute()
 
-        callback.onResult(results.items, results.nextPageToken)
+        callback.onResult(results.items.map { VideoResult(it) }, results.nextPageToken)
         ytModel.isLoading.postValue(true)
     }
 
-    override fun loadBefore(params: LoadParams<String>, callback: LoadCallback<String, SearchResult>) {
+    override fun loadBefore(params: LoadParams<String>, callback: LoadCallback<String, VideoResult>) {
         // Préparation de la requête
         val req = ytModel.youtubeApi.search().list("snippet")
 
@@ -60,7 +60,7 @@ class YoutubeDataSource(val ytModel: YoutubeViewModel) : PageKeyedDataSource<Str
         ytModel.isLoading.postValue(true)
         val results = req.execute()
 
-        callback.onResult(results.items, results.prevPageToken)
+        callback.onResult(results.items.map { VideoResult(it) }, results.prevPageToken)
         ytModel.isLoading.postValue(false)
     }
 }
